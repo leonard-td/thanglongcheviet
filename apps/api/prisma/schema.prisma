@@ -1,13 +1,226 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// This schema will be expanded in Sprint 2 with User entity
-// and in subsequent sprints with CMS, CRM, and Product modules
+// ============= AUTH =============
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole @default(ADMIN)
+  refreshToken String?  @map("refresh_token")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+// ============= CMS =============
+model Card {
+  id          String       @id @default(uuid())
+  category    CardCategory
+  translations Json        @default("{}")
+  image       String?
+  linkUrl     String?      @map("link_url")
+  sortOrder   Int          @default(0) @map("sort_order")
+  status      CardStatus   @default(DRAFT)
+  publishedAt DateTime?    @map("published_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@index([category, status])
+  @@map("cards")
+}
+
+enum CardCategory {
+  HERO_SLIDER
+  SERVICE_HIGHLIGHT
+  PROMOTION
+  TESTIMONIAL
+}
+
+enum CardStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  valueType   String   @map("value_type")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_configs")
+}
+
+model Newsfeed {
+  id          String         @id @default(uuid())
+  translations Json          @default("{}")
+  category    String
+  image       String?
+  tags        String[]       @default([])
+  viewCount   Int            @default(0) @map("view_count")
+  status      NewsfeedStatus @default(DRAFT)
+  publishedAt DateTime?      @map("published_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@index([category, status])
+  @@index([publishedAt])
+  @@map("newsfeeds")
+}
+
+enum NewsfeedStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ============= CRM =============
+model CustomerInquiry {
+  id            String          @id @default(uuid())
+  customerName  String          @map("customer_name")
+  customerEmail String          @map("customer_email")
+  customerPhone String?         @map("customer_phone")
+  subject       String
+  message       String          @db.Text
+  source        InquirySource   @default(CONTACT_FORM)
+  status        InquiryStatus   @default(NEW)
+  priority      InquiryPriority @default(NORMAL)
+  assignedToId  String?         @map("assigned_to_id")
+  notes         InquiryNote[]
+  statusHistory InquiryStatusHistory[]
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  @@index([status, priority])
+  @@index([customerEmail])
+  @@map("customer_inquiries")
+}
+
+model InquiryNote {
+  id         String          @id @default(uuid())
+  inquiryId  String          @map("inquiry_id")
+  inquiry    CustomerInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  authorId   String          @map("author_id")
+  content    String          @db.Text
+  isInternal Boolean         @default(true) @map("is_internal")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([inquiryId])
+  @@map("inquiry_notes")
+}
+
+model InquiryStatusHistory {
+  id         String          @id @default(uuid())
+  inquiryId  String          @map("inquiry_id")
+  inquiry    CustomerInquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  fromStatus InquiryStatus   @map("from_status")
+  toStatus   InquiryStatus   @map("to_status")
+  changedBy  String          @map("changed_by")
+  reason     String?
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  @@index([inquiryId])
+  @@map("inquiry_status_history")
+}
+
+enum InquiryStatus {
+  NEW
+  REVIEWING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  ARCHIVED
+}
+
+enum InquirySource {
+  CONTACT_FORM
+  PHONE
+  EMAIL
+  CHAT
+  SOCIAL_MEDIA
+}
+
+enum InquiryPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// ============= PRODUCT =============
+model Category {
+  id          String     @id @default(uuid())
+  parentId    String?    @map("parent_id")
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  translations Json      @default("{}")
+  slug        String     @unique
+  image       String?
+  sortOrder   Int        @default(0) @map("sort_order")
+  products    Product[]
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id           String        @id @default(uuid())
+  sku          String        @unique
+  categoryId   String        @map("category_id")
+  category     Category      @relation(fields: [categoryId], references: [id])
+  translations Json          @default("{}")
+  images       String[]      @default([])
+  price        Decimal       @db.Decimal(10, 2)
+  comparePrice Decimal?      @map("compare_price") @db.Decimal(10, 2)
+  cost         Decimal?      @db.Decimal(10, 2)
+  stock        Int           @default(0)
+  tags         String[]      @default([])
+  status       ProductStatus @default(DRAFT)
+  publishedAt  DateTime?     @map("published_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  viewLogs     ProductViewLog[]
+
+  @@index([categoryId, status])
+  @@index([sku])
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  OUT_OF_STOCK
+  ARCHIVED
+}
+
+model ProductViewLog {
+  id        String   @id @default(uuid())
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  viewCount Int      @map("view_count")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([productId, date])
+  @@index([productId])
+  @@index([date])
+  @@map("product_view_logs")
+}
