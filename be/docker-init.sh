@@ -31,8 +31,15 @@ echo "-> Running database migrations and seeders..."
 php artisan migrate:fresh --seed --force
 
 # 5. Creating storage link
-echo "-> Creating storage link..."
-php artisan storage:link || true
+# If the storage link exists, remove it and create a new one
+if [ ! -L "/var/www/public/storage" ]; then
+    echo "-> Creating storage link..."
+    php artisan storage:link || true
+else
+    echo "-> Storage link already exists. Recreating..."
+    rm -rf /var/www/public/storage
+    php artisan storage:link || true
+fi
 
 # 6. Generating Swagger API documentation
 echo "-> Generating Swagger API documentation..."
