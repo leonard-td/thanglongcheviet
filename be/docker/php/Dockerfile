@@ -22,6 +22,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Remap www-data to uid/gid 1000 to match WSL's /mnt automount owner.
+# Without this, php-fpm (uid 33) is never the "owner" of bind-mounted files on
+# /mnt/d and touch()/utime() fails with EPERM (e.g. Blade compiled views).
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
 # Set working directory
 WORKDIR /var/www
 

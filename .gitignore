@@ -39,3 +39,4 @@ coverage/
 # Lock files from other package managers (since we use pnpm)
 package-lock.json
 yarn.lock
+.pnpm-store
