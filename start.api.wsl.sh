@@ -58,6 +58,6 @@ if [ "$REINSTALL" = "1" ] || [ ! -d node_modules ]; then
 fi
 
 echo "==> Khởi động stack tại $DEST"
-exec ./start.api.sh "${ARGS[@]}"
+exec ./start.api.sh "apps"
 
 
