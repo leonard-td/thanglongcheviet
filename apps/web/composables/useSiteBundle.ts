@@ -22,32 +22,55 @@ const localFallback: SiteBundle = {
 }
 
 export function useSiteBundle() {
-  const { fetchApi } = useApi()
-
-  const { data } = useAsyncData<SiteBundle>(
-    'site-bundle',
-    async () => {
-      try {
-        const res = await fetchApi<ApiEnvelope<SiteBundle>>('/site')
-        if (res.success && res.data?.settings) {
-          return res.data
+  const { data, status, refresh } = useAsyncData('site-settings', async () => {
+    try {
+      const config = useRuntimeConfig()
+      const medusaUrl = import.meta.client ? config.public.medusaBackendUrl : (config.medusaBackendUrlServer || config.public.medusaBackendUrl)
+      const res = await $fetch<{ site_settings: any }>(`${medusaUrl}/store/site-settings`, {
+        headers: {
+          'x-publishable-api-key': config.public.medusaPublishableKey
         }
-      } catch (e) {
-        console.warn('Site bundle API unavailable, using local fallback', e)
-      }
-      return localFallback
-    },
-    { default: () => localFallback },
-  )
+      })
+      
+      const remoteSettings = res?.site_settings || {}
 
-  const bundle = computed(() => data.value ?? localFallback)
+      // Merge remote settings with local fallback. 
+      // Remote settings take precedence.
+      return {
+        ...localFallback,
+        settings: {
+          ...localFallback.settings,
+          contact: {
+            ...localFallback.settings.contact,
+            address: remoteSettings.address ? { vi: remoteSettings.address, en: remoteSettings.address } : localFallback.settings.contact.address,
+            phone: remoteSettings.phone || localFallback.settings.contact.phone,
+            phoneDisplay: remoteSettings.phone || localFallback.settings.contact.phoneDisplay,
+            mobile: remoteSettings.phone || localFallback.settings.contact.mobile,
+            email: remoteSettings.email || localFallback.settings.contact.email,
+          },
+          hours: remoteSettings.hours || localFallback.settings.hours,
+          social: {
+            ...localFallback.settings.social,
+            facebook: remoteSettings.facebook || localFallback.settings.social.facebook,
+          }
+        }
+      } as SiteBundle
+    } catch (err) {
+      console.error("Failed to fetch site settings", err)
+      return localFallback
+    }
+  }, {
+    default: () => localFallback
+  })
 
   return {
-    bundle,
-    settings: computed(() => bundle.value.settings),
-    team: computed(() => bundle.value.team),
-    services: computed(() => bundle.value.services),
-    gallery: computed(() => bundle.value.gallery),
-    testimonials: computed(() => bundle.value.testimonials),
+    bundle: computed(() => data.value || localFallback),
+    settings: computed(() => (data.value || localFallback).settings),
+    team: computed(() => (data.value || localFallback).team),
+    services: computed(() => (data.value || localFallback).services),
+    gallery: computed(() => (data.value || localFallback).gallery),
+    testimonials: computed(() => (data.value || localFallback).testimonials),
+    status,
+    refresh
   }
 }

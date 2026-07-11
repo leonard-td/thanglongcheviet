@@ -25,38 +25,10 @@ interface NavLink {
   children?: { key: string, path: string, label?: string }[]
 }
 
-<<<<<<< Updated upstream
-const navLinks = computed<NavLink[]>(() => [
-  // { key: 'nav.home', path: '/' },
-  {
-    key: 'nav.products',
-    path: '/san-pham-list',
-    children: [
-      { key: 'nav.productsMenu.teaViet', path: '/san-pham-list' },
-      { key: 'nav.productsMenu.anQuangCaffe', path: '/an-quang-caffe' },
-      { key: 'nav.productsMenu.corporateGifts', path: '/qua-tang-doanh-nghiep' },
-    ],
-  },
-  { key: 'nav.projectsPartners', path: '/du-an-doi-tac' },
-  { key: 'nav.events', path: '/trai-nghiem' },
-  {
-    key: 'nav.blog',
-    path: '/tin-tuc',
-    children: [
-      { key: 'nav.blogMenu.vietTea', path: '/nep-tra-viet' },
-      { key: 'nav.blogMenu.tradition', path: '/van-hoa-viet' },
-      { key: 'nav.blogMenu.teaHeritage', path: '/di-san-tra-cu' },
-      { key: 'nav.blogMenu.anQuangGarden', path: '/vuon-an-quang' },
-    ],
-  },
-  { key: 'nav.library', path: '/thu-vien-van-hoa' },
-  { key: 'nav.contact', path: '/lien-he' },
-])
-=======
-const { getStoreNavigation, mapNavigationToNavLinks, navigationId } = useNavigation()
+const { getStoreNavigation, mapNavigationToNavLinks } = useNavigation()
 const dynamicLinks = ref<NavLink[]>([])
 
-if (navigationId) {
+onMounted(async () => {
   try {
     const rawNav = await getStoreNavigation()
     if (rawNav && rawNav.length > 0) {
@@ -67,7 +39,7 @@ if (navigationId) {
       console.warn('[AppHeader] Failed to load dynamic navigation, falling back to static:', e)
     }
   }
-}
+})
 
 const navLinks = computed<NavLink[]>(() => {
   if (dynamicLinks.value.length > 0) {
@@ -101,7 +73,6 @@ const navLinks = computed<NavLink[]>(() => {
     { key: 'nav.contact', path: '/lien-he' },
   ]
 })
->>>>>>> Stashed changes
 
 const toggleMobileGroup = (key: string) => {
   openMobileGroup.value = openMobileGroup.value === key ? null : key

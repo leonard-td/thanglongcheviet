@@ -59,13 +59,13 @@ services:
     container_name: tlcv_deps_prod
     working_dir: /workspace
     command: >
-             cd /workspace/apps/backend/.medusa/server &&
+      sh -c "cd /workspace/apps/backend/.medusa/server &&
              (npm install --omit=dev --no-audit --no-fund ||
               npm install --omit=dev --no-audit --no-fund --legacy-peer-deps) &&
-             cd /workspace/apps/storefront &&
-             npm install --omit=dev --no-audit --no-fund &&
-             cd /workspace/strapi &&
-             npm install --omit=dev --no-audit --no-fund"
+             cd /workspace/apps/web/.output/server &&
+             if [ -d node_modules/sharp ]; then
+               npm rebuild sharp --no-audit --no-fund || true;
+             fi"
     volumes:
       - ../:/workspace
       - backend_server_node_modules:/workspace/apps/backend/.medusa/server/node_modules
@@ -127,11 +127,14 @@ services:
       retries: 20
       start_period: 60s
 
-  # --- Next.js storefront (prebuilt: .next/standalone or next start) ---------
-  storefront:
+  # --- Nuxt web (prebuilt Nitro server, deps bundled inside .output) ---------
+  # Waits for `deps` only because of the sharp binary fix-up above. All
+  # NUXT_PUBLIC_* values are read at RUNTIME by Nitro, so a changed
+  # publishable key/region only needs a container recreate, never a rebuild.
+  web:
     image: node:20
-    container_name: tlcv_storefront_prod
-    working_dir: /workspace/apps/storefront
+    container_name: tlcv_web_prod
+    working_dir: /workspace/apps/web
     restart: unless-stopped
     depends_on:
       deps:
@@ -139,45 +142,22 @@ services:
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
-      PORT: "8000"
-      NEXT_PUBLIC_MEDUSA_BACKEND_URL: ${NEXT_PUBLIC_MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
-      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
-      NEXT_PUBLIC_STRAPI_API_URL: http://cms:1337
+      PORT: "3000"
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Browser-side Medusa URL — the public origin (nginx). The backend's
+      # :9000 is internal-only in prod.
+      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # SSR-side override: compose DNS, no round-trip out through nginx.
+      NUXT_MEDUSA_BACKEND_URL_SERVER: http://backend:9000
+      # Store API credentials for the PROD database (.env.prod).
+      NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
+      NUXT_PUBLIC_MEDUSA_REGION_ID: ${NUXT_PUBLIC_MEDUSA_REGION_ID:-}
+      NUXT_PUBLIC_STRAPI_API_URL: http://host.docker.internal:1337
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ../:/workspace
-    # Assuming standard next start, or if standalone, change to node server.js
-    command: sh -c "npm run start -- -p 8000"
-
-  # --- Strapi CMS (Production) -----------------------------------------------
-  cms:
-    image: node:20
-    container_name: tlcv_cms_prod
-    working_dir: /workspace/strapi
-    restart: unless-stopped
-    depends_on:
-      deps:
-        condition: service_completed_successfully
-      postgres:
-        condition: service_healthy
-    environment:
-      NODE_ENV: production
-      HOST: 0.0.0.0
-      PORT: "1337"
-      DATABASE_CLIENT: postgres
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${POSTGRES_DB:-medusa}
-      DATABASE_USERNAME: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_SCHEMA: strapi
-      APP_KEYS: toBeModifiedLater1,toBeModifiedLater2
-      API_TOKEN_SALT: defaultSaltForCmsApiToken
-      ADMIN_JWT_SECRET: defaultJwtSecretForAdminCms
-      TRANSFER_TOKEN_SALT: defaultTransferTokenSalt
-      JWT_SECRET: defaultCmsJwtSecret
-    volumes:
-      - ../:/workspace
-    command: sh -c "npm run start"
+    command: sh -c "node .output/server/index.mjs"
 
   # --- nginx (single entrypoint) — SAME image, port, and config as dev -------
   nginx:
@@ -185,12 +165,10 @@ services:
     container_name: tlcv_nginx_prod
     restart: unless-stopped
     depends_on:
-      storefront:
+      web:
         condition: service_started
       backend:
         condition: service_healthy
-      cms:
-        condition: service_started
     ports:
       - "${HTTP_PORT:-80}:80"
     volumes:

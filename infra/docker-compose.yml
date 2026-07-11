@@ -1,10 +1,58 @@
 # =============================================================================
 # Thang Long Che Viet — full dev stack, single port
 # =============================================================================
+# Everything the project needs (Postgres, Medusa backend/storefront, Nuxt web)
+# runs in containers with source mounted for hot-reload, fronted by nginx on
+# ONE port so every service is reachable through the same host+port — matching
+# the production layout (nginx/sites/salon.conf): one domain, one port,
+# path-based routing.
+#
+# apps/web (Nuxt) is the customer-facing site, served at "/". The Medusa
+# backend is treated as an internal CMS/admin service — nginx proxies its
+# admin dashboard (/app) and APIs (/admin, /store) so apps/web can call them
+# same-origin. apps/storefront (Medusa's Next.js storefront) is NOT routed
+# through nginx: it also wants to live at "/", which collides with apps/web,
+# so it stays reachable only on its own published port (profile "storefront").
+#
+# node_modules / build caches live in NAMED VOLUMES (ext4) instead of the bind
+# mount, so they're fast and don't collide with Windows-built node_modules on
+# /mnt/d.
+#
+# No Redis: @medusajs/event-bus-redis reproducibly hung server boot forever in
+# this WSL2/Docker environment, and cache/locking/workflow-engine gain little
+# for a single-instance dev stack. Medusa runs fully in-memory.
+#
+# The project is bind-mounted at /workspace (NOT /app) inside every Node
+# container. Medusa's admin dashboard is served at the URL path /app
+# (localhost:9000/app), and Vite's dev-server import resolution strips a
+# leading path segment that matches its configured `base`. If a container's
+# filesystem root were also named /app, an admin route/i18n virtual module's
+# absolute import path (e.g. /app/apps/backend/src/admin/i18n/index.ts) would
+# collide with that `base` stripping and silently corrupt into
+# "apps/backend/src/admin/i18n/index.ts", which then fails to resolve
+# ("Failed to resolve import ... Does the file exist?") even though the file
+# is right there. Mounting at /workspace avoids the collision entirely.
+#
+# Run (from the repo root, INSIDE WSL where Docker lives):
+#   cp .env.example .env         # then edit if needed
+#   ./start.dev.sh
+#   # -> open http://localhost          (Nuxt web)
+#   # -> open http://localhost/app      (Medusa admin — admin@medusa.local / supersecret123)
+#   # -> Settings > Publishable API keys -> copy into .env as
+#   #    NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY, then:
+#   docker compose -f infra/docker-compose.yml --env-file .env --profile storefront up -d
+#   # -> open http://localhost:8000     (Medusa storefront, not behind nginx)
+#
+# NOTE: backend host port is fixed at 9000 on purpose. The storefront SDK uses
+# a single URL (NEXT_PUBLIC_MEDUSA_BACKEND_URL) for both browser and SSR, so
+# the storefront shares the backend's network namespace (localhost:9000 works
+# from both the browser via the published port and from SSR in that container).
+# =============================================================================
 
 name: tlcv
 
 services:
+  # --- PostgreSQL ------------------------------------------------------------
   postgres:
     image: postgres:15
     container_name: tlcv-postgres
@@ -13,6 +61,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-medusa}
+    # ports:
+    #   - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -21,10 +71,13 @@ services:
       timeout: 5s
       retries: 12
 
+  # --- One-shot dependency install (whole npm workspace, populates volumes) --
   install:
     image: node:20
     container_name: tlcv_install
     working_dir: /workspace
+    # Medusa/Next/Nuxt in one npm workspace can hit ERESOLVE peer-dependency
+    # conflicts; retry with --legacy-peer-deps like run-dev.sh/run-dev.ps1 do.
     command: >
       sh -c "npm install --no-audit --no-fund ||
              npm install --no-audit --no-fund --legacy-peer-deps"
@@ -32,10 +85,10 @@ services:
       - ../:/workspace
       - root_node_modules:/workspace/node_modules
       - backend_node_modules:/workspace/apps/backend/node_modules
-      - storefront_node_modules:/workspace/apps/storefront/node_modules
-      - strapi_node_modules:/workspace/strapi/node_modules
+      - web_node_modules:/workspace/apps/web/node_modules
     restart: "no"
 
+  # --- Medusa backend (API + admin dashboard, proxied at /app, /admin, /store)
   backend:
     image: node:20
     container_name: tlcv_backend
@@ -49,24 +102,34 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
-      STORE_CORS: ${STORE_CORS:-http://localhost:80}
-      ADMIN_CORS: ${ADMIN_CORS:-http://localhost:80}
-      AUTH_CORS: ${AUTH_CORS:-http://localhost:80}
+      STORE_CORS: ${STORE_CORS:-http://localhost:8000}
+      ADMIN_CORS: ${ADMIN_CORS:-http://localhost:9000,http://localhost:5173,http://localhost}
+      AUTH_CORS: ${AUTH_CORS:-http://localhost:9000,http://localhost:8800,http://localhost:5173,http://localhost}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
-      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-80}}
+      # Public origin for uploaded-file URLs (file-local provider appends
+      # /static). Must be the nginx entrypoint — the backend's own :9000 is no
+      # longer published, so URLs built from it would be unreachable.
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
+      # host check (only matters when DOMAIN != localhost).
       DOMAIN: ${DOMAIN:-localhost}
-      DISABLE_ADMIN_HMR: ${DISABLE_ADMIN_HMR:-true}
-      ENABLE_ADMIN_HMR: ${ENABLE_ADMIN_HMR:-false}
-      ADMIN_FORCE_REBUILD: ${ADMIN_FORCE_REBUILD:-false}
-      ADMIN_AUTH_TYPE: ${ADMIN_AUTH_TYPE:-jwt}
+      # Poll the filesystem so hot-reload works over the WSL/Windows bind mount.
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "1000"
+    # ports:
+      # Backend API + admin. Storefront's port is published here too because the
+      # storefront shares this container's network namespace (see below).
+      # - "9000:9000"
+      # - "${STOREFRONT_PORT:-8000}:8000"
     volumes:
       - ../:/workspace
       - root_node_modules:/workspace/node_modules
       - backend_node_modules:/workspace/apps/backend/node_modules
       - backend_medusa:/workspace/apps/backend/.medusa
+    # seed-base runs BEFORE seed-cards: on an empty database it creates the
+    # base commerce data (sales channel, VND currency, Vietnam region, stock
+    # location + shipping, publishable key) that every /store request needs.
     command: >
       sh -c "npx medusa db:migrate &&
              (npx medusa exec ./src/scripts/seed-base.ts || true) &&
@@ -80,90 +143,71 @@ services:
       retries: 20
       start_period: 90s
 
-  storefront:
-    image: node:20
-    container_name: tlcv_storefront
-    working_dir: /workspace/apps/storefront
-    restart: unless-stopped
-    depends_on:
-      backend:
-        condition: service_healthy
-      install:
-        condition: service_completed_successfully
-    environment:
-      NODE_ENV: development
-      MEDUSA_BACKEND_URL: http://backend:9000
-      NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://${DOMAIN:-localhost}:${HTTP_PORT:-80}
-      NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
-      NEXT_PUBLIC_MEDUSA_NAVIGATION_ID: ${NEXT_PUBLIC_MEDUSA_NAVIGATION_ID:-}
-      NEXT_PUBLIC_DEFAULT_REGION: ${NEXT_PUBLIC_DEFAULT_REGION:-dk}
-      NEXT_PUBLIC_BASE_URL: http://${DOMAIN:-localhost}:${HTTP_PORT:-80}
-      NEXT_PUBLIC_STRIPE_KEY: ${NEXT_PUBLIC_STRIPE_KEY:-}
-      NEXT_PUBLIC_STRAPI_API_URL: http://cms:1337
-      WATCHPACK_POLLING: "true"
-    volumes:
-      - ../:/workspace
-      - root_node_modules:/workspace/node_modules
-      - storefront_node_modules:/workspace/apps/storefront/node_modules
-      - storefront_next:/workspace/apps/storefront/.next
-    command: sh -c "npx next dev -p 8000 -H 0.0.0.0"
 
-  cms:
+  # --- Nuxt web (dev, hot-reload) — the customer-facing site, served at "/" --
+  web:
     image: node:20
-    container_name: tlcv_cms
-    working_dir: /workspace/strapi
+    container_name: tlcv_web
+    working_dir: /workspace/apps/web
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
       install:
         condition: service_completed_successfully
     environment:
       NODE_ENV: development
       HOST: 0.0.0.0
-      PORT: "1337"
-      DATABASE_CLIENT: postgres
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_NAME: ${POSTGRES_DB:-medusa}
-      DATABASE_USERNAME: ${POSTGRES_USER:-postgres}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      DATABASE_SCHEMA: strapi
-      APP_KEYS: toBeModifiedLater1,toBeModifiedLater2
-      API_TOKEN_SALT: defaultSaltForCmsApiToken
-      ADMIN_JWT_SECRET: defaultJwtSecretForAdminCms
-      TRANSFER_TOKEN_SALT: defaultTransferTokenSalt
-      JWT_SECRET: defaultCmsJwtSecret
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@medusa.local}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-supersecret123}
-      HTTP_PORT: ${HTTP_PORT:-80}
+      PORT: "3000"
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Browser-side Medusa URL — the nginx entrypoint (single origin), since
+      # the backend's :9000 is no longer published to the host.
+      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # SSR-side override: reach Medusa via compose DNS, no round-trip out
+      # through nginx.
+      NUXT_MEDUSA_BACKEND_URL_SERVER: http://backend:9000
+      # Store API credentials (provision via scripts/setup-web-integration.mjs)
+      NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
+      NUXT_PUBLIC_MEDUSA_REGION_ID: ${NUXT_PUBLIC_MEDUSA_REGION_ID:-}
+      # Bind mount over 9p (WSL/Windows) doesn't emit inotify events.
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ../:/workspace
-      - strapi_node_modules:/workspace/strapi/node_modules
-    command: sh -c "npm run develop"
+      - root_node_modules:/workspace/node_modules
+      - web_node_modules:/workspace/apps/web/node_modules
+      - web_nuxt:/workspace/apps/web/.nuxt
+      - web_output:/workspace/apps/web/.output
+    # No published host port on purpose: nginx below is the single entrypoint.
+    # Uncomment for direct debugging without going through nginx:
+    # ports:
+    #   - "3000:3000"
+    command: sh -c "npm run dev -- --host 0.0.0.0 --port 3000"
 
+  # --- nginx (single entrypoint, one port for every service) ------------------
   nginx:
     image: nginx:1.25-alpine
     container_name: tlcv_nginx
     restart: unless-stopped
     depends_on:
-      storefront:
+      web:
         condition: service_started
       backend:
         condition: service_healthy
-      cms:
-        condition: service_started
     ports:
       - "${HTTP_PORT:-80}:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Dev routing only (plain HTTP, no domain/SSL). Production uses
+      # nginx/sites/salon.conf (real domain + certbot) via a separate prod
+      # compose file instead of this conf.d directory.
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
 
 volumes:
   postgres_data:
   root_node_modules:
   backend_node_modules:
-  storefront_node_modules:
   backend_medusa:
-  storefront_next:
-  strapi_node_modules:
+  web_node_modules:
+  web_nuxt:
+  web_output:

@@ -250,6 +250,45 @@
     "leaveInfo": "Để lại thông tin",
     "leaveInfoSubtitle": "Gửi thông tin, chúng tôi sẽ liên hệ lại sớm nhất"
   },
+  "corporate": {
+    "title": "Quà tặng doanh nghiệp",
+    "subtitle": "Giải pháp quà tặng trà cao cấp, tinh tế, khẳng định dấu ấn thương hiệu và tri ân đối tác.",
+    "values": {
+      "eyebrow": "Vì sao chọn chúng tôi",
+      "title": "Giải pháp quà tặng tối ưu",
+      "customLogo": "In ấn logo & Nhận diện",
+      "customLogoDesc": "Tuỳ chỉnh bao bì, in logo, thiết kế thiệp mang dấu ấn riêng.",
+      "premiumQuality": "Trà thượng hạng",
+      "premiumQualityDesc": "Tuyển chọn từ những dòng trà đặc sản ngon nhất Việt Nam.",
+      "elegantDesign": "Thiết kế đẳng cấp",
+      "elegantDesignDesc": "Hộp quà chế tác tỉ mỉ, từ giấy mỹ thuật, gỗ đến sơn mài.",
+      "discounts": "Chiết khấu hấp dẫn",
+      "discountsDesc": "Chính sách ưu đãi tốt nhất cho đơn hàng doanh nghiệp số lượng lớn."
+    },
+    "process": {
+      "eyebrow": "Quy trình",
+      "title": "Quy trình hợp tác",
+      "step1": "Tư vấn & Báo giá",
+      "step1Desc": "Lắng nghe nhu cầu và đề xuất giải pháp quà tặng phù hợp.",
+      "step2": "Thiết kế & Duyệt mẫu",
+      "step2Desc": "Lên maket thiết kế và làm hộp mẫu để khách hàng duyệt.",
+      "step3": "Sản xuất & Đóng gói",
+      "step3Desc": "Đảm bảo chất lượng đồng đều, tỉ mỉ trong từng chi tiết.",
+      "step4": "Giao hàng toàn quốc",
+      "step4Desc": "Giao hàng tận nơi, đúng hẹn, an toàn nguyên vẹn."
+    },
+    "form": {
+      "eyebrow": "Liên hệ ngay",
+      "title": "Nhận tư vấn & Báo giá sỉ",
+      "subtitle": "Vui lòng để lại thông tin, chúng tôi sẽ liên hệ trong thời gian sớm nhất.",
+      "company": "Tên doanh nghiệp",
+      "companyPlaceholder": "Công ty cổ phần...",
+      "contactName": "Người liên hệ",
+      "quantity": "Số lượng dự kiến",
+      "quantityPlaceholder": "Chọn số lượng",
+      "submit": "Nhận báo giá ngay"
+    }
+  },
   "footer": {
     "followUs": "Theo dõi chúng tôi",
     "latestNews": "Tin mới nhất",

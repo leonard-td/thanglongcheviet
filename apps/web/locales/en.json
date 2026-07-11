@@ -250,6 +250,45 @@
     "leaveInfo": "Leave your info",
     "leaveInfoSubtitle": "Send us your info and we'll get back to you shortly"
   },
+  "corporate": {
+    "title": "Corporate Gifts",
+    "subtitle": "Premium, elegant tea gift solutions to affirm your brand identity and express gratitude to partners.",
+    "values": {
+      "eyebrow": "Why Choose Us",
+      "title": "The Ultimate Gift Solution",
+      "customLogo": "Custom Branding",
+      "customLogoDesc": "Custom packaging, logo printing, and personalized greeting cards.",
+      "premiumQuality": "Premium Quality Tea",
+      "premiumQualityDesc": "Selected from the finest specialty tea regions in Vietnam.",
+      "elegantDesign": "Elegant Design",
+      "elegantDesignDesc": "Meticulously crafted boxes, from fine art paper to wood and lacquer.",
+      "discounts": "Attractive Discounts",
+      "discountsDesc": "The best pricing policies for large corporate bulk orders."
+    },
+    "process": {
+      "eyebrow": "Process",
+      "title": "How We Work",
+      "step1": "Consult & Quote",
+      "step1Desc": "Listening to your needs and proposing suitable gift solutions.",
+      "step2": "Design & Sampling",
+      "step2Desc": "Creating design mockups and producing sample boxes for approval.",
+      "step3": "Production & Packaging",
+      "step3Desc": "Ensuring consistent quality and meticulous attention to every detail.",
+      "step4": "Nationwide Delivery",
+      "step4Desc": "Door-to-door delivery, on time, safely and intact."
+    },
+    "form": {
+      "eyebrow": "Contact Us Now",
+      "title": "Get a Quote",
+      "subtitle": "Please leave your information below, we will contact you as soon as possible.",
+      "company": "Company Name",
+      "companyPlaceholder": "ABC Corporation...",
+      "contactName": "Contact Person",
+      "quantity": "Estimated Quantity",
+      "quantityPlaceholder": "Select quantity",
+      "submit": "Get Quote Now"
+    }
+  },
   "footer": {
     "followUs": "Follow Us",
     "latestNews": "Latest news",

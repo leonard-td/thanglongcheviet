@@ -95,12 +95,7 @@ module.exports = defineConfig({
       },
     }),
   },
-  plugins: [
-    {
-      resolve: "medusa-navigation-menu",
-      options: {},
-    },
-  ],
+  plugins: [],
   modules: [
     {
       resolve: "./src/modules/campaign",
@@ -113,6 +108,12 @@ module.exports = defineConfig({
     },
     {
       resolve: "./src/modules/card",
+    },
+    {
+      resolve: "./src/modules/navigation",
+    },
+    {
+      resolve: "./src/modules/site-settings",
     },
     {
       resolve: "@medusajs/file",
