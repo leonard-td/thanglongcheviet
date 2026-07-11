@@ -47,6 +47,12 @@ export default defineMiddlewares({
       middlewares: [authenticate("customer", ["bearer", "session"])],
     },
     {
+      // Zalo ký webhook trên raw body — cần giữ lại để verify chữ ký
+      matcher: "/webhooks/zalo/*",
+      method: ["POST"],
+      bodyParser: { preserveRawBody: true },
+    },
+    {
       matcher: "/admin/campaign-posts",
       method: "GET",
       middlewares: [

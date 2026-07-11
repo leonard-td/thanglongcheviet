@@ -1,7 +1,10 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { MedusaError } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { INQUIRY_MODULE } from "../../../modules/inquiry"
 import type InquiryModuleService from "../../../modules/inquiry/service"
+import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
+import type CareChannelModuleService from "../../../modules/care-channel/service"
+import { formatInquiryMessage } from "../../../modules/care-channel/utils/format"
 
 type ContactBody = {
   name?: string
@@ -40,6 +43,19 @@ export async function POST(
     service: service?.trim().slice(0, 200) || null,
     message: message?.trim().slice(0, 4000) || null,
     source: source?.trim().slice(0, 100) || "website",
+  })
+
+  // fire-and-forget: chuyển tiếp lời nhắn tới các kênh CSKH đã tích hợp
+  // (Zalo OA, Telegram...) — lỗi gửi không được chặn phản hồi cho khách
+  const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
+  const careService: CareChannelModuleService =
+    req.scope.resolve(CARE_CHANNEL_MODULE)
+  careService.notifySupportChannels(formatInquiryMessage(inquiry)).catch((error) => {
+    logger.warn(
+      `care-channel: failed to forward inquiry ${inquiry.id}: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    )
   })
 
   res.status(201).json({ success: true, inquiry_id: inquiry.id })

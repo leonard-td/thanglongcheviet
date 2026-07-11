@@ -86,6 +86,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/card",
     },
     {
+      resolve: "./src/modules/care-channel",
+    },
+    {
       resolve: "@medusajs/file",
       options: {
         providers: [

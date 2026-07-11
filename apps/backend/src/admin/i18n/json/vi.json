@@ -5,7 +5,131 @@
     "campaignTopics": "Chủ đề bài viết",
     "media": "Thư viện ảnh",
     "events": "Sự kiện",
-    "eventRegistrations": "Đăng ký sự kiện"
+    "eventRegistrations": "Đăng ký sự kiện",
+    "careChannels": "Kênh CSKH",
+    "careMessages": "Tin nhắn CSKH"
+  },
+  "care-channels": {
+    "title": "Kênh chăm sóc khách hàng",
+    "hint": "Tích hợp Zalo OA, Telegram... để nhận thông báo đơn hàng và nhắn tin với khách hàng.",
+    "create": "Thêm kênh",
+    "edit": "Chỉnh sửa kênh",
+    "columns": {
+      "name": "Tên kênh",
+      "provider": "Nền tảng",
+      "scopes": "Phạm vi",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "provider": {
+      "telegram": "Telegram",
+      "zalo_oa": "Zalo OA"
+    },
+    "scopes": {
+      "orders": "Đơn hàng",
+      "messages": "Tin nhắn"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng"
+    },
+    "fields": {
+      "name": "Tên kênh",
+      "provider": "Nền tảng",
+      "notifyOrders": "Nhận thông báo đơn hàng",
+      "notifyOrdersHint": "Gửi tin tới kênh này khi có đơn hàng mới (chăm sóc bán hàng).",
+      "receiveMessages": "Nhận/gửi tin nhắn khách hàng",
+      "receiveMessagesHint": "Nhận tin khách nhắn tới kênh và cho phép nhân viên trả lời (CSKH chung).",
+      "active": "Kích hoạt",
+      "telegramSectionTitle": "Cấu hình Telegram",
+      "telegramSectionHint": "Tạo bot qua @BotFather, thêm bot vào group nhận thông báo rồi điền thông tin bên dưới.",
+      "botToken": "Bot token",
+      "chatId": "Chat ID mặc định",
+      "chatIdHint": "ID group/chat nhận thông báo (group ID thường bắt đầu bằng -100).",
+      "zaloSectionTitle": "Cấu hình Zalo OA",
+      "zaloSectionHint": "Lấy thông tin từ Zalo Developer Console của Official Account.",
+      "oaId": "OA ID",
+      "appId": "App ID",
+      "secretKey": "Secret key",
+      "accessToken": "Access token",
+      "refreshToken": "Refresh token",
+      "refreshTokenHint": "Token tự xoay vòng khi hệ thống refresh — chỉ dán lại khi lấy token mới từ Zalo.",
+      "notifyUserIds": "Zalo user ID nhận thông báo",
+      "notifyUserIdsHint": "Danh sách user ID (phân tách bằng dấu phẩy) của nhân viên nhận thông báo — user phải nhắn tin cho OA trước ít nhất một lần.",
+      "secretKeepHint": "Khi chỉnh sửa, để trống nếu muốn giữ giá trị đã lưu."
+    },
+    "webhook": {
+      "title": "Webhook nhận tin nhắn",
+      "telegramHint": "Bấm nút để đăng ký webhook với Telegram (yêu cầu backend có HTTPS công khai qua MEDUSA_BACKEND_URL).",
+      "zaloHint": "Sao chép URL này và dán vào mục Webhook trong Zalo Developer Console.",
+      "register": "Đăng ký với Telegram",
+      "registered": "Đã đăng ký webhook",
+      "registerFailed": "Đăng ký webhook thất bại"
+    },
+    "actions": {
+      "create": "Tạo kênh",
+      "edit": "Chỉnh sửa",
+      "sendTest": "Gửi tin thử",
+      "delete": "Xoá",
+      "save": "Lưu",
+      "backToList": "Quay lại"
+    },
+    "messages": {
+      "created": "Đã tạo kênh",
+      "createFailed": "Tạo kênh thất bại",
+      "updated": "Đã lưu kênh",
+      "updateFailed": "Lưu kênh thất bại",
+      "deleted": "Đã xoá kênh",
+      "deleteFailed": "Xoá kênh thất bại",
+      "deleteConfirmTitle": "Xoá kênh?",
+      "deleteConfirmDesc": "Kênh \"{{name}}\" sẽ bị xoá và ngừng nhận/gửi tin.",
+      "confirmDelete": "Xoá",
+      "cancelDelete": "Huỷ",
+      "testSent": "Đã gửi tin thử — kiểm tra kênh của bạn",
+      "testFailed": "Gửi tin thử thất bại"
+    }
+  },
+  "care-messages": {
+    "title": "Tin nhắn CSKH",
+    "columns": {
+      "createdAt": "Thời gian",
+      "channel": "Kênh",
+      "direction": "Chiều",
+      "kind": "Loại",
+      "user": "Khách hàng",
+      "content": "Nội dung",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "direction": {
+      "inbound": "Nhận",
+      "outbound": "Gửi"
+    },
+    "kind": {
+      "order": "Đơn hàng",
+      "support": "CSKH",
+      "test": "Tin thử"
+    },
+    "status": {
+      "sent": "Đã gửi",
+      "failed": "Lỗi",
+      "received": "Đã nhận"
+    },
+    "filters": {
+      "channel": "Kênh",
+      "allChannels": "Tất cả kênh",
+      "direction": "Chiều",
+      "allDirections": "Tất cả"
+    },
+    "reply": {
+      "title": "Hội thoại với {{user}}",
+      "placeholder": "Nhập tin nhắn trả lời...",
+      "send": "Gửi",
+      "sent": "Đã gửi tin nhắn",
+      "sendFailed": "Gửi tin nhắn thất bại",
+      "empty": "Chưa có tin nhắn trong hội thoại này"
+    }
   },
   "events": {
     "title": "Sự kiện",

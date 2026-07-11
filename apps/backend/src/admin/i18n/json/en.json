@@ -5,7 +5,131 @@
     "campaignTopics": "Post Topics",
     "media": "Media Library",
     "events": "Events",
-    "eventRegistrations": "Event Registrations"
+    "eventRegistrations": "Event Registrations",
+    "careChannels": "Care Channels",
+    "careMessages": "Care Messages"
+  },
+  "care-channels": {
+    "title": "Customer care channels",
+    "hint": "Connect Zalo OA, Telegram... to receive order notifications and chat with customers.",
+    "create": "Add channel",
+    "edit": "Edit channel",
+    "columns": {
+      "name": "Name",
+      "provider": "Platform",
+      "scopes": "Scope",
+      "status": "Status",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "provider": {
+      "telegram": "Telegram",
+      "zalo_oa": "Zalo OA"
+    },
+    "scopes": {
+      "orders": "Orders",
+      "messages": "Messages"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "fields": {
+      "name": "Channel name",
+      "provider": "Platform",
+      "notifyOrders": "Receive order notifications",
+      "notifyOrdersHint": "Send a message to this channel whenever a new order is placed (sales care).",
+      "receiveMessages": "Send/receive customer messages",
+      "receiveMessagesHint": "Receive messages customers send to this channel and let staff reply (general care).",
+      "active": "Active",
+      "telegramSectionTitle": "Telegram configuration",
+      "telegramSectionHint": "Create a bot with @BotFather, add it to the notification group, then fill in the fields below.",
+      "botToken": "Bot token",
+      "chatId": "Default chat ID",
+      "chatIdHint": "The group/chat ID that receives notifications (group IDs usually start with -100).",
+      "zaloSectionTitle": "Zalo OA configuration",
+      "zaloSectionHint": "Copy these values from the Official Account's Zalo Developer Console.",
+      "oaId": "OA ID",
+      "appId": "App ID",
+      "secretKey": "Secret key",
+      "accessToken": "Access token",
+      "refreshToken": "Refresh token",
+      "refreshTokenHint": "Tokens rotate automatically when the system refreshes them — only paste new ones obtained from Zalo.",
+      "notifyUserIds": "Zalo user IDs for notifications",
+      "notifyUserIdsHint": "Comma-separated user IDs of staff receiving notifications — each user must have messaged the OA at least once.",
+      "secretKeepHint": "When editing, leave blank to keep the stored value."
+    },
+    "webhook": {
+      "title": "Inbound message webhook",
+      "telegramHint": "Click the button to register the webhook with Telegram (requires a public HTTPS backend via MEDUSA_BACKEND_URL).",
+      "zaloHint": "Copy this URL and paste it into the Webhook section of the Zalo Developer Console.",
+      "register": "Register with Telegram",
+      "registered": "Webhook registered",
+      "registerFailed": "Failed to register webhook"
+    },
+    "actions": {
+      "create": "Create channel",
+      "edit": "Edit",
+      "sendTest": "Send test message",
+      "delete": "Delete",
+      "save": "Save",
+      "backToList": "Back"
+    },
+    "messages": {
+      "created": "Channel created",
+      "createFailed": "Failed to create channel",
+      "updated": "Channel saved",
+      "updateFailed": "Failed to save channel",
+      "deleted": "Channel deleted",
+      "deleteFailed": "Failed to delete channel",
+      "deleteConfirmTitle": "Delete channel?",
+      "deleteConfirmDesc": "Channel \"{{name}}\" will be removed and stop sending/receiving messages.",
+      "confirmDelete": "Delete",
+      "cancelDelete": "Cancel",
+      "testSent": "Test message sent — check your channel",
+      "testFailed": "Failed to send test message"
+    }
+  },
+  "care-messages": {
+    "title": "Care messages",
+    "columns": {
+      "createdAt": "Time",
+      "channel": "Channel",
+      "direction": "Direction",
+      "kind": "Type",
+      "user": "Customer",
+      "content": "Content",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "direction": {
+      "inbound": "Inbound",
+      "outbound": "Outbound"
+    },
+    "kind": {
+      "order": "Order",
+      "support": "Support",
+      "test": "Test"
+    },
+    "status": {
+      "sent": "Sent",
+      "failed": "Failed",
+      "received": "Received"
+    },
+    "filters": {
+      "channel": "Channel",
+      "allChannels": "All channels",
+      "direction": "Direction",
+      "allDirections": "All"
+    },
+    "reply": {
+      "title": "Conversation with {{user}}",
+      "placeholder": "Type a reply...",
+      "send": "Send",
+      "sent": "Message sent",
+      "sendFailed": "Failed to send message",
+      "empty": "No messages in this conversation yet"
+    }
   },
   "events": {
     "title": "Events",
