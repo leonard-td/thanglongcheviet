@@ -74,7 +74,7 @@ const formatPrice = (price: number) =>
              active filter so useScrollAnimation()'s one-time observer (see
              composables/useScrollAnimation.ts) keeps working across filter
              changes instead of only for whatever was present at mount. -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
           <article
             v-for="p in displayProducts"
             v-show="p.visible"
@@ -90,19 +90,19 @@ const formatPrice = (price: number) =>
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             >
           </NuxtLink>
-          <div class="p-5 md:p-6 text-center">
-            <h3 class="font-heading text-lg font-semibold text-white mb-2">
+          <div class="p-3 md:p-4 text-center">
+            <h3 class="font-heading text-sm md:text-base font-semibold text-white mb-1.5">
               <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" class="group-hover:text-primary-400 transition-colors">
                 {{ p.title }}
               </NuxtLink>
             </h3>
-            <p class="text-white/50 text-sm leading-relaxed mb-4 line-clamp-2">
+            <p class="text-white/50 text-xs leading-relaxed mb-2.5 line-clamp-2">
               {{ p.shortDesc }}
             </p>
-            <p class="text-primary-400 font-semibold text-base mb-5">
+            <p class="text-primary-400 font-semibold text-sm mb-3">
               {{ formatPrice(p.price) }}
             </p>
-            <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" class="btn-primary px-6 py-2.5 text-xs">
+            <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" class="btn-primary px-4 py-2 text-[11px]">
               {{ t('products.viewDetail') }}
             </NuxtLink>
           </div>

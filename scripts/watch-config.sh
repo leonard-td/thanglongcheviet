@@ -25,6 +25,19 @@ mtime() { stat -c %Y "$1" 2>/dev/null || echo 0; }
 
 compose_mtime=$(mtime "$COMPOSE_FILE")
 medusa_config_mtime=$(mtime "$MEDUSA_CONFIG")
+# Debounce flags: a file that just changed is marked "pending" instead of
+# acted on immediately. The action only fires once its mtime has been
+# unchanged for a full poll interval (i.e. edits settled) — an editor/agent
+# saving several times within a couple seconds (e.g. a few quick fixes to
+# medusa-config.ts in a row) previously fired `restart backend` /
+# `up -d` once per save. Each restart cuts off the backend's own ~90s boot
+# sequence (migrations/seed scripts/vite) mid-flight, and if that keeps
+# happening the container never finishes booting, its healthcheck never
+# passes, and nginx (which waits on that healthcheck) can get stuck in a
+# half-started state — which looks like the admin page endlessly
+# reloading. Coalescing rapid bursts into one restart avoids that.
+compose_pending=0
+medusa_pending=0
 
 while true; do
   sleep 2
@@ -32,6 +45,9 @@ while true; do
   new_compose_mtime=$(mtime "$COMPOSE_FILE")
   if [ "$new_compose_mtime" != "$compose_mtime" ]; then
     compose_mtime="$new_compose_mtime"
+    compose_pending=1
+  elif [ "$compose_pending" = "1" ]; then
+    compose_pending=0
     echo "[watch-config] docker-compose.yml changed -> \$COMPOSE up -d"
     $COMPOSE up -d
   fi
@@ -39,6 +55,9 @@ while true; do
   new_medusa_config_mtime=$(mtime "$MEDUSA_CONFIG")
   if [ "$new_medusa_config_mtime" != "$medusa_config_mtime" ]; then
     medusa_config_mtime="$new_medusa_config_mtime"
+    medusa_pending=1
+  elif [ "$medusa_pending" = "1" ]; then
+    medusa_pending=0
     echo "[watch-config] medusa-config.ts changed -> restarting backend"
     $COMPOSE restart backend
   fi

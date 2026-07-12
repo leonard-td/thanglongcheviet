@@ -27,6 +27,11 @@ watchEffect(() => {
   }
 })
 
+// Banner full-bleed: header trong suốt nằm đè lên banner, chuyển nền đặc
+// khi scroll hết banner (xem composables/useHeaderBanner.ts)
+const bannerEl = ref<HTMLElement | null>(null)
+useBannerHeader(bannerEl)
+
 const topic = computed(() => data.value?.topic ?? null)
 const posts = computed(() =>
   (data.value?.posts ?? []).map((post) => {
@@ -52,8 +57,9 @@ useSeoMeta({
 <template>
   <div class="bg-dark min-h-[60vh]">
     <!-- ── Topic banner ─────────────────────────────── -->
-    <section class="relative bg-dark text-white">
-      <div class="relative h-[300px] sm:h-[360px] md:h-[440px] overflow-hidden">
+    <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]) -->
+    <section ref="bannerEl" class="relative -mt-[72px] bg-dark text-white">
+      <div class="relative h-[210px] sm:h-[250px] md:h-[310px] overflow-hidden">
         <img
           v-if="topic?.image"
           :src="topic.image"
@@ -64,24 +70,6 @@ useSeoMeta({
         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/20" />
 
         <div class="relative h-full container-page flex flex-col justify-end pb-8 md:pb-12">
-          <!-- Breadcrumb -->
-          <!-- <nav class="mb-4 text-xs uppercase tracking-[0.2em] text-white/70" aria-label="breadcrumb">
-            <ol class="flex flex-wrap items-center gap-2">
-              <li>
-                <NuxtLink :to="localePath('/')" class="hover:text-primary-300 transition-colors">
-                  {{ t('nav.home') }}
-                </NuxtLink>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <NuxtLink :to="localePath('/tin-tuc')" class="hover:text-primary-300 transition-colors">
-                  {{ t('nav.blog') }}
-                </NuxtLink>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li class="text-primary-300">{{ topic?.name }}</li>
-            </ol>
-          </nav> -->
 
           <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-bold max-w-3xl">
             {{ topic?.name }}
@@ -126,10 +114,10 @@ useSeoMeta({
         <h2 id="topic-posts-heading" class="sr-only">{{ topic?.name }}</h2>
 
         <!-- Loading skeleton -->
-        <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          <div v-for="n in 6" :key="n" class="rounded-2xl overflow-hidden bg-white/[0.04] ring-1 ring-white/10 animate-pulse">
+        <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+          <div v-for="n in 8" :key="n" class="rounded-2xl overflow-hidden bg-white/[0.04] ring-1 ring-white/10 animate-pulse">
             <div class="aspect-[16/10] bg-white/5" />
-            <div class="p-6 space-y-3">
+            <div class="p-4 space-y-3">
               <div class="h-3 w-24 rounded bg-white/10" />
               <div class="h-5 w-3/4 rounded bg-white/10" />
               <div class="h-3 w-full rounded bg-white/10" />
@@ -138,7 +126,7 @@ useSeoMeta({
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="!posts.length" class="py-16 text-center">
+        <div v-else-if="!posts.length" class="py-8 text-center">
           <p class="font-heading text-xl text-white mb-2">{{ t('blog.topics.emptyTitle') }}</p>
           <p class="text-sm text-white/60 mb-8">{{ t('blog.topics.emptyDesc') }}</p>
           <NuxtLink :to="localePath('/tin-tuc')" class="btn-primary">
@@ -146,17 +134,19 @@ useSeoMeta({
           </NuxtLink>
         </div>
 
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+          <!-- overflow-hidden chỉ đặt trên khung ảnh (không đặt trên card)
+               để tooltip của tiêu đề không bị cắt -->
           <article
             v-for="post in posts"
             :key="post.slug"
-            class="group flex flex-col overflow-hidden rounded-2xl bg-white/[0.04] animate-on-scroll
+            class="group flex flex-col rounded-2xl bg-white/[0.04] animate-on-scroll
                    ring-1 ring-white/10 hover:ring-primary-400/50
                    hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 transition-all duration-300"
           >
             <NuxtLink
               :to="localePath(`/tin-tuc/${post.slug}`)"
-              class="relative block aspect-[16/10] overflow-hidden"
+              class="relative block aspect-[16/10] overflow-hidden rounded-t-2xl"
               :aria-label="post.title"
             >
               <img
@@ -167,22 +157,24 @@ useSeoMeta({
               >
             </NuxtLink>
 
-            <div class="flex flex-1 flex-col p-6">
-              <time class="text-primary-400 text-xs uppercase tracking-[0.2em]">{{ post.dateLabel }}</time>
+            <div class="flex flex-1 flex-col p-4">
+              <!-- <time class="text-primary-400 text-xs uppercase tracking-[0.2em]">{{ post.dateLabel }}</time> -->
               <h3
-                class="font-heading text-lg md:text-xl font-semibold text-white mt-2 mb-3
-                       group-hover:text-primary-400 transition-colors line-clamp-2"
+                class="font-heading text-base font-semibold text-white mt-2 mb-2
+                       group-hover:text-primary-400 transition-colors"
               >
-                <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)">
-                  {{ post.title }}
-                </NuxtLink>
+                <WidgetsTooltip :text="post.title" placement="top" multiline class="w-full min-w-0">
+                  <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)" class="block w-full truncate">
+                    {{ post.title }}
+                  </NuxtLink>
+                </WidgetsTooltip>
               </h3>
-              <p class="text-white/50 text-sm leading-relaxed line-clamp-3">
+              <p class="text-white/50 text-sm leading-relaxed line-clamp-2">
                 {{ post.excerpt }}
               </p>
               <NuxtLink
                 :to="localePath(`/tin-tuc/${post.slug}`)"
-                class="mt-auto pt-4 inline-flex items-center gap-1.5 text-primary-400 text-xs
+                class="mt-auto pt-3 inline-flex items-center gap-1.5 text-primary-400 text-xs
                        font-condensed uppercase tracking-[0.15em] hover:text-primary-300 transition-colors"
               >
                 {{ t('blog.readMore') }}

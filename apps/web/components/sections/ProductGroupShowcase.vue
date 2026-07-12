@@ -23,13 +23,21 @@ const localePath = useLocalePath()
 
 const priceLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 const bannerImage = computed(() => props.image || props.products[0]?.image || null)
+
+// Banner full-bleed: header trong suốt nằm đè lên banner, chuyển nền đặc
+// khi scroll hết banner (xem composables/useHeaderBanner.ts). Component này
+// là template dùng chung cho cả trang danh mục và bộ sưu tập nên chỉ cần
+// gọi 1 lần ở đây.
+const bannerEl = ref<HTMLElement | null>(null)
+useBannerHeader(bannerEl)
 </script>
 
 <template>
   <div class="bg-dark min-h-[60vh] text-white">
     <!-- ── Group banner ─────────────────────────────── -->
-    <section class="relative bg-dark">
-      <div class="relative h-[260px] sm:h-[320px] md:h-[400px] overflow-hidden">
+    <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]) -->
+    <section ref="bannerEl" class="relative -mt-[72px] bg-dark">
+      <div class="relative h-[180px] sm:h-[225px] md:h-[280px] overflow-hidden">
         <img
           v-if="bannerImage"
           :src="bannerImage"
@@ -39,7 +47,7 @@ const bannerImage = computed(() => props.image || props.products[0]?.image || nu
         <div v-else class="absolute inset-0 bg-gradient-to-br from-primary-800 via-dark-700 to-dark" />
         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
 
-        <div class="relative h-full container-page flex flex-col justify-end pb-8 md:pb-12">
+        <div class="relative h-full container-page flex flex-col justify-end pb-5 md:pb-8">
           <!-- <nav class="mb-4 text-xs uppercase tracking-[0.2em] text-white/70" aria-label="breadcrumb">
             <ol class="flex flex-wrap items-center gap-2">
               <li>
@@ -96,11 +104,11 @@ const bannerImage = computed(() => props.image || props.products[0]?.image || nu
         <h2 id="group-products-heading" class="sr-only">{{ heading }}</h2>
 
         <!-- Loading skeleton -->
-        <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-7">
+        <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           <div v-for="n in 8" :key="n" class="animate-pulse">
             <div class="aspect-[4/5] rounded-xl bg-white/5 ring-1 ring-white/10" />
-            <div class="mx-auto mt-4 h-4 w-2/3 rounded bg-white/10" />
-            <div class="mx-auto mt-2 h-3 w-1/3 rounded bg-white/10" />
+            <div class="mx-auto mt-3 h-3 w-2/3 rounded bg-white/10" />
+            <div class="mx-auto mt-2 h-2.5 w-1/3 rounded bg-white/10" />
           </div>
         </div>
 
@@ -113,7 +121,7 @@ const bannerImage = computed(() => props.image || props.products[0]?.image || nu
         </div>
 
         <!-- Image-led minimal cards: photo, name, price — nothing else -->
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-7">
+        <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           <NuxtLink
             v-for="p in products"
             :key="p.id"
@@ -135,12 +143,12 @@ const bannerImage = computed(() => props.image || props.products[0]?.image || nu
               <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
             <h3
-              class="mt-4 text-center font-heading text-base md:text-lg font-semibold text-white
+              class="mt-3 text-center font-heading text-sm md:text-base font-semibold text-white
                      group-hover:text-primary-400 transition-colors line-clamp-2"
             >
               {{ p.title }}
             </h3>
-            <p class="mt-1 text-center text-primary-400 text-sm font-semibold">
+            <p class="mt-1 text-center text-primary-400 text-xs font-semibold">
               {{ formatMoney(p.price, p.currencyCode, priceLocale) }}
             </p>
           </NuxtLink>

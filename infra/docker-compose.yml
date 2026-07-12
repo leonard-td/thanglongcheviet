@@ -115,13 +115,18 @@ services:
       # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
       # host check (only matters when DOMAIN != localhost).
       DOMAIN: ${DOMAIN:-localhost}
+      # Read by medusa-config.ts to pin the admin Vite dev-server's HMR
+      # websocket to the port nginx actually publishes (see the `hmr` comment
+      # there) — otherwise the browser tries to reach an unpublished random
+      # internal port and HMR silently breaks.
+      HTTP_PORT: ${HTTP_PORT:-8800}
       # Poll the filesystem so hot-reload works over the WSL/Windows bind mount.
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: "1000"
-    # ports:
+    ports:
       # Backend API + admin. Storefront's port is published here too because the
       # storefront shares this container's network namespace (see below).
-      # - "9000:9000"
+      - "9000:9000"
       # - "${STOREFRONT_PORT:-8000}:8000"
     volumes:
       - ../:/workspace

@@ -63,7 +63,7 @@ html.lenis body {
 
   /* Section padding */
   .section-py {
-    @apply py-16 md:py-24;
+    @apply py-8 md:py-10;
   }
 
   /* Primary button — Modis style */

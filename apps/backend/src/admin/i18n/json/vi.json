@@ -268,7 +268,8 @@
       "topic": "Chủ đề",
       "status": "Trạng thái",
       "publishAt": "Thời gian đăng",
-      "unpublishAt": "Thời gian gỡ"
+      "unpublishAt": "Thời gian gỡ",
+      "actions": "Thao tác"
     },
     "status": {
       "active": "Đang hoạt động",
@@ -278,6 +279,9 @@
       "title": "Tiêu đề",
       "slug": "Đường dẫn (slug)",
       "slugPlaceholder": "tự động tạo từ tiêu đề",
+      "description": "Mô tả ngắn",
+      "descriptionPlaceholder": "Tóm tắt ngắn gọn nội dung bài viết",
+      "descriptionHint": "Hiển thị ở danh sách bài viết và dùng làm mô tả SEO mặc định nếu không đặt riêng ở mục SEO bên dưới.",
       "topic": "Chủ đề",
       "topicPlaceholder": "Chọn chủ đề",
       "noTopic": "Không thuộc chủ đề nào",
@@ -290,11 +294,11 @@
       "source": "Nguồn bài viết",
       "sourceHint": "Ghi rõ xuất xứ nếu bài viết được biên tập lại từ nơi khác, ví dụ \"Theo VnExpress\".",
       "seoSectionTitle": "Thông tin SEO",
-      "seoSectionHint": "Tùy chọn — nếu bỏ trống, website sẽ tự dùng tiêu đề và đoạn trích của bài viết.",
+      "seoSectionHint": "Tùy chọn — nếu bỏ trống, website sẽ tự dùng tiêu đề và mô tả ngắn của bài viết.",
       "seoTitle": "Tiêu đề SEO",
       "seoTitlePlaceholder": "mặc định dùng tiêu đề bài viết",
       "seoDescription": "Mô tả SEO",
-      "seoDescriptionPlaceholder": "mặc định dùng đoạn trích tự động từ nội dung",
+      "seoDescriptionPlaceholder": "mặc định dùng mô tả ngắn ở trên",
       "seoKeywords": "Từ khóa SEO",
       "seoKeywordsPlaceholder": "phân tách bằng dấu phẩy, ví dụ: trà sen, trà việt"
     },
@@ -302,19 +306,31 @@
       "create": "Tạo bài viết",
       "save": "Lưu thay đổi",
       "delete": "Xóa",
+      "duplicate": "Nhân bản",
       "backToList": "Quay lại danh sách"
     },
     "messages": {
       "created": "Tạo bài viết thành công",
       "updated": "Cập nhật bài viết thành công",
       "deleted": "Xóa bài viết thành công",
+      "duplicated": "Nhân bản bài viết thành công — bản sao đang ở trạng thái tạm dừng",
       "createFailed": "Tạo bài viết thất bại",
       "updateFailed": "Cập nhật bài viết thất bại",
       "deleteFailed": "Xóa bài viết thất bại",
+      "duplicateFailed": "Nhân bản bài viết thất bại",
       "deleteConfirmTitle": "Xóa bài viết",
       "deleteConfirmDesc": "Bạn có chắc muốn xóa \"{{title}}\" không?",
       "confirmDelete": "Xóa",
       "cancelDelete": "Hủy"
+    }
+  },
+  "productDuplicate": {
+    "title": "Nhân bản sản phẩm",
+    "hint": "Tạo bản sao ở trạng thái nháp gồm biến thể, tùy chọn, hình ảnh, giá, danh mục và kênh bán. SKU / mã vạch để trống để bạn đặt lại.",
+    "action": "Nhân bản",
+    "messages": {
+      "success": "Nhân bản sản phẩm thành công",
+      "failed": "Nhân bản sản phẩm thất bại"
     }
   },
   "campaign-topics": {
@@ -501,6 +517,19 @@
       "cancel": "Hủy",
       "done": "Đã xóa ảnh",
       "failed": "Xóa ảnh thất bại"
+    },
+    "picker": {
+      "title": "Chèn ảnh",
+      "upload": "Tải ảnh mới",
+      "uploading": "Đang tải lên...",
+      "dropHint": "Kéo thả ảnh vào đây hoặc bấm để chọn file",
+      "orPasteUrl": "hoặc dán URL ảnh có sẵn",
+      "urlPlaceholder": "https://...",
+      "useUrl": "Dùng URL này",
+      "library": "Thư viện ảnh",
+      "empty": "Chưa có ảnh nào trong thư viện — tải ảnh mới ở trên.",
+      "select": "Chọn ảnh này",
+      "uploadFailed": "Tải ảnh lên thất bại"
     }
   },
   "storefrontLink": {

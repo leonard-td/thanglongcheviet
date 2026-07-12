@@ -108,6 +108,62 @@ const handleBuyNow = async () => {
   if (ok) await navigateTo(localePath('/gio-hang'))
 }
 
+// ── Kính lúp ảnh sản phẩm ─────────────────────────────────────────────
+// Vòng lens bám theo con trỏ hiển thị vùng ảnh phóng to; khung ảnh chính
+// giữ nguyên kích thước. Chỉ bật trên thiết bị có hover thật (chuột).
+const ZOOM_SCALE = 2.2
+const LENS_SIZE = 160
+const zoomFrameEl = ref<HTMLElement | null>(null)
+const zoomActive = ref(false)
+const lensStyle = ref<Record<string, string>>({})
+
+function onZoomEnter() {
+  if (window.matchMedia('(hover: hover)').matches) {
+    zoomActive.value = true
+  }
+}
+
+function onZoomMove(e: MouseEvent) {
+  const frame = zoomFrameEl.value
+  if (!zoomActive.value || !frame) return
+  const rect = frame.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
+  const half = LENS_SIZE / 2
+  lensStyle.value = {
+    width: `${LENS_SIZE}px`,
+    height: `${LENS_SIZE}px`,
+    left: `${Math.min(Math.max(x - half, 0), rect.width - LENS_SIZE)}px`,
+    top: `${Math.min(Math.max(y - half, 0), rect.height - LENS_SIZE)}px`,
+    backgroundImage: `url(${activeImage.value})`,
+    backgroundSize: `${rect.width * ZOOM_SCALE}px ${rect.height * ZOOM_SCALE}px`,
+    backgroundPosition: `${half - x * ZOOM_SCALE}px ${half - y * ZOOM_SCALE}px`,
+  }
+}
+
+// ── Thanh mua nhanh cố định ───────────────────────────────────────────
+// Khi khối chọn thuộc tính/số lượng/CTA gốc ra khỏi màn hình thì hiện
+// thanh cố định đáy trang để thêm vào giỏ từ bất kỳ vị trí scroll nào.
+const buyBoxEl = ref<HTMLElement | null>(null)
+const showBuyBar = ref(false)
+let buyBoxObserver: IntersectionObserver | null = null
+
+onMounted(() => {
+  buyBoxObserver = new IntersectionObserver(([entry]) => {
+    showBuyBar.value = !entry.isIntersecting
+  })
+  // buyBoxEl nằm trong v-else nên chỉ tồn tại sau khi product load xong
+  watch(buyBoxEl, (el) => {
+    buyBoxObserver?.disconnect()
+    showBuyBar.value = false
+    if (el) buyBoxObserver?.observe(el)
+  }, { immediate: true })
+})
+
+onBeforeUnmount(() => {
+  buyBoxObserver?.disconnect()
+})
+
 const specs = computed(() => {
   if (!product.value) return []
   const rows: { label: string, value: string }[] = []
@@ -144,7 +200,7 @@ useProductStructuredData(product)
     <section v-if="!product" class="section-py" aria-busy="true" :aria-label="t('common.loading')">
       <div class="container-page">
         <div class="mb-6 h-4 w-56 bg-white/5 rounded animate-pulse" />
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-12">
           <div class="aspect-square rounded-2xl bg-white/5 animate-pulse" />
           <div class="space-y-4">
             <div class="h-3 w-24 bg-white/5 rounded animate-pulse" />
@@ -168,27 +224,45 @@ useProductStructuredData(product)
           <span class="text-white/75 truncate">{{ product.title }}</span>
         </nav> -->
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-          <!-- Gallery -->
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-12">
+          <!-- Gallery: thumbnail dọc bên trái, ảnh chính có kính lúp khi hover -->
           <div class="animate-on-scroll lg:sticky lg:top-24 lg:self-start">
-            <div class="relative aspect-square overflow-hidden rounded-2xl bg-[#2a3326] shadow-2xl group">
-              <img
-                :src="activeImage"
-                :alt="product.title"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            <div class="flex flex-col-reverse sm:flex-row gap-3">
+              <div
+                v-if="product.gallery.length > 1"
+                class="flex sm:flex-col gap-3 flex-none overflow-x-auto sm:overflow-x-visible sm:max-h-[440px] sm:overflow-y-auto"
               >
-            </div>
-            <div v-if="product.gallery.length > 1" class="mt-4 flex gap-3">
-              <button
-                v-for="(img, i) in product.gallery"
-                :key="i"
-                type="button"
-                class="relative aspect-square w-20 overflow-hidden rounded-lg border-2 transition-colors"
-                :class="img === activeImage ? 'border-primary-500' : 'border-transparent opacity-60 hover:opacity-100'"
-                @click="selectedImage = img"
+                <button
+                  v-for="(img, i) in product.gallery"
+                  :key="i"
+                  type="button"
+                  class="relative aspect-square w-16 flex-none overflow-hidden rounded-lg border-2 transition-colors"
+                  :class="img === activeImage ? 'border-primary-500' : 'border-transparent opacity-60 hover:opacity-100'"
+                  @click="selectedImage = img"
+                >
+                  <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover">
+                </button>
+              </div>
+
+              <div
+                ref="zoomFrameEl"
+                class="relative flex-1 min-w-0 aspect-square overflow-hidden rounded-2xl bg-[#2a3326] shadow-2xl cursor-crosshair"
+                @mouseenter="onZoomEnter"
+                @mouseleave="zoomActive = false"
+                @mousemove="onZoomMove"
               >
-                <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover">
-              </button>
+                <img
+                  :src="activeImage"
+                  :alt="product.title"
+                  class="w-full h-full object-cover"
+                >
+                <div
+                  v-show="zoomActive"
+                  class="zoom-lens"
+                  :style="lensStyle"
+                  aria-hidden="true"
+                />
+              </div>
             </div>
           </div>
 
@@ -239,8 +313,8 @@ useProductStructuredData(product)
               </p>
             </div>
 
-            <!-- Quantity + CTA -->
-            <div class="flex flex-wrap items-stretch gap-3 mb-4">
+            <!-- Quantity + CTA (mốc theo dõi cho thanh mua nhanh cố định) -->
+            <div ref="buyBoxEl" class="flex flex-wrap items-stretch gap-3 mb-4">
               <div class="flex items-center border border-white/20">
                 <button
                   type="button"
@@ -362,5 +436,113 @@ useProductStructuredData(product)
         </div>
       </div>
     </section>
+
+    <!-- ── Thanh mua nhanh cố định ──────────────────────────────────────
+         Hiện khi khối chọn thuộc tính/số lượng/CTA gốc ra khỏi màn hình,
+         để thêm vào giỏ nhanh từ bất kỳ vị trí scroll nào. -->
+    <Transition name="buybar">
+      <div
+        v-if="product && showBuyBar"
+        class="fixed inset-x-0 bottom-0 z-[900] border-t border-primary-500/25
+               bg-[#1f1f1f]/95 backdrop-blur shadow-[0_-8px_24px_rgba(0,0,0,0.35)]"
+      >
+        <div class="container-page flex items-center gap-3 md:gap-5 py-2.5">
+          <img
+            :src="activeImage"
+            :alt="product.title"
+            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10"
+          >
+          <div class="hidden md:block min-w-0 max-w-[220px]">
+            <p class="truncate text-sm font-semibold text-white">{{ product.title }}</p>
+            <p class="text-sm font-semibold text-primary-400">{{ priceText }}</p>
+          </div>
+
+          <div
+            v-if="product.options.length"
+            class="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto py-1"
+          >
+            <div
+              v-for="opt in product.options"
+              :key="opt.id"
+              class="flex flex-none items-center gap-1.5"
+            >
+              <span class="hidden lg:inline text-[10px] uppercase tracking-widest text-white/40">
+                {{ opt.title }}
+              </span>
+              <button
+                v-for="val in opt.values"
+                :key="val"
+                type="button"
+                class="min-h-[32px] flex-none border px-2.5 text-xs transition-colors"
+                :class="[
+                  selectedOptions[opt.title] === val
+                    ? 'border-primary-500 bg-primary-500/15 text-primary-300'
+                    : 'border-white/20 text-white/70 hover:border-white/40',
+                  !isValueAvailable(opt.title, val) ? 'opacity-30 cursor-not-allowed line-through' : '',
+                ]"
+                :disabled="!isValueAvailable(opt.title, val)"
+                @click="chooseOption(opt.title, val)"
+              >
+                {{ val }}
+              </button>
+            </div>
+          </div>
+          <div v-else class="flex-1" />
+
+          <div class="flex flex-none items-center border border-white/20">
+            <button
+              type="button"
+              class="flex min-h-[36px] w-9 items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
+              :disabled="quantity <= 1"
+              :aria-label="t('cart.quantity')"
+              @click="decrementQty"
+            >
+              −
+            </button>
+            <span class="w-9 text-center text-sm tabular-nums">{{ quantity }}</span>
+            <button
+              type="button"
+              class="flex min-h-[36px] w-9 items-center justify-center text-white/70 hover:text-white"
+              :aria-label="t('cart.quantity')"
+              @click="incrementQty"
+            >
+              +
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="btn-primary !min-h-[40px] flex-none px-4 sm:px-6 disabled:opacity-60"
+            :disabled="!canAddToCart"
+            @click="handleAddToCart"
+          >
+            {{ added ? t('cart.added') : t('cart.add') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+/* Vòng kính lúp bám theo con trỏ trên ảnh chính */
+.zoom-lens {
+  position: absolute;
+  border-radius: 9999px;
+  border: 2px solid rgba(221, 160, 77, 0.85);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.45);
+  background-repeat: no-repeat;
+  background-color: #2a3326;
+  pointer-events: none;
+}
+
+.buybar-enter-active,
+.buybar-leave-active {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.buybar-enter-from,
+.buybar-leave-to {
+  transform: translateY(100%);
+  opacity: 0;
+}
+</style>

@@ -11,6 +11,26 @@ const dashboardReactRouterDom = path.dirname(
   })
 )
 
+// The admin bundler's generated index.html has no <title> and a blank
+// `data:,` favicon (see @medusajs/admin-bundler's writeHTMLFile) — this
+// plugin's transformIndexHtml hook runs on that exact template (both in
+// `medusa develop` and in the production build, since both go through the
+// same Vite plugin pipeline) and swaps in the storefront's branding.
+// The favicon file is served from /static (same static dir Medusa's local
+// file provider already serves uploads from), not from src/admin, since the
+// admin bundler treats src/admin as component source, not static assets.
+const adminBrandingPlugin = {
+  name: "tlcv-admin-branding",
+  transformIndexHtml(html: string) {
+    return html
+      .replace(
+        '<link rel="icon" href="data:," data-placeholder-favicon />',
+        '<link rel="icon" type="image/png" href="/static/branding-favicon.png" />'
+      )
+      .replace("<head>", "<head>\n            <title>Thăng Long Chè Việt</title>")
+  },
+}
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
@@ -70,6 +90,7 @@ module.exports = defineConfig({
           "react-router-dom": dashboardReactRouterDom,
         },
       },
+      plugins: [adminBrandingPlugin],
     }),
   },
   modules: [

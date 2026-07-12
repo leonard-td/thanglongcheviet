@@ -268,7 +268,8 @@
       "topic": "Topic",
       "status": "Status",
       "publishAt": "Publish at",
-      "unpublishAt": "Unpublish at"
+      "unpublishAt": "Unpublish at",
+      "actions": "Actions"
     },
     "status": {
       "active": "Active",
@@ -278,6 +279,9 @@
       "title": "Title",
       "slug": "Slug",
       "slugPlaceholder": "auto-generated from title",
+      "description": "Short description",
+      "descriptionPlaceholder": "A brief summary of the post",
+      "descriptionHint": "Shown on post listings and used as the default SEO description when the SEO section below is left empty.",
       "topic": "Topic",
       "topicPlaceholder": "Select a topic",
       "noTopic": "No topic",
@@ -290,11 +294,11 @@
       "source": "Source",
       "sourceHint": "Credit the original source when this post is adapted from elsewhere, e.g. \"Via VnExpress\".",
       "seoSectionTitle": "SEO",
-      "seoSectionHint": "Optional — leave blank to fall back to the post title and auto-generated excerpt.",
+      "seoSectionHint": "Optional — leave blank to fall back to the post title and short description.",
       "seoTitle": "SEO title",
       "seoTitlePlaceholder": "defaults to the post title",
       "seoDescription": "SEO description",
-      "seoDescriptionPlaceholder": "defaults to an auto-generated excerpt from the content",
+      "seoDescriptionPlaceholder": "defaults to the short description above",
       "seoKeywords": "SEO keywords",
       "seoKeywordsPlaceholder": "comma-separated, e.g. lotus tea, vietnamese tea"
     },
@@ -302,19 +306,31 @@
       "create": "Create post",
       "save": "Save changes",
       "delete": "Delete",
+      "duplicate": "Duplicate",
       "backToList": "Back to list"
     },
     "messages": {
       "created": "Post created successfully",
       "updated": "Post updated successfully",
       "deleted": "Post deleted successfully",
+      "duplicated": "Post duplicated successfully — the copy is inactive",
       "createFailed": "Failed to create post",
       "updateFailed": "Failed to update post",
       "deleteFailed": "Failed to delete post",
+      "duplicateFailed": "Failed to duplicate post",
       "deleteConfirmTitle": "Delete post",
       "deleteConfirmDesc": "Are you sure you want to delete \"{{title}}\"?",
       "confirmDelete": "Delete",
       "cancelDelete": "Cancel"
+    }
+  },
+  "productDuplicate": {
+    "title": "Duplicate product",
+    "hint": "Create a draft copy including variants, options, images, prices, categories and sales channels. SKU / barcode are left blank for you to fill in.",
+    "action": "Duplicate",
+    "messages": {
+      "success": "Product duplicated successfully",
+      "failed": "Failed to duplicate product"
     }
   },
   "campaign-topics": {
@@ -501,6 +517,19 @@
       "cancel": "Cancel",
       "done": "Image deleted",
       "failed": "Failed to delete image"
+    },
+    "picker": {
+      "title": "Insert image",
+      "upload": "Upload a new image",
+      "uploading": "Uploading...",
+      "dropHint": "Drag an image here or click to choose a file",
+      "orPasteUrl": "or paste an existing image URL",
+      "urlPlaceholder": "https://...",
+      "useUrl": "Use this URL",
+      "library": "Image library",
+      "empty": "No images in the library yet — upload one above.",
+      "select": "Select this image",
+      "uploadFailed": "Image upload failed"
     }
   },
   "storefrontLink": {

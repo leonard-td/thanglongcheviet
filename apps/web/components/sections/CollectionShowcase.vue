@@ -25,7 +25,7 @@ const tiles = computed(() =>
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <NuxtLink
           v-for="c in tiles"
           :key="c.id"
@@ -46,11 +46,11 @@ const tiles = computed(() =>
           <div v-else class="absolute inset-0 bg-gradient-to-br from-primary-800 via-dark-700 to-dark" />
           <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
 
-          <div class="absolute inset-x-0 bottom-0 p-5">
-            <h3 class="font-heading text-lg font-semibold text-white group-hover:text-primary-300 transition-colors">
+          <div class="absolute inset-x-0 bottom-0 p-3">
+            <h3 class="font-heading text-sm md:text-base font-semibold text-white group-hover:text-primary-300 transition-colors line-clamp-1">
               {{ c.label }}
             </h3>
-            <p class="mt-1 text-xs uppercase tracking-[0.2em] text-white/60">
+            <p class="mt-1 text-[11px] uppercase tracking-[0.2em] text-white/60">
               {{ t('products.productCount', { count: c.count }) }}
             </p>
           </div>

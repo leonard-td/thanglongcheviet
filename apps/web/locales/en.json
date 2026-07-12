@@ -291,6 +291,7 @@
     "readMore": "Read more",
     "readingTime": "{minutes} min read",
     "related": "Related articles",
+    "sameTopic": "More from this topic",
     "backToTopic": "Back to {topic}",
     "topics": {
       "eyebrow": "Topics",

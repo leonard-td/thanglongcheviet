@@ -54,6 +54,7 @@ const EditCampaignPostPage = () => {
 
   const [title, setTitle] = useState(campaign_post.title)
   const [slug, setSlug] = useState(campaign_post.slug)
+  const [description, setDescription] = useState(campaign_post.description ?? "")
   const [thumbnail, setThumbnail] = useState(campaign_post.thumbnail ?? "")
   const [topicId, setTopicId] = useState(campaign_post.topic_id ?? "")
   const [isActive, setIsActive] = useState(campaign_post.is_active)
@@ -84,6 +85,26 @@ const EditCampaignPostPage = () => {
     },
   })
 
+  const { mutate: duplicatePost, isPending: isDuplicating } = useMutation({
+    mutationFn: () =>
+      sdk.client.fetch<CampaignPostResponse>(
+        `/admin/campaign-posts/${id}/duplicate`,
+        { method: "POST" }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [["campaign-posts"]] })
+      toast.success(t("campaign-posts.messages.duplicated"))
+      navigate("..")
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("campaign-posts.messages.duplicateFailed")
+      )
+    },
+  })
+
   const { mutateAsync: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: () =>
       sdk.client.fetch(`/admin/campaign-posts/${id}`, {
@@ -104,6 +125,7 @@ const EditCampaignPostPage = () => {
         title,
         slug,
         content: content || EMPTY_TIPTAP_DOC,
+        description: description || null,
         thumbnail: thumbnail || null,
         topic_id: topicId || null,
         is_active: isActive,
@@ -154,6 +176,13 @@ const EditCampaignPostPage = () => {
           </Text>
         </div>
         <div className="flex items-center gap-x-2">
+          <Button
+            variant="secondary"
+            isLoading={isDuplicating}
+            onClick={() => duplicatePost()}
+          >
+            {t("campaign-posts.actions.duplicate")}
+          </Button>
           <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
             {t("campaign-posts.actions.delete")}
           </Button>
@@ -166,6 +195,7 @@ const EditCampaignPostPage = () => {
       <CampaignPostForm
         title={title}
         slug={slug}
+        description={description}
         thumbnail={thumbnail}
         topicId={topicId}
         isActive={isActive}
@@ -180,6 +210,7 @@ const EditCampaignPostPage = () => {
         submitLabel={t("campaign-posts.actions.save")}
         onTitleChange={setTitle}
         onSlugChange={setSlug}
+        onDescriptionChange={setDescription}
         onThumbnailChange={setThumbnail}
         onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}

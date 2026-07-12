@@ -5,6 +5,10 @@ const CampaignPost = model.define("campaign_post", {
   title: model.text(),
   slug: model.text().searchable(),
   content: model.json(),
+  // Short summary shown on listing cards/sidebar on the storefront and used
+  // as the SEO meta description fallback — replaces the old behavior of
+  // auto-truncating the content body
+  description: model.text().nullable(),
   // Card/hero image; falls back to the first image inside content on the storefront
   thumbnail: model.text().nullable(),
   // Plain-column reference to campaign_topic (resolved manually in API routes)
