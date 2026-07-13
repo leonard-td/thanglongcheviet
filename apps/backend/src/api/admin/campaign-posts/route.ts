@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CAMPAIGN_MODULE } from "../../../modules/campaign"
 import type CampaignModuleService from "../../../modules/campaign/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../utils/media-url"
@@ -55,7 +56,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const body = CreateCampaignPostSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
   const slug = body.slug || slugify(body.title)
 
   const post = await campaignModuleService.createCampaignPosts({

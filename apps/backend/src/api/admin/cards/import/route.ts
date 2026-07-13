@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
 import { toRelativeMediaUrl } from "../../../utils/media-url"
@@ -30,7 +31,7 @@ const ImportSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
-  const { items } = ImportSchema.parse(req.body)
+  const { items } = await zodValidator(, req.body)
 
   const existingCards = await cardModuleService.listCards({})
   const byId = new Map(existingCards.map((c) => [c.id, c]))

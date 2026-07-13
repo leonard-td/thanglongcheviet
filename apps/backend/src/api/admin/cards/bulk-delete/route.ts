@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
 
@@ -16,7 +17,7 @@ const BulkDeleteSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
-  const { ids } = BulkDeleteSchema.parse(req.body)
+  const { ids } = await zodValidator(, req.body)
 
   const cards = await cardModuleService.listCards({ id: ids })
   const byId = new Map(cards.map((c) => [c.id, c]))

@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CARD_MODULE } from "../../../../../modules/card"
 import type CardModuleService from "../../../../../modules/card/service"
 
@@ -11,7 +12,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = RenameFolderSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
 
   const folder = await cardModuleService.updateMediaFolders({ id, name: body.name })
 

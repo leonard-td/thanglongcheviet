@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
 import type CampaignModuleService from "../../../../modules/campaign/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../../utils/media-url"
@@ -37,7 +38,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const body = UpdateCampaignPostSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
 
   const post = await campaignModuleService.updateCampaignPosts({
     id,
