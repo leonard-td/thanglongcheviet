@@ -8,7 +8,57 @@
     "eventRegistrations": "Event Registrations",
     "careChannels": "Care Channels",
     "careMessages": "Care Messages",
-    "backup": "Backup & Restore"
+    "backup": "Backup & Restore",
+    "storeInfo": "Store Information"
+  },
+  "relatedCollection": {
+    "title": "Related collection",
+    "hint": "Products of this collection are shown in the right-hand menu of the category page on the website.",
+    "placeholder": "Select a collection",
+    "none": "None",
+    "save": "Save",
+    "saved": "Related collection saved",
+    "saveFailed": "Save failed"
+  },
+  "storeInfo": {
+    "title": "Store Information",
+    "subtitle": "Contact details, homepage background images and the about article",
+    "sections": {
+      "contact": "Contact information",
+      "heroImages": "Homepage background images",
+      "heroImagesHint": "The two background images shown on the website homepage.",
+      "about": "About article",
+      "aboutHint": "Content of the store's about page on the website."
+    },
+    "fields": {
+      "storeName": "Store name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "googleMapUrl": "Google Maps link",
+      "googleMapUrlHint": "Paste a place share link from Google Maps.",
+      "openHours": "Opening hours",
+      "openHoursPlaceholder": "E.g. 8:00 – 22:00 daily",
+      "facebookUrl": "Facebook link",
+      "zaloUrl": "Zalo link",
+      "instagramUrl": "Instagram link",
+      "heroImage1": "Background image 1",
+      "heroImage2": "Background image 2",
+      "aboutTitle": "About article title",
+      "aboutThumbnail": "Thumbnail image",
+      "aboutContent": "Article content",
+      "aboutCollection": "Accompanying collection",
+      "aboutCollectionPlaceholder": "Select a collection",
+      "aboutCollectionHint": "Products of this collection are shown in the right-hand menu of the about page.",
+      "noCollection": "None"
+    },
+    "actions": {
+      "save": "Save"
+    },
+    "messages": {
+      "saved": "Store information saved",
+      "saveFailed": "Save failed"
+    }
   },
   "backup": {
     "title": "Backup & Restore",

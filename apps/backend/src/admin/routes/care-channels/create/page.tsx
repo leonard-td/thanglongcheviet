@@ -1,4 +1,4 @@
-import { Button, Heading, Text, toast } from "@medusajs/ui"
+import { Button, toast } from "@medusajs/ui"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -8,6 +8,7 @@ import CareChannelForm, {
   formValuesToConfig,
   type CareChannelFormValues,
 } from "../../../components/care-channel-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { sdk } from "../../../lib/sdk"
 import type { CareChannelResponse } from "../../../types/care-channel"
@@ -62,19 +63,29 @@ const CreateCareChannelPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("care-channels.create")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {t("care-channels.hint")}
-          </Text>
-        </div>
-        <Button variant="secondary" onClick={() => navigate("..")}>
-          {t("care-channels.actions.backToList")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("care-channels.create")}
+        subtitle={t("care-channels.hint")}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("care-channels.actions.backToList")}
+            </Button>
+            <Button
+              form="care-channel-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("care-channels.actions.create")}
+            </Button>
+          </>
+        }
+      />
 
       <CareChannelForm
+        formId="care-channel-form"
+        hideSubmit
         values={values}
         onChange={handleChange}
         isSubmitting={isPending}

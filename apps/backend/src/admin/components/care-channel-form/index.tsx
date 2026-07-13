@@ -96,6 +96,8 @@ type CareChannelFormProps = {
   providerLocked?: boolean
   isSubmitting?: boolean
   submitLabel: string
+  formId?: string
+  hideSubmit?: boolean
   onSubmit: (event: React.FormEvent) => void
 }
 
@@ -105,12 +107,14 @@ const CareChannelForm = ({
   providerLocked = false,
   isSubmitting = false,
   submitLabel,
+  formId,
+  hideSubmit = false,
   onSubmit,
 }: CareChannelFormProps) => {
   const { t } = useTranslation()
 
   return (
-    <form className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
+    <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
       <div className="flex flex-col gap-y-2">
         <Label htmlFor="name">{t("care-channels.fields.name")}</Label>
         <Input
@@ -309,11 +313,13 @@ const CareChannelForm = ({
         </div>
       )}
 
-      <div className="flex justify-end">
-        <Button isLoading={isSubmitting} type="submit" variant="primary">
-          {submitLabel}
-        </Button>
-      </div>
+      {!hideSubmit && (
+        <div className="flex justify-end">
+          <Button isLoading={isSubmitting} type="submit" variant="primary">
+            {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }

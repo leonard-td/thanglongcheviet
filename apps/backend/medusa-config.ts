@@ -110,6 +110,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/care-channel",
     },
     {
+      resolve: "./src/modules/site-settings",
+    },
+    {
       resolve: "@medusajs/file",
       options: {
         providers: [

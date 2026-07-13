@@ -21,6 +21,7 @@ import CareChannelForm, {
   formValuesToConfig,
   type CareChannelFormValues,
 } from "../../../components/care-channel-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { sdk } from "../../../lib/sdk"
 import type {
@@ -183,24 +184,34 @@ const EditCareChannelPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h1">{t("care-channels.edit")}</Heading>
-        <div className="flex items-center gap-x-2">
-          <Button
-            variant="secondary"
-            isLoading={isTesting}
-            onClick={handleTest}
-          >
-            {t("care-channels.actions.sendTest")}
-          </Button>
-          <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
-            {t("care-channels.actions.delete")}
-          </Button>
-          <Button variant="secondary" onClick={() => navigate("..")}>
-            {t("care-channels.actions.backToList")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("care-channels.edit")}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              isLoading={isTesting}
+              onClick={handleTest}
+            >
+              {t("care-channels.actions.sendTest")}
+            </Button>
+            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
+              {t("care-channels.actions.delete")}
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("care-channels.actions.backToList")}
+            </Button>
+            <Button
+              form="care-channel-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("care-channels.actions.save")}
+            </Button>
+          </>
+        }
+      />
 
       <div className="flex flex-col gap-y-3 px-6 py-4">
         <div>
@@ -230,6 +241,8 @@ const EditCareChannelPage = () => {
       </div>
 
       <CareChannelForm
+        formId="care-channel-form"
+        hideSubmit
         values={values}
         onChange={handleChange}
         providerLocked

@@ -1,7 +1,5 @@
 import {
   Button,
-  Heading,
-  Text,
   toast,
   usePrompt,
 } from "@medusajs/ui"
@@ -18,6 +16,7 @@ import {
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import EventForm from "../../../components/event-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { toDatetimeLocal, toIsoDateTime } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
@@ -141,32 +140,40 @@ const EditEventPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("events.edit")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {t("events.registeredSeats", {
-              count: eventData.registered_seats ?? 0,
-            })}
-          </Text>
-        </div>
-        <div className="flex items-center gap-x-2">
-          <Button
-            variant="secondary"
-            onClick={() => navigate(`/event-registrations?event_id=${id}`)}
-          >
-            {t("events.actions.viewRegistrations")}
-          </Button>
-          <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
-            {t("events.actions.delete")}
-          </Button>
-          <Button variant="secondary" onClick={() => navigate("..")}>
-            {t("events.actions.backToList")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("events.edit")}
+        subtitle={t("events.registeredSeats", {
+          count: eventData.registered_seats ?? 0,
+        })}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => navigate(`/event-registrations?event_id=${id}`)}
+            >
+              {t("events.actions.viewRegistrations")}
+            </Button>
+            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
+              {t("events.actions.delete")}
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("events.actions.backToList")}
+            </Button>
+            <Button
+              form="event-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("events.actions.save")}
+            </Button>
+          </>
+        }
+      />
 
       <EventForm
+        formId="event-form"
+        hideSubmit
         title={title}
         slug={slug}
         thumbnail={thumbnail}

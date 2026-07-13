@@ -31,6 +31,7 @@ interface NavLink {
 
 const navLinks = computed<NavLink[]>(() => [
   // { key: 'nav.home', path: '/' },
+  { key: 'nav.about', path: '/gioi-thieu' },
   {
     key: 'nav.products',
     path: '/san-pham-list',
@@ -242,9 +243,9 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 }
 
 .site-header.is-solid {
-  background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%);
-  border-bottom-color: rgba(201, 108, 108, 0.35);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .22);
+  /* background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%); */
+  /* border-bottom-color: rgba(201, 108, 108, 0.35); */
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, .22); */
 }
 
 .site-header-inner {

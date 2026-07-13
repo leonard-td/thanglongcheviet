@@ -1,0 +1,346 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Button,
+  Heading,
+  Input,
+  Label,
+  Select,
+  Text,
+  Textarea,
+  toast,
+} from "@medusajs/ui"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import type { JSONContent } from "@tiptap/core"
+import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import ImagePicker from "../../../components/image-picker"
+import PageHeader from "../../../components/page-header"
+import PageLayout from "../../../components/page-layout"
+import TiptapEditor from "../../../components/tiptap-editor"
+import { sdk } from "../../../lib/sdk"
+
+type SiteSettings = {
+  id: string
+  store_name: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  google_map_url: string | null
+  open_hours: string | null
+  facebook_url: string | null
+  zalo_url: string | null
+  instagram_url: string | null
+  hero_images: string[]
+  about_title: string | null
+  about_thumbnail: string | null
+  about_content: JSONContent | null
+  about_collection_id: string | null
+}
+
+type SiteSettingsResponse = { site_settings: SiteSettings }
+
+type CollectionOption = { id: string; title: string }
+
+const NO_COLLECTION = "__none__"
+const FORM_ID = "store-info-form"
+
+const StoreInfoPage = () => {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  const { data } = useQuery<SiteSettingsResponse>({
+    queryFn: () => sdk.client.fetch("/admin/site-settings"),
+    queryKey: [["site-settings"]],
+  })
+
+  const { data: collectionsData } = useQuery<{
+    collections: CollectionOption[]
+  }>({
+    queryFn: () =>
+      sdk.client.fetch("/admin/collections", {
+        query: { limit: 100, fields: "id,title" },
+      }),
+    queryKey: [["collections", "store-info-options"]],
+  })
+
+  const [storeName, setStoreName] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
+  const [googleMapUrl, setGoogleMapUrl] = useState("")
+  const [openHours, setOpenHours] = useState("")
+  const [facebookUrl, setFacebookUrl] = useState("")
+  const [zaloUrl, setZaloUrl] = useState("")
+  const [instagramUrl, setInstagramUrl] = useState("")
+  const [heroImage1, setHeroImage1] = useState("")
+  const [heroImage2, setHeroImage2] = useState("")
+  const [aboutTitle, setAboutTitle] = useState("")
+  const [aboutThumbnail, setAboutThumbnail] = useState("")
+  const [aboutContent, setAboutContent] = useState<JSONContent | null>(null)
+  const [aboutCollectionId, setAboutCollectionId] = useState("")
+  const [loadedId, setLoadedId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const settings = data?.site_settings
+    if (!settings || settings.id === loadedId) {
+      return
+    }
+    setStoreName(settings.store_name ?? "")
+    setEmail(settings.email ?? "")
+    setPhone(settings.phone ?? "")
+    setAddress(settings.address ?? "")
+    setGoogleMapUrl(settings.google_map_url ?? "")
+    setOpenHours(settings.open_hours ?? "")
+    setFacebookUrl(settings.facebook_url ?? "")
+    setZaloUrl(settings.zalo_url ?? "")
+    setInstagramUrl(settings.instagram_url ?? "")
+    setHeroImage1(settings.hero_images?.[0] ?? "")
+    setHeroImage2(settings.hero_images?.[1] ?? "")
+    setAboutTitle(settings.about_title ?? "")
+    setAboutThumbnail(settings.about_thumbnail ?? "")
+    setAboutContent(settings.about_content ?? null)
+    setAboutCollectionId(settings.about_collection_id ?? "")
+    setLoadedId(settings.id)
+  }, [data, loadedId])
+
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      sdk.client.fetch("/admin/site-settings", { method: "POST", body }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [["site-settings"]] })
+    },
+  })
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    try {
+      await mutateAsync({
+        store_name: storeName || null,
+        email: email || null,
+        phone: phone || null,
+        address: address || null,
+        google_map_url: googleMapUrl || null,
+        open_hours: openHours || null,
+        facebook_url: facebookUrl || null,
+        zalo_url: zaloUrl || null,
+        instagram_url: instagramUrl || null,
+        hero_images: [heroImage1, heroImage2].filter(Boolean),
+        about_title: aboutTitle || null,
+        about_thumbnail: aboutThumbnail || null,
+        about_content: aboutContent,
+        about_collection_id: aboutCollectionId || null,
+      })
+      toast.success(t("storeInfo.messages.saved"))
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("storeInfo.messages.saveFailed")
+      )
+    }
+  }
+
+  const collections = collectionsData?.collections ?? []
+
+  return (
+    <PageLayout>
+      <PageHeader
+        title={t("storeInfo.title")}
+        subtitle={t("storeInfo.subtitle")}
+        actions={
+          <Button
+            form={FORM_ID}
+            type="submit"
+            variant="primary"
+            isLoading={isPending}
+          >
+            {t("storeInfo.actions.save")}
+          </Button>
+        }
+      />
+
+      <form
+        id={FORM_ID}
+        className="flex flex-col gap-6 px-6 py-6"
+        onSubmit={handleSubmit}
+      >
+        <Heading level="h2">{t("storeInfo.sections.contact")}</Heading>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-name">{t("storeInfo.fields.storeName")}</Label>
+            <Input
+              id="store-name"
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-email">{t("storeInfo.fields.email")}</Label>
+            <Input
+              id="store-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-phone">{t("storeInfo.fields.phone")}</Label>
+            <Input
+              id="store-phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-open-hours">
+              {t("storeInfo.fields.openHours")}
+            </Label>
+            <Input
+              id="store-open-hours"
+              placeholder={t("storeInfo.fields.openHoursPlaceholder")}
+              value={openHours}
+              onChange={(e) => setOpenHours(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-y-2">
+          <Label htmlFor="store-address">{t("storeInfo.fields.address")}</Label>
+          <Textarea
+            id="store-address"
+            rows={2}
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-y-2">
+          <Label htmlFor="store-map">{t("storeInfo.fields.googleMapUrl")}</Label>
+          <Input
+            id="store-map"
+            value={googleMapUrl}
+            onChange={(e) => setGoogleMapUrl(e.target.value)}
+          />
+          <Text className="text-ui-fg-subtle" size="xsmall">
+            {t("storeInfo.fields.googleMapUrlHint")}
+          </Text>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-facebook">
+              {t("storeInfo.fields.facebookUrl")}
+            </Label>
+            <Input
+              id="store-facebook"
+              value={facebookUrl}
+              onChange={(e) => setFacebookUrl(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-zalo">{t("storeInfo.fields.zaloUrl")}</Label>
+            <Input
+              id="store-zalo"
+              value={zaloUrl}
+              onChange={(e) => setZaloUrl(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-instagram">
+              {t("storeInfo.fields.instagramUrl")}
+            </Label>
+            <Input
+              id="store-instagram"
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-ui-border-base" />
+        <Heading level="h2">{t("storeInfo.sections.heroImages")}</Heading>
+        <Text className="text-ui-fg-subtle" size="small">
+          {t("storeInfo.sections.heroImagesHint")}
+        </Text>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-y-2">
+            <Label>{t("storeInfo.fields.heroImage1")}</Label>
+            <ImagePicker value={heroImage1} onChange={setHeroImage1} />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label>{t("storeInfo.fields.heroImage2")}</Label>
+            <ImagePicker value={heroImage2} onChange={setHeroImage2} />
+          </div>
+        </div>
+
+        <div className="border-t border-ui-border-base" />
+        <Heading level="h2">{t("storeInfo.sections.about")}</Heading>
+        <Text className="text-ui-fg-subtle" size="small">
+          {t("storeInfo.sections.aboutHint")}
+        </Text>
+
+        <div className="flex flex-col gap-y-2">
+          <Label htmlFor="about-title">{t("storeInfo.fields.aboutTitle")}</Label>
+          <Input
+            id="about-title"
+            value={aboutTitle}
+            onChange={(e) => setAboutTitle(e.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-col gap-y-2">
+          <Label>{t("storeInfo.fields.aboutThumbnail")}</Label>
+          <ImagePicker value={aboutThumbnail} onChange={setAboutThumbnail} />
+        </div>
+
+        <div className="flex flex-col gap-y-2">
+          <Label>{t("storeInfo.fields.aboutContent")}</Label>
+          <TiptapEditor
+            editorKey={loadedId ?? "loading"}
+            value={aboutContent}
+            onChange={setAboutContent}
+          />
+        </div>
+
+        <div className="flex flex-col gap-y-2">
+          <Label>{t("storeInfo.fields.aboutCollection")}</Label>
+          <Select
+            value={aboutCollectionId || NO_COLLECTION}
+            onValueChange={(value) =>
+              setAboutCollectionId(value === NO_COLLECTION ? "" : value)
+            }
+          >
+            <Select.Trigger>
+              <Select.Value
+                placeholder={t("storeInfo.fields.aboutCollectionPlaceholder")}
+              />
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value={NO_COLLECTION}>
+                {t("storeInfo.fields.noCollection")}
+              </Select.Item>
+              {collections.map((collection) => (
+                <Select.Item key={collection.id} value={collection.id}>
+                  {collection.title}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
+          <Text className="text-ui-fg-subtle" size="xsmall">
+            {t("storeInfo.fields.aboutCollectionHint")}
+          </Text>
+        </div>
+      </form>
+    </PageLayout>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "menu.storeInfo",
+  translationNs: "translation",
+})
+
+export default StoreInfoPage

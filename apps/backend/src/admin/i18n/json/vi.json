@@ -8,7 +8,57 @@
     "eventRegistrations": "Đăng ký sự kiện",
     "careChannels": "Kênh CSKH",
     "careMessages": "Tin nhắn CSKH",
-    "backup": "Sao lưu & Phục hồi"
+    "backup": "Sao lưu & Phục hồi",
+    "storeInfo": "Thông tin cửa hàng"
+  },
+  "relatedCollection": {
+    "title": "Bộ sưu tập liên quan",
+    "hint": "Sản phẩm của bộ sưu tập này hiển thị ở menu bên phải trang danh mục trên website.",
+    "placeholder": "Chọn bộ sưu tập",
+    "none": "Không chọn",
+    "save": "Lưu",
+    "saved": "Đã lưu bộ sưu tập liên quan",
+    "saveFailed": "Lưu thất bại"
+  },
+  "storeInfo": {
+    "title": "Thông tin cửa hàng",
+    "subtitle": "Thông tin liên hệ, ảnh nền trang chủ và bài giới thiệu",
+    "sections": {
+      "contact": "Thông tin liên hệ",
+      "heroImages": "Ảnh nền trang chủ",
+      "heroImagesHint": "Hai ảnh nền hiển thị trên trang chủ của website.",
+      "about": "Bài giới thiệu",
+      "aboutHint": "Nội dung trang giới thiệu cửa hàng trên website."
+    },
+    "fields": {
+      "storeName": "Tên cửa hàng",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "googleMapUrl": "Link Google Maps",
+      "googleMapUrlHint": "Dán link chia sẻ địa điểm từ Google Maps.",
+      "openHours": "Giờ mở cửa",
+      "openHoursPlaceholder": "VD: 8:00 – 22:00 hằng ngày",
+      "facebookUrl": "Link Facebook",
+      "zaloUrl": "Link Zalo",
+      "instagramUrl": "Link Instagram",
+      "heroImage1": "Ảnh nền 1",
+      "heroImage2": "Ảnh nền 2",
+      "aboutTitle": "Tiêu đề bài giới thiệu",
+      "aboutThumbnail": "Ảnh thumbnail",
+      "aboutContent": "Nội dung bài viết",
+      "aboutCollection": "Bộ sưu tập hiển thị kèm",
+      "aboutCollectionPlaceholder": "Chọn bộ sưu tập",
+      "aboutCollectionHint": "Sản phẩm của bộ sưu tập này hiển thị ở menu bên phải trang giới thiệu.",
+      "noCollection": "Không chọn"
+    },
+    "actions": {
+      "save": "Lưu"
+    },
+    "messages": {
+      "saved": "Đã lưu thông tin cửa hàng",
+      "saveFailed": "Lưu thất bại"
+    }
   },
   "backup": {
     "title": "Sao lưu & Phục hồi",

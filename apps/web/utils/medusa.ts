@@ -27,6 +27,8 @@ export interface MedusaCategory {
   id: string
   name: string
   handle: string
+  // metadata.related_collection_id: bộ sưu tập gắn với danh mục (đặt trong admin)
+  metadata?: Record<string, unknown> | null
 }
 
 export interface MedusaCollection {

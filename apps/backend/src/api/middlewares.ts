@@ -98,5 +98,10 @@ export default defineMiddlewares({
       method: ["PATCH"],
       bodyParser: { sizeLimit: "10mb" },
     },
+    {
+      matcher: "/admin/site-settings",
+      method: ["POST"],
+      bodyParser: { sizeLimit: "10mb" },
+    },
   ],
 })

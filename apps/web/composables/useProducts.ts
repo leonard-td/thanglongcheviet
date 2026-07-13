@@ -38,7 +38,9 @@ export function useProducts() {
 
   const { data: categoriesData } = useAsyncData(
     'medusa-product-categories',
-    () => fetchMedusa<{ product_categories: MedusaCategory[] }>('/store/product-categories?limit=100'),
+    () => fetchMedusa<{ product_categories: MedusaCategory[] }>(
+      '/store/product-categories?limit=100&fields=id,name,handle,rank,metadata',
+    ),
     { default: () => ({ product_categories: [] as MedusaCategory[] }) },
   )
 
@@ -110,6 +112,14 @@ export function useProducts() {
     return products.value.filter(p => p.collectionId === collectionId)
   }
 
+  /** Bộ sưu tập gắn với danh mục (admin đặt qua metadata.related_collection_id) */
+  const relatedCollectionIdByCategory = (categoryId: string | null) => {
+    if (!categoryId) return null
+    const raw = (categoriesData.value?.product_categories ?? []).find(c => c.id === categoryId)
+    const value = raw?.metadata?.related_collection_id
+    return typeof value === 'string' && value ? value : null
+  }
+
   return {
     products,
     featuredProducts,
@@ -120,5 +130,6 @@ export function useProducts() {
     related,
     byCategory,
     byCollection,
+    relatedCollectionIdByCategory,
   }
 }

@@ -1,4 +1,4 @@
-import { Button, Heading, Text, toast, usePrompt } from "@medusajs/ui"
+import { Button, toast, usePrompt } from "@medusajs/ui"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import {
@@ -10,6 +10,7 @@ import {
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CardForm from "../../../components/card-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { cardTitle } from "../../../lib/card"
 import { sdk } from "../../../lib/sdk"
@@ -93,26 +94,34 @@ const EditCardPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("cards.edit")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {cardTitle(card, t)}
-          </Text>
-        </div>
-        <div className="flex items-center gap-x-2">
-          {!card.locked && (
-            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
-              {t("cards.actions.delete")}
+      <PageHeader
+        title={t("cards.edit")}
+        subtitle={cardTitle(card, t)}
+        actions={
+          <>
+            {!card.locked && (
+              <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
+                {t("cards.actions.delete")}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("cards.actions.backToList")}
             </Button>
-          )}
-          <Button variant="secondary" onClick={() => navigate("..")}>
-            {t("cards.actions.backToList")}
-          </Button>
-        </div>
-      </div>
+            <Button
+              form="card-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("cards.actions.save")}
+            </Button>
+          </>
+        }
+      />
 
       <CardForm
+        formId="card-form"
+        hideSubmit
         locked={card.locked}
         titleVi={titleVi}
         titleEn={titleEn}

@@ -1,4 +1,4 @@
-import { Button, Heading, Text, toast, usePrompt } from "@medusajs/ui"
+import { Button, toast, usePrompt } from "@medusajs/ui"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import {
@@ -10,6 +10,7 @@ import {
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CampaignTopicForm from "../../../components/campaign-topic-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { sdk } from "../../../lib/sdk"
 import type {
@@ -125,24 +126,32 @@ const EditCampaignTopicPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("campaign-topics.edit")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {name}
-          </Text>
-        </div>
-        <div className="flex items-center gap-x-2">
-          <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
-            {t("campaign-topics.actions.delete")}
-          </Button>
-          <Button variant="secondary" onClick={() => navigate("..")}>
-            {t("campaign-topics.actions.backToList")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("campaign-topics.edit")}
+        subtitle={name}
+        actions={
+          <>
+            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
+              {t("campaign-topics.actions.delete")}
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("campaign-topics.actions.backToList")}
+            </Button>
+            <Button
+              form="campaign-topic-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("campaign-topics.actions.save")}
+            </Button>
+          </>
+        }
+      />
 
       <CampaignTopicForm
+        formId="campaign-topic-form"
+        hideSubmit
         name={name}
         slug={slug}
         description={description}

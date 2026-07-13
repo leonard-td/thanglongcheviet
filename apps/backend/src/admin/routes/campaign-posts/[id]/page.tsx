@@ -1,7 +1,5 @@
 import {
   Button,
-  Heading,
-  Text,
   toast,
   usePrompt,
 } from "@medusajs/ui"
@@ -18,6 +16,7 @@ import {
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CampaignPostForm from "../../../components/campaign-post-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { toDatetimeLocal, toIsoDateTime } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
@@ -168,31 +167,39 @@ const EditCampaignPostPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("campaign-posts.edit")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {title}
-          </Text>
-        </div>
-        <div className="flex items-center gap-x-2">
-          <Button
-            variant="secondary"
-            isLoading={isDuplicating}
-            onClick={() => duplicatePost()}
-          >
-            {t("campaign-posts.actions.duplicate")}
-          </Button>
-          <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
-            {t("campaign-posts.actions.delete")}
-          </Button>
-          <Button variant="secondary" onClick={() => navigate("..")}>
-            {t("campaign-posts.actions.backToList")}
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title={t("campaign-posts.edit")}
+        subtitle={title}
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              isLoading={isDuplicating}
+              onClick={() => duplicatePost()}
+            >
+              {t("campaign-posts.actions.duplicate")}
+            </Button>
+            <Button variant="danger" isLoading={isDeleting} onClick={handleDelete}>
+              {t("campaign-posts.actions.delete")}
+            </Button>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("campaign-posts.actions.backToList")}
+            </Button>
+            <Button
+              form="campaign-post-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("campaign-posts.actions.save")}
+            </Button>
+          </>
+        }
+      />
 
       <CampaignPostForm
+        formId="campaign-post-form"
+        hideSubmit
         title={title}
         slug={slug}
         description={description}

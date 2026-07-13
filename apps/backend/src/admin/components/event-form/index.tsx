@@ -30,6 +30,8 @@ type EventFormProps = {
   editorKey?: string
   isSubmitting?: boolean
   submitLabel: string
+  formId?: string
+  hideSubmit?: boolean
   onTitleChange: (value: string) => void
   onSlugChange: (value: string) => void
   onThumbnailChange: (value: string) => void
@@ -63,6 +65,8 @@ const EventForm = ({
   editorKey,
   isSubmitting = false,
   submitLabel,
+  formId,
+  hideSubmit = false,
   onTitleChange,
   onSlugChange,
   onThumbnailChange,
@@ -81,7 +85,7 @@ const EventForm = ({
   const { t } = useTranslation()
 
   return (
-    <form className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
+    <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
       <div className="flex flex-col gap-y-2">
         <Label htmlFor="title">{t("events.fields.title")}</Label>
         <Input
@@ -219,11 +223,13 @@ const EventForm = ({
         />
       </div>
 
-      <div className="flex justify-end">
-        <Button isLoading={isSubmitting} type="submit" variant="primary">
-          {submitLabel}
-        </Button>
-      </div>
+      {!hideSubmit && (
+        <div className="flex justify-end">
+          <Button isLoading={isSubmitting} type="submit" variant="primary">
+            {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }

@@ -16,6 +16,9 @@ const props = defineProps<{
   basePath: string
   emptyMessage: string
   products: Product[]
+  /** Sản phẩm bộ sưu tập gắn với danh mục — hiện menu phải tự cuộn khi có. */
+  sidebarProducts?: Product[]
+  sidebarTitle?: string
 }>()
 
 const { t, locale } = useI18n()
@@ -23,6 +26,16 @@ const localePath = useLocalePath()
 
 const priceLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 const bannerImage = computed(() => props.image || props.products[0]?.image || null)
+
+const sidebarItems = computed(() =>
+  (props.sidebarProducts ?? []).slice(0, 10).map(p => ({
+    key: p.slug,
+    to: localePath(`/san-pham/${p.slug}`),
+    image: p.image,
+    title: p.title,
+    subtitle: formatMoney(p.price, p.currencyCode, priceLocale.value),
+  })),
+)
 
 // Banner full-bleed: header trong suốt nằm đè lên banner, chuyển nền đặc
 // khi scroll hết banner (xem composables/useHeaderBanner.ts). Component này
@@ -35,9 +48,11 @@ useBannerHeader(bannerEl)
 <template>
   <div class="bg-dark min-h-[60vh] text-white">
     <!-- ── Group banner ─────────────────────────────── -->
-    <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]) -->
-    <section ref="bannerEl" class="relative -mt-[72px] bg-dark">
-      <div class="relative h-[180px] sm:h-[225px] md:h-[280px] overflow-hidden">
+    <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]).
+         sticky top-0: banner ghim lại cùng menu khi scroll, nội dung trượt
+         phía sau; marquee inline ghim ngay dưới banner. -->
+    <section ref="bannerEl" class="sticky top-0 z-40 -mt-[72px] bg-dark">
+      <div class="relative h-[90px] sm:h-[112px] md:h-[140px] overflow-hidden">
         <img
           v-if="bannerImage"
           :src="bannerImage"
@@ -46,40 +61,24 @@ useBannerHeader(bannerEl)
         >
         <div v-else class="absolute inset-0 bg-gradient-to-br from-primary-800 via-dark-700 to-dark" />
         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
-
         <div class="relative h-full container-page flex flex-col justify-end pb-5 md:pb-8">
-          <!-- <nav class="mb-4 text-xs uppercase tracking-[0.2em] text-white/70" aria-label="breadcrumb">
-            <ol class="flex flex-wrap items-center gap-2">
-              <li>
-                <NuxtLink :to="localePath('/')" class="hover:text-primary-300 transition-colors">
-                  {{ t('nav.home') }}
-                </NuxtLink>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li>
-                <NuxtLink :to="localePath('/san-pham-list')" class="hover:text-primary-300 transition-colors">
-                  {{ t('products.label') }}
-                </NuxtLink>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li class="text-primary-300">{{ heading }}</li>
-            </ol>
-          </nav> -->
-
           <!-- <p class="modis-eyebrow mb-2">{{ groupLabel }}</p> -->
-          <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-bold max-w-3xl">
+          <h1 class="font-heading text-xl sm:text-2xl md:text-3xl font-bold max-w-3xl line-clamp-1">
             {{ heading }}
           </h1>
-          <p class="mt-4 inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-primary-300">
+          <p class="mt-1.5 hidden md:inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-primary-300">
             <span class="h-[2px] w-8 bg-primary-400 inline-block" />
             {{ t('products.productCount', { count: products.length }) }}
           </p>
         </div>
       </div>
+
+      <!-- Marquee tin tức ghim ngay dưới banner -->
+      <HomeNewsMarquee inline />
     </section>
 
     <!-- ── Group switcher ───────────────────────────── -->
-    <div v-if="items.length > 1" class="border-b border-white/10 bg-dark-800">
+    <!-- <div v-if="items.length > 1" class="border-b border-white/10 bg-dark-800">
       <div class="container-page py-4 flex flex-wrap items-center gap-2">
         <span class="text-xs uppercase tracking-[0.2em] text-white/50 mr-1">
           {{ groupLabel }}
@@ -96,13 +95,18 @@ useBannerHeader(bannerEl)
           {{ item.label }}
         </NuxtLink>
       </div>
-    </div>
+    </div> -->
 
-    <!-- ── Product grid ─────────────────────────────── -->
+    <!-- ── Product grid (+ menu bộ sưu tập bên phải nếu có) ── -->
     <section class="section-py bg-dark" aria-labelledby="group-products-heading">
       <div class="container-page">
         <h2 id="group-products-heading" class="sr-only">{{ heading }}</h2>
 
+        <div
+          class="grid grid-cols-1 gap-10 xl:gap-14"
+          :class="sidebarItems.length ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : ''"
+        >
+        <div class="min-w-0">
         <!-- Loading skeleton -->
         <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           <div v-for="n in 8" :key="n" class="animate-pulse">
@@ -152,6 +156,24 @@ useBannerHeader(bannerEl)
               {{ formatMoney(p.price, p.currencyCode, priceLocale) }}
             </p>
           </NuxtLink>
+        </div>
+        </div>
+
+        <!-- Menu phải: sản phẩm bộ sưu tập gắn với danh mục, tự cuộn từ dưới
+             lên (giống bài viết cùng chủ đề). top tính theo cụm ghim:
+             banner + marquee -->
+        <aside
+          v-if="sidebarItems.length"
+          class="lg:sticky lg:top-[190px] lg:self-start"
+          :aria-label="sidebarTitle || t('products.collectionSidebar')"
+        >
+          <h2 class="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-white">
+            <span class="h-[2px] w-6 bg-primary-400 inline-block flex-none" />
+            <span class="truncate">{{ sidebarTitle || t('products.collectionSidebar') }}</span>
+          </h2>
+
+          <WidgetsAutoScrollSidebar :items="sidebarItems" />
+        </aside>
         </div>
       </div>
     </section>

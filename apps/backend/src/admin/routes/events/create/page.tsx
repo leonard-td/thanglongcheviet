@@ -1,7 +1,5 @@
 import {
   Button,
-  Heading,
-  Text,
   toast,
 } from "@medusajs/ui"
 import type { JSONContent } from "@tiptap/core"
@@ -11,6 +9,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import EventForm from "../../../components/event-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { slugify, toIsoDateTime } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
@@ -72,19 +71,29 @@ const CreateEventPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("events.create")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {t("events.hint")}
-          </Text>
-        </div>
-        <Button variant="secondary" onClick={() => navigate("..")}>
-          {t("events.actions.backToList")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("events.create")}
+        subtitle={t("events.hint")}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("events.actions.backToList")}
+            </Button>
+            <Button
+              form="event-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("events.actions.create")}
+            </Button>
+          </>
+        }
+      />
 
       <EventForm
+        formId="event-form"
+        hideSubmit
         title={title}
         slug={slug}
         thumbnail={thumbnail}

@@ -19,6 +19,8 @@ type CampaignTopicFormProps = {
   rank: number
   isSubmitting?: boolean
   submitLabel: string
+  formId?: string
+  hideSubmit?: boolean
   onNameChange: (value: string) => void
   onSlugChange: (value: string) => void
   onDescriptionChange: (value: string) => void
@@ -37,6 +39,8 @@ const CampaignTopicForm = ({
   rank,
   isSubmitting = false,
   submitLabel,
+  formId,
+  hideSubmit = false,
   onNameChange,
   onSlugChange,
   onDescriptionChange,
@@ -48,7 +52,7 @@ const CampaignTopicForm = ({
   const { t } = useTranslation()
 
   return (
-    <form className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
+    <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
       <div className="flex flex-col gap-y-2">
         <Label htmlFor="topic-name">{t("campaign-topics.fields.name")}</Label>
         <Input
@@ -113,11 +117,13 @@ const CampaignTopicForm = ({
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button isLoading={isSubmitting} type="submit" variant="primary">
-          {submitLabel}
-        </Button>
-      </div>
+      {!hideSubmit && (
+        <div className="flex justify-end">
+          <Button isLoading={isSubmitting} type="submit" variant="primary">
+            {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }

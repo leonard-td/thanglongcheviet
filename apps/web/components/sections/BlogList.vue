@@ -74,13 +74,7 @@ const posts = computed(() =>
               loading="lazy"
               class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             >
-            <span
-              v-if="post.topic"
-              class="absolute left-4 top-4 inline-flex items-center rounded-full
-                     bg-primary-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white shadow"
-            >
-              {{ post.topic.name }}
-            </span>
+            <!-- Nhãn chủ đề đã ẩn trên danh sách bài viết theo yêu cầu UI -->
           </NuxtLink>
 
           <div class="flex flex-1 flex-col p-4">

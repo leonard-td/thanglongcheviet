@@ -40,6 +40,9 @@ watchEffect(() => {
   }
 })
 
+// Tab "Mô tả" / "Đặc điểm nổi bật" ở khối thông tin cuối trang
+const activeTab = ref<'desc' | 'specs'>('desc')
+
 // Nuxt reuses this component instance across client-side slug navigation —
 // reset local UI state when the product actually changes.
 watch(() => product.value?.id, () => {
@@ -48,6 +51,7 @@ watch(() => product.value?.id, () => {
   selectedImage.value = null
   manualOptions.value = null
   quickBuyOpen.value = false
+  activeTab.value = 'desc'
 })
 
 const activeImage = computed(() =>
@@ -231,7 +235,7 @@ useProductStructuredData(product)
     <section v-if="!product" class="section-py" aria-busy="true" :aria-label="t('common.loading')">
       <div class="container-page">
         <div class="mb-6 h-4 w-56 bg-white/5 rounded animate-pulse" />
-        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3.5fr)_minmax(0,8.5fr)] gap-8 lg:gap-12">
           <div class="aspect-square rounded-2xl bg-white/5 animate-pulse" />
           <div class="space-y-4">
             <div class="h-3 w-24 bg-white/5 rounded animate-pulse" />
@@ -248,7 +252,8 @@ useProductStructuredData(product)
     <section v-else class="section-py">
       <div class="container-page">
 
-        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-12">
+        <!-- Cột gallery thu ~30% (5fr → 3.5fr) theo yêu cầu UI -->
+        <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3.5fr)_minmax(0,8.5fr)] gap-8 lg:gap-12">
           <!-- Gallery: thumbnail dọc bên trái, ảnh chính có kính lúp khi hover -->
           <div class="animate-on-scroll lg:sticky lg:top-24 lg:self-start">
             <div class="flex flex-col-reverse sm:flex-row gap-3">
@@ -338,25 +343,33 @@ useProductStructuredData(product)
             </div>
 
             <!-- Quantity + CTA (mốc theo dõi cho thanh mua nhanh cố định) -->
-            <div ref="buyBoxEl" class="flex flex-wrap items-stretch gap-3 mb-4">
+            <div ref="buyBoxEl" class="mb-4">
+              <p class="text-xs uppercase tracking-widest text-white/50 mb-2">
+                {{ t('cart.quantity') }}
+              </p>
+              <div class="flex flex-wrap items-stretch gap-3">
               <div class="flex items-center border border-white/20">
                 <button
                   type="button"
                   class="w-11 min-h-[44px] flex items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
                   :disabled="quantity <= 1"
-                  :aria-label="t('cart.quantity')"
+                  :aria-label="t('cart.decrease')"
                   @click="decrementQty"
                 >
-                  −
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
                 </button>
                 <span class="w-10 text-center text-sm tabular-nums">{{ quantity }}</span>
                 <button
                   type="button"
                   class="w-11 min-h-[44px] flex items-center justify-center text-white/70 hover:text-white"
-                  :aria-label="t('cart.quantity')"
+                  :aria-label="t('cart.increase')"
                   @click="incrementQty"
                 >
-                  +
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m18 15-6-6-6 6" />
+                  </svg>
                 </button>
               </div>
 
@@ -378,6 +391,7 @@ useProductStructuredData(product)
               >
                 {{ t('products.buyNow') }}
               </button>
+              </div>
             </div>
 
             <div class="flex flex-wrap gap-x-5 gap-y-2 mb-8 text-xs">
@@ -416,24 +430,56 @@ useProductStructuredData(product)
               </div>
             </div>
 
-            <!-- Specs -->
-            <dl v-if="specs.length" class="space-y-2 border-t border-white/10 pt-6">
-              <h2 class="text-sm font-semibold text-white/80 mb-3">{{ t('products.featuresTitle') }}</h2>
-              <div v-for="row in specs" :key="row.label" class="flex justify-between text-sm py-1.5 border-b border-white/5">
-                <dt class="text-white/50">{{ row.label }}</dt>
-                <dd class="text-white/85 text-right">{{ row.value }}</dd>
-              </div>
-            </dl>
           </div>
         </div>
 
+        <!-- Mô tả + Đặc điểm nổi bật: 2 tab ngang hàng trong cùng khối -->
         <div class="mt-16 max-w-3xl animate-on-scroll">
-          <h2 class="section-heading text-2xl md:text-3xl mb-4">{{ t('products.descTitle') }}</h2>
-          <div class="divider-gold !mx-0" />
+          <div class="flex gap-1 border-b border-white/10" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'desc'"
+              class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
+              :class="activeTab === 'desc'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-white/50 hover:text-white/80'"
+              @click="activeTab = 'desc'"
+            >
+              {{ t('products.descTitle') }}
+            </button>
+            <button
+              v-if="specs.length"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'specs'"
+              class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
+              :class="activeTab === 'specs'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-white/50 hover:text-white/80'"
+              @click="activeTab = 'specs'"
+            >
+              {{ t('products.featuresTitle') }}
+            </button>
+          </div>
+
           <div
+            v-show="activeTab === 'desc'"
+            role="tabpanel"
             class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5"
             v-html="product.description"
           />
+          <dl
+            v-if="specs.length"
+            v-show="activeTab === 'specs'"
+            role="tabpanel"
+            class="space-y-2 mt-5"
+          >
+            <div v-for="row in specs" :key="row.label" class="flex justify-between text-sm py-1.5 border-b border-white/5">
+              <dt class="text-white/50">{{ row.label }}</dt>
+              <dd class="text-white/85 text-right">{{ row.value }}</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </section>
@@ -442,7 +488,8 @@ useProductStructuredData(product)
       <div class="container-page">
         <h2 class="section-heading text-2xl md:text-3xl text-center mb-3">{{ t('products.related') }}</h2>
         <div class="divider-gold mb-10" />
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
+        <!-- Sản phẩm liên quan: 4 cột, kích thước thu ~50% -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <NuxtLink
             v-for="p in relatedItems"
             :key="p.id"
@@ -452,8 +499,8 @@ useProductStructuredData(product)
             <div class="relative aspect-[346/197] overflow-hidden rounded-md bg-[#2a3326] shadow-lg">
               <img :src="p.image" :alt="p.title" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
             </div>
-            <h3 class="mt-3 text-center text-white/75 text-sm uppercase tracking-[0.12em] transition-colors group-hover:text-primary-400">{{ p.title }}</h3>
-            <p class="mt-1 text-center text-primary-400 text-sm font-semibold">
+            <h3 class="mt-2 text-center text-white/75 text-xs uppercase tracking-[0.12em] transition-colors group-hover:text-primary-400 line-clamp-1">{{ p.title }}</h3>
+            <p class="mt-0.5 text-center text-primary-400 text-xs font-semibold">
               {{ formatMoney(p.price, p.currencyCode, locale === 'en' ? 'en-US' : 'vi-VN') }}
             </p>
           </NuxtLink>
@@ -575,19 +622,23 @@ useProductStructuredData(product)
                 type="button"
                 class="flex min-h-[40px] w-10 items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
                 :disabled="quantity <= 1"
-                :aria-label="t('cart.quantity')"
+                :aria-label="t('cart.decrease')"
                 @click="decrementQty"
               >
-                −
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
               </button>
               <span class="w-10 text-center text-sm tabular-nums">{{ quantity }}</span>
               <button
                 type="button"
                 class="flex min-h-[40px] w-10 items-center justify-center text-white/70 hover:text-white"
-                :aria-label="t('cart.quantity')"
+                :aria-label="t('cart.increase')"
                 @click="incrementQty"
               >
-                +
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m18 15-6-6-6 6" />
+                </svg>
               </button>
             </div>
           </div>

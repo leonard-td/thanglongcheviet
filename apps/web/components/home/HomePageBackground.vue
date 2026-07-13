@@ -21,8 +21,16 @@ const props = withDefaults(defineProps<{
   fallbackColor: '#333',
 })
 
-const resolvedBaseImage = computed(() => props.baseImage ?? defaultBaseImage)
-const resolvedLeftImage = computed(() => props.leftImage ?? defaultLeftImage)
+// 2 ảnh nền trang chủ quản lý trong admin (Settings → Thông tin cửa hàng);
+// props truyền tay > ảnh cấu hình > ảnh mặc định đóng gói sẵn.
+const { heroImages } = useSiteSettings()
+
+const resolvedBaseImage = computed(
+  () => props.baseImage ?? heroImages.value[0] ?? defaultBaseImage,
+)
+const resolvedLeftImage = computed(
+  () => props.leftImage ?? heroImages.value[1] ?? defaultLeftImage,
+)
 
 const mediaStyle = (image: string, blur: number) => ({
   backgroundImage: `url(${image})`,

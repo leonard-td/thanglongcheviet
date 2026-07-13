@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { stripHtml } from '~/utils/storefront'
 
+// Banner tự render marquee inline ngay dưới nó — layout không chèn ở đầu main
+definePageMeta({ bannerMarquee: true })
+
 const { t, locale } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
@@ -71,24 +74,15 @@ const sidebarPosts = computed(() => {
   })
 })
 
-// Chỉ chạy marquee khi đủ dài để cuộn tuần hoàn liền mạch; ít bài thì
-// hiển thị danh sách tĩnh.
-const shouldMarquee = computed(() => sidebarPosts.value.length >= 4)
-
-// Khung marquee không được cao hơn 1 bản danh sách, nếu không vòng lặp sẽ
-// hở khoảng trống — đo chiều cao thật của bản gốc và cap ở 480px.
-const marqueeListEl = ref<HTMLElement | null>(null)
-const { height: marqueeListHeight } = useElementSize(marqueeListEl)
-const marqueeStyle = computed(() => {
-  if (!shouldMarquee.value) return {}
-  const height = marqueeListHeight.value
-    ? Math.min(marqueeListHeight.value, 480)
-    : 480
-  return {
-    height: `${height}px`,
-    '--marquee-duration': `${sidebarPosts.value.length * 6}s`,
-  }
-})
+const sidebarItems = computed(() =>
+  sidebarPosts.value.map(p => ({
+    key: p.slug,
+    to: localePath(`/tin-tuc/${p.slug}`),
+    image: p.image,
+    title: p.title,
+    subtitle: p.dateLabel,
+  })),
+)
 
 const relatedPosts = computed(() => {
   const current = slug.value
@@ -98,7 +92,7 @@ const relatedPosts = computed(() => {
   const others = allPosts.value.filter(
     p => p.slug !== current && !sameTopic.includes(p),
   )
-  return [...sameTopic, ...others].slice(0, 3).map((p) => {
+  return [...sameTopic, ...others].slice(0, 4).map((p) => {
     const date = new Date(p.date || Date.now())
     return {
       ...p,
@@ -134,9 +128,11 @@ useArticleStructuredData(post)
   <div class="bg-dark min-h-[60vh]">
     <template v-if="post">
       <!-- ── Banner (kiểu trang danh sách theo chủ đề) ── -->
-      <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]) -->
-      <section ref="bannerEl" class="relative -mt-[72px] bg-dark text-white">
-        <div class="relative h-[240px] sm:h-[280px] md:h-[340px] overflow-hidden">
+      <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]).
+           sticky top-0: banner ghim lại cùng menu khi scroll, nội dung
+           trượt phía sau; marquee inline ghim ngay dưới banner. -->
+      <section ref="bannerEl" class="sticky top-0 z-40 -mt-[72px] bg-dark text-white">
+        <div class="relative h-[120px] sm:h-[140px] md:h-[170px] overflow-hidden">
           <img
             v-if="post.image"
             :src="post.image"
@@ -146,12 +142,12 @@ useArticleStructuredData(post)
           <div v-else class="absolute inset-0 bg-gradient-to-br from-primary-800 via-dark-700 to-dark" />
           <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/20" />
 
-          <div class="relative h-full container-page flex flex-col items-start justify-end pb-7 md:pb-10">
-            <h1 class="font-heading text-2xl sm:text-3xl md:text-4xl font-bold leading-tight max-w-3xl">
+          <div class="relative h-full container-page flex flex-col items-start justify-end pb-3 md:pb-4">
+            <h1 class="font-heading text-lg sm:text-xl md:text-2xl font-bold leading-tight max-w-3xl line-clamp-1">
               {{ title }}
             </h1>
 
-            <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.18em] text-white/70">
+            <div class="mt-2 hidden md:flex flex-wrap items-center gap-x-6 gap-y-2 text-xs uppercase tracking-[0.18em] text-white/70">
               <span class="inline-flex items-center gap-2">
                 <svg class="w-4 h-4 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
@@ -180,6 +176,9 @@ useArticleStructuredData(post)
             </div>
           </div>
         </div>
+
+        <!-- Marquee tin tức ghim ngay dưới banner -->
+        <HomeNewsMarquee inline />
       </section>
 
       <!-- ── Article body + sidebar ─────────────────── -->
@@ -216,10 +215,11 @@ useArticleStructuredData(post)
             </div>
           </article>
 
-          <!-- Sidebar: bài viết cùng chủ đề, tự cuộn tuần hoàn từ dưới lên -->
+          <!-- Sidebar: bài viết cùng chủ đề, tự cuộn tuần hoàn từ dưới lên.
+               top tính theo cụm ghim: banner + marquee -->
           <aside
             v-if="sidebarPosts.length"
-            class="lg:sticky lg:top-24 lg:self-start"
+            class="lg:sticky lg:top-[220px] lg:self-start"
             :aria-label="t('blog.sameTopic')"
           >
             <h2 class="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-white">
@@ -234,71 +234,7 @@ useArticleStructuredData(post)
               <span v-else class="truncate">{{ t('blog.sameTopic') }}</span>
             </h2>
 
-            <div
-              class="topic-marquee rounded-2xl bg-white/[0.03] ring-1 ring-white/10"
-              :class="{ 'is-static': !shouldMarquee }"
-              :style="marqueeStyle"
-            >
-              <div class="topic-marquee-track">
-                <ul ref="marqueeListEl">
-                  <li
-                    v-for="item in sidebarPosts"
-                    :key="item.slug"
-                    class="border-b border-white/5 last:border-0"
-                  >
-                    <NuxtLink
-                      :to="localePath(`/tin-tuc/${item.slug}`)"
-                      class="group flex gap-3 p-3 transition-colors hover:bg-white/[0.05]"
-                    >
-                      <img
-                        :src="item.image"
-                        :alt="item.title"
-                        loading="lazy"
-                        class="h-16 w-24 flex-none rounded-lg object-cover ring-1 ring-white/10"
-                      >
-                      <div class="min-w-0">
-                        <h3 class="text-sm font-semibold leading-snug text-white line-clamp-2 group-hover:text-primary-400 transition-colors">
-                          {{ item.title }}
-                        </h3>
-                        <time class="mt-1.5 block text-[11px] uppercase tracking-[0.15em] text-primary-400/90">
-                          {{ item.dateLabel }}
-                        </time>
-                      </div>
-                    </NuxtLink>
-                  </li>
-                </ul>
-                <!-- Bản nhân đôi để vòng lặp cuộn liền mạch; ẩn với trình đọc
-                     màn hình và loại khỏi tab order -->
-                <ul v-if="shouldMarquee" aria-hidden="true" inert>
-                  <li
-                    v-for="item in sidebarPosts"
-                    :key="`clone-${item.slug}`"
-                    class="border-b border-white/5 last:border-0"
-                  >
-                    <NuxtLink
-                      :to="localePath(`/tin-tuc/${item.slug}`)"
-                      class="group flex gap-3 p-3 transition-colors hover:bg-white/[0.05]"
-                      tabindex="-1"
-                    >
-                      <img
-                        :src="item.image"
-                        :alt="''"
-                        loading="lazy"
-                        class="h-16 w-24 flex-none rounded-lg object-cover ring-1 ring-white/10"
-                      >
-                      <div class="min-w-0">
-                        <h3 class="text-sm font-semibold leading-snug text-white line-clamp-2 group-hover:text-primary-400 transition-colors">
-                          {{ item.title }}
-                        </h3>
-                        <time class="mt-1.5 block text-[11px] uppercase tracking-[0.15em] text-primary-400/90">
-                          {{ item.dateLabel }}
-                        </time>
-                      </div>
-                    </NuxtLink>
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <WidgetsAutoScrollSidebar :items="sidebarItems" />
           </aside>
         </div>
       </div>
@@ -318,11 +254,11 @@ useArticleStructuredData(post)
             <div class="divider-gold" />
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <article
               v-for="item in relatedPosts"
               :key="item.slug"
-              class="group flex flex-col overflow-hidden rounded-2xl bg-white/[0.04]
+              class="group flex flex-col overflow-hidden rounded-xl bg-white/[0.04]
                      ring-1 ring-white/10 hover:ring-primary-400/50
                      hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30 transition-all duration-300"
             >
@@ -337,17 +273,10 @@ useArticleStructuredData(post)
                   loading="lazy"
                   class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 >
-                <span
-                  v-if="item.topic"
-                  class="absolute left-4 top-4 inline-flex items-center rounded-full
-                         bg-primary-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white shadow"
-                >
-                  {{ item.topic.name }}
-                </span>
               </NuxtLink>
-              <div class="flex flex-1 flex-col p-6">
-                <time class="text-primary-400 text-xs uppercase tracking-[0.2em]">{{ item.dateLabel }}</time>
-                <h3 class="font-heading text-lg font-semibold text-white mt-2 group-hover:text-primary-400 transition-colors line-clamp-2">
+              <div class="flex flex-1 flex-col p-3">
+                <time class="text-primary-400 text-[10px] uppercase tracking-[0.2em]">{{ item.dateLabel }}</time>
+                <h3 class="font-heading text-sm font-semibold text-white mt-1.5 group-hover:text-primary-400 transition-colors line-clamp-2">
                   <NuxtLink :to="localePath(`/tin-tuc/${item.slug}`)">
                     {{ item.title }}
                   </NuxtLink>
@@ -456,41 +385,5 @@ useArticleStructuredData(post)
   @apply border border-white/10 px-4 py-2.5 bg-white/[0.02] text-white/80;
 }
 
-/*
- * Sidebar "bài viết cùng chủ đề" — cuộn dọc tuần hoàn từ dưới lên.
- * Track gồm 2 bản danh sách xếp chồng; translateY(-50%) đúng bằng chiều cao
- * 1 bản nên vòng lặp liền mạch. Hover/focus thì dừng để đọc & bấm.
- */
-.topic-marquee {
-  /* chiều cao đặt qua inline style (đo theo 1 bản danh sách, cap 480px) */
-  overflow: hidden;
-}
-.topic-marquee-track {
-  display: flex;
-  flex-direction: column;
-  animation: topic-marquee-up var(--marquee-duration, 40s) linear infinite;
-  will-change: transform;
-}
-.topic-marquee.is-static .topic-marquee-track {
-  animation: none;
-}
-.topic-marquee:hover .topic-marquee-track,
-.topic-marquee:focus-within .topic-marquee-track {
-  animation-play-state: paused;
-}
-@keyframes topic-marquee-up {
-  from { transform: translateY(0); }
-  to { transform: translateY(-50%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .topic-marquee-track {
-    animation: none !important;
-  }
-  .topic-marquee {
-    overflow-y: auto;
-  }
-  .topic-marquee-track ul[aria-hidden='true'] {
-    display: none;
-  }
-}
+/* Sidebar cuộn tự động: xem components/widgets/AutoScrollSidebar.vue */
 </style>
