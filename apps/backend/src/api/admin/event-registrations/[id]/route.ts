@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { EVENT_MODULE } from "../../../../modules/event"
 import type EventModuleService from "../../../../modules/event/service"
 
@@ -35,7 +36,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
 
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const body = UpdateEventRegistrationSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
 
   const [existing] = await eventModuleService.listEventRegistrations(
     { id },

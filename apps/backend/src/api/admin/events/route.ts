@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { EVENT_MODULE } from "../../../modules/event"
 import type EventModuleService from "../../../modules/event/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../utils/media-url"
@@ -56,7 +57,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const body = CreateEventSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
   const slug = body.slug || slugify(body.title)
 
   const event = await eventModuleService.createEvents({

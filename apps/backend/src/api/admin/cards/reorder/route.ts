@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
 
@@ -17,7 +18,7 @@ const ReorderSchema = z.object({
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const { items } = ReorderSchema.parse(req.body)
+  const { items } = await zodValidator(, req.body)
 
   await cardModuleService.updateCards(
     items.map(({ id, rank }) => ({ id, rank })),

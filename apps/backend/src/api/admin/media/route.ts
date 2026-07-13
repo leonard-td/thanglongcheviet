@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CARD_MODULE } from "../../../modules/card"
 import type CardModuleService from "../../../modules/card/service"
 import { toRelativeMediaUrl } from "../../utils/media-url"
@@ -42,7 +43,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = RecordMediaSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
   const url = toRelativeMediaUrl(body.url)!
 
   const existing = await cardModuleService.listCardMedias({ url }, { take: 1 })

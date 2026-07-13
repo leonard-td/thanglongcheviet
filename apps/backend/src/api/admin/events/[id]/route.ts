@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { EVENT_MODULE } from "../../../../modules/event"
 import type EventModuleService from "../../../../modules/event/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../../utils/media-url"
@@ -38,7 +39,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
 
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const body = UpdateEventSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
 
   const event = await eventModuleService.updateEvents({
     id,

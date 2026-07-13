@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import { z } from "zod"
+import { zodValidator } from "@medusajs/framework/zod"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
 import { toRelativeMediaUrl } from "../../../utils/media-url"
@@ -35,7 +36,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
   const existing = await cardModuleService.retrieveCard(id)
-  const body = UpdateCardSchema.parse(req.body)
+  const body = await zodValidator(, req.body)
 
   // Mikro-ORM rejects explicit `undefined` values on a known property, so
   // only forward keys the caller actually sent — and for locked cards, drop
