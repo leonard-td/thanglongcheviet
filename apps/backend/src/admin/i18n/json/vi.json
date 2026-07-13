@@ -7,7 +7,65 @@
     "events": "Sự kiện",
     "eventRegistrations": "Đăng ký sự kiện",
     "careChannels": "Kênh CSKH",
-    "careMessages": "Tin nhắn CSKH"
+    "careMessages": "Tin nhắn CSKH",
+    "backup": "Sao lưu & Phục hồi"
+  },
+  "backup": {
+    "title": "Sao lưu & Phục hồi",
+    "hint": "Nén toàn bộ database và thư viện media đã upload thành file zip, hoặc khôi phục hệ thống từ file backup. Trước mỗi lần phục hồi, dữ liệu hiện tại luôn được tự động sao lưu (pre-restore).",
+    "createButton": "Tạo bản sao lưu",
+    "restoreUploadButton": "Phục hồi từ file...",
+    "listTitle": "Các bản sao lưu",
+    "empty": "Chưa có bản sao lưu nào.",
+    "columns": {
+      "name": "File",
+      "size": "Dung lượng",
+      "createdAt": "Thời điểm tạo",
+      "actions": "Thao tác"
+    },
+    "actions": {
+      "download": "Tải về",
+      "restore": "Phục hồi từ bản này",
+      "delete": "Xóa"
+    },
+    "job": {
+      "runningBackup": "Đang tạo bản sao lưu...",
+      "runningRestore": "Đang phục hồi — không tắt hay khởi động lại server...",
+      "completedBackup": "Đã tạo bản sao lưu: {{file}}",
+      "completedRestore": "Phục hồi hoàn tất. Dữ liệu trước đó đã được tự động sao lưu thành {{file}}. Hãy tải lại trang — có thể bạn cần đăng nhập lại.",
+      "failed": "Tác vụ thất bại: {{error}}"
+    },
+    "steps": {
+      "starting": "Đang khởi động...",
+      "dump_db": "Đang xuất database...",
+      "collect_static": "Đang thu thập file media...",
+      "zip": "Đang nén file...",
+      "validate": "Đang kiểm tra toàn vẹn file backup...",
+      "check_compat": "Đang kiểm tra tương thích schema...",
+      "pre_restore_backup": "Đang tự động sao lưu dữ liệu hiện tại (pre-restore)...",
+      "restore_db": "Đang phục hồi database...",
+      "restore_static": "Đang phục hồi file media..."
+    },
+    "restorePrompt": {
+      "title": "Phục hồi hệ thống?",
+      "description": "Toàn bộ dữ liệu hiện tại (database và thư viện media) sẽ bị THAY THẾ bằng nội dung của \"{{file}}\". Hệ thống sẽ tự động sao lưu hiện trạng trước, nhưng đây vẫn là thao tác thay đổi toàn hệ thống.",
+      "confirmText": "RESTORE",
+      "confirm": "Phục hồi",
+      "cancel": "Hủy"
+    },
+    "deletePrompt": {
+      "title": "Xóa bản sao lưu?",
+      "description": "\"{{file}}\" sẽ bị xóa vĩnh viễn khỏi server.",
+      "confirm": "Xóa",
+      "cancel": "Hủy"
+    },
+    "toasts": {
+      "backupStarted": "Đã bắt đầu tạo bản sao lưu",
+      "restoreStarted": "Đã bắt đầu phục hồi",
+      "deleted": "Đã xóa bản sao lưu",
+      "jobRunning": "Đang có tác vụ sao lưu/phục hồi khác chạy",
+      "requestFailed": "Yêu cầu thất bại"
+    }
   },
   "care-channels": {
     "title": "Kênh chăm sóc khách hàng",

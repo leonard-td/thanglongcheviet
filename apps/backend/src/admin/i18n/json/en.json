@@ -7,7 +7,65 @@
     "events": "Events",
     "eventRegistrations": "Event Registrations",
     "careChannels": "Care Channels",
-    "careMessages": "Care Messages"
+    "careMessages": "Care Messages",
+    "backup": "Backup & Restore"
+  },
+  "backup": {
+    "title": "Backup & Restore",
+    "hint": "Compress the entire database and uploaded media library into a zip file, or restore the system from a backup file. Before every restore, the current state is automatically backed up (pre-restore).",
+    "createButton": "Create backup",
+    "restoreUploadButton": "Restore from file...",
+    "listTitle": "Available backups",
+    "empty": "No backups yet.",
+    "columns": {
+      "name": "File",
+      "size": "Size",
+      "createdAt": "Created at",
+      "actions": "Actions"
+    },
+    "actions": {
+      "download": "Download",
+      "restore": "Restore this backup",
+      "delete": "Delete"
+    },
+    "job": {
+      "runningBackup": "Creating backup...",
+      "runningRestore": "Restoring — do not close or restart the server...",
+      "completedBackup": "Backup created: {{file}}",
+      "completedRestore": "Restore completed. Current data was backed up beforehand as {{file}}. Reload the page — you may need to sign in again.",
+      "failed": "Job failed: {{error}}"
+    },
+    "steps": {
+      "starting": "Starting...",
+      "dump_db": "Exporting database...",
+      "collect_static": "Collecting media files...",
+      "zip": "Compressing archive...",
+      "validate": "Validating backup file integrity...",
+      "check_compat": "Checking schema compatibility...",
+      "pre_restore_backup": "Backing up current data (pre-restore)...",
+      "restore_db": "Restoring database...",
+      "restore_static": "Restoring media files..."
+    },
+    "restorePrompt": {
+      "title": "Restore system?",
+      "description": "All current data (database and media library) will be REPLACED by the contents of \"{{file}}\". The current state is automatically backed up first, but this is still a system-wide destructive action.",
+      "confirmText": "RESTORE",
+      "confirm": "Restore",
+      "cancel": "Cancel"
+    },
+    "deletePrompt": {
+      "title": "Delete backup?",
+      "description": "\"{{file}}\" will be permanently deleted from the server.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "toasts": {
+      "backupStarted": "Backup started",
+      "restoreStarted": "Restore started",
+      "deleted": "Backup deleted",
+      "jobRunning": "Another backup/restore job is already running",
+      "requestFailed": "Request failed"
+    }
   },
   "care-channels": {
     "title": "Customer care channels",

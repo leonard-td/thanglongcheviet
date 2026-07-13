@@ -47,6 +47,7 @@ watch(() => product.value?.id, () => {
   quantity.value = 1
   selectedImage.value = null
   manualOptions.value = null
+  quickBuyOpen.value = false
 })
 
 const activeImage = computed(() =>
@@ -108,6 +109,29 @@ const handleBuyNow = async () => {
   if (ok) await navigateTo(localePath('/gio-hang'))
 }
 
+// ── Modal mua nhanh (mở từ thanh mua nhanh cố định) ───────────────────
+// Thanh cố định chỉ còn 2 nút; chọn thuộc tính + số lượng diễn ra trong
+// modal này rồi mới thực hiện thêm vào giỏ / mua ngay theo mode đã bấm.
+const quickBuyOpen = ref(false)
+const quickBuyMode = ref<'add' | 'buy'>('add')
+
+function openQuickBuy(mode: 'add' | 'buy') {
+  quickBuyMode.value = mode
+  added.value = false
+  quickBuyOpen.value = true
+}
+
+const confirmQuickBuy = async () => {
+  if (quickBuyMode.value === 'buy') {
+    await handleBuyNow()
+  } else {
+    const ok = await handleAddToCart()
+    if (ok) quickBuyOpen.value = false
+  }
+}
+
+onKeyStroke('Escape', () => { quickBuyOpen.value = false })
+
 // ── Kính lúp ảnh sản phẩm ─────────────────────────────────────────────
 // Vòng lens bám theo con trỏ hiển thị vùng ảnh phóng to; khung ảnh chính
 // giữ nguyên kích thước. Chỉ bật trên thiết bị có hover thật (chuột).
@@ -148,6 +172,12 @@ const buyBoxEl = ref<HTMLElement | null>(null)
 const showBuyBar = ref(false)
 let buyBoxObserver: IntersectionObserver | null = null
 
+// ConnectWidget (FAB Zalo/Facebook/Instagram) render toàn cục ở góc dưới
+// trang, đè lên thanh mua nhanh khi thanh này hiện — đồng bộ để nó tự dịch
+// lên trên.
+const { setActive: setQuickBuyBarActive } = useQuickBuyBar()
+watch(showBuyBar, (v) => setQuickBuyBarActive(v))
+
 onMounted(() => {
   buyBoxObserver = new IntersectionObserver(([entry]) => {
     showBuyBar.value = !entry.isIntersecting
@@ -162,6 +192,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   buyBoxObserver?.disconnect()
+  setQuickBuyBarActive(false)
 })
 
 const specs = computed(() => {
@@ -216,13 +247,6 @@ useProductStructuredData(product)
 
     <section v-else class="section-py">
       <div class="container-page">
-        <!-- <nav class="mb-6 flex items-center gap-2 text-xs uppercase tracking-[0.1em] text-white/45" aria-label="Breadcrumb">
-          <NuxtLink :to="localePath('/')" class="hover:text-primary-400 transition-colors">{{ t('nav.home') }}</NuxtLink>
-          <span aria-hidden="true">/</span>
-          <NuxtLink :to="listUrl" class="hover:text-primary-400 transition-colors">{{ t('products.label') }}</NuxtLink>
-          <span aria-hidden="true">/</span>
-          <span class="text-white/75 truncate">{{ product.title }}</span>
-        </nav> -->
 
         <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-12">
           <!-- Gallery: thumbnail dọc bên trái, ảnh chính có kính lúp khi hover -->
@@ -446,77 +470,146 @@ useProductStructuredData(product)
         class="fixed inset-x-0 bottom-0 z-[900] border-t border-primary-500/25
                bg-[#1f1f1f]/95 backdrop-blur shadow-[0_-8px_24px_rgba(0,0,0,0.35)]"
       >
-        <div class="container-page flex items-center gap-3 md:gap-5 py-2.5">
+        <div class="container-page flex items-center justify-end gap-3 md:gap-5 py-2.5">
           <img
             :src="activeImage"
             :alt="product.title"
             class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10"
           >
-          <div class="hidden md:block min-w-0 max-w-[220px]">
+          <div class="hidden sm:block min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-white">{{ product.title }}</p>
             <p class="text-sm font-semibold text-primary-400">{{ priceText }}</p>
           </div>
 
-          <div
-            v-if="product.options.length"
-            class="flex min-w-0 flex-1 items-center gap-3 overflow-x-auto py-1"
+          <button
+            type="button"
+            class="btn-primary !min-h-[40px] flex-none px-4 sm:px-6"
+            @click="openQuickBuy('add')"
           >
-            <div
-              v-for="opt in product.options"
-              :key="opt.id"
-              class="flex flex-none items-center gap-1.5"
-            >
-              <span class="hidden lg:inline text-[10px] uppercase tracking-widest text-white/40">
-                {{ opt.title }}
-              </span>
-              <button
-                v-for="val in opt.values"
-                :key="val"
-                type="button"
-                class="min-h-[32px] flex-none border px-2.5 text-xs transition-colors"
-                :class="[
-                  selectedOptions[opt.title] === val
-                    ? 'border-primary-500 bg-primary-500/15 text-primary-300'
-                    : 'border-white/20 text-white/70 hover:border-white/40',
-                  !isValueAvailable(opt.title, val) ? 'opacity-30 cursor-not-allowed line-through' : '',
-                ]"
-                :disabled="!isValueAvailable(opt.title, val)"
-                @click="chooseOption(opt.title, val)"
-              >
-                {{ val }}
-              </button>
-            </div>
-          </div>
-          <div v-else class="flex-1" />
-
-          <div class="flex flex-none items-center border border-white/20">
-            <button
-              type="button"
-              class="flex min-h-[36px] w-9 items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
-              :disabled="quantity <= 1"
-              :aria-label="t('cart.quantity')"
-              @click="decrementQty"
-            >
-              −
-            </button>
-            <span class="w-9 text-center text-sm tabular-nums">{{ quantity }}</span>
-            <button
-              type="button"
-              class="flex min-h-[36px] w-9 items-center justify-center text-white/70 hover:text-white"
-              :aria-label="t('cart.quantity')"
-              @click="incrementQty"
-            >
-              +
-            </button>
-          </div>
+            {{ t('cart.add') }}
+          </button>
 
           <button
             type="button"
-            class="btn-primary !min-h-[40px] flex-none px-4 sm:px-6 disabled:opacity-60"
+            class="min-h-[40px] flex-none px-4 sm:px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
+                   hover:bg-primary-500 hover:text-white transition-colors"
+            @click="openQuickBuy('buy')"
+          >
+            {{ t('products.buyNow') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ── Modal mua nhanh ──────────────────────────────────────────────
+         Mở từ thanh mua nhanh cố định: chọn thuộc tính + số lượng rồi
+         xác nhận thêm vào giỏ hoặc mua ngay theo nút đã bấm. -->
+    <Transition name="qbmodal">
+      <div
+        v-if="product && quickBuyOpen"
+        class="fixed inset-0 z-[950] flex items-end justify-center sm:items-center sm:p-4"
+      >
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" @click="quickBuyOpen = false" />
+
+        <div
+          role="dialog"
+          aria-modal="true"
+          :aria-label="product.title"
+          class="qbmodal-panel relative w-full sm:max-w-md max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl
+                 border border-white/10 bg-[#1f1f1f] p-5 shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
+        >
+          <div class="flex items-start gap-3 mb-5">
+            <img
+              :src="activeImage"
+              :alt="product.title"
+              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10"
+            >
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-white leading-snug">{{ product.title }}</p>
+              <p class="mt-1 text-base font-semibold text-primary-400">{{ priceText }}</p>
+            </div>
+            <button
+              type="button"
+              class="flex h-8 w-8 flex-none items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              :aria-label="t('common.close')"
+              @click="quickBuyOpen = false"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div v-if="product.options.length" class="space-y-4 mb-5">
+            <div v-for="opt in product.options" :key="opt.id">
+              <p class="text-xs uppercase tracking-widest text-white/50 mb-2">
+                {{ opt.title }}
+                <span v-if="selectedOptions[opt.title]" class="text-white/80">— {{ selectedOptions[opt.title] }}</span>
+              </p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="val in opt.values"
+                  :key="val"
+                  type="button"
+                  class="min-h-[40px] px-4 border text-sm transition-colors"
+                  :class="[
+                    selectedOptions[opt.title] === val
+                      ? 'border-primary-500 bg-primary-500/15 text-primary-300'
+                      : 'border-white/20 text-white/70 hover:border-white/40',
+                    !isValueAvailable(opt.title, val) ? 'opacity-30 cursor-not-allowed line-through' : '',
+                  ]"
+                  :disabled="!isValueAvailable(opt.title, val)"
+                  @click="chooseOption(opt.title, val)"
+                >
+                  {{ val }}
+                </button>
+              </div>
+            </div>
+            <p v-if="missingOption" class="text-xs text-amber-400/90">
+              {{ t('products.chooseOption', { option: missingOption.title }) }}
+            </p>
+          </div>
+
+          <div class="flex items-center justify-between mb-5">
+            <p class="text-xs uppercase tracking-widest text-white/50">{{ t('cart.quantity') }}</p>
+            <div class="flex items-center border border-white/20">
+              <button
+                type="button"
+                class="flex min-h-[40px] w-10 items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
+                :disabled="quantity <= 1"
+                :aria-label="t('cart.quantity')"
+                @click="decrementQty"
+              >
+                −
+              </button>
+              <span class="w-10 text-center text-sm tabular-nums">{{ quantity }}</span>
+              <button
+                type="button"
+                class="flex min-h-[40px] w-10 items-center justify-center text-white/70 hover:text-white"
+                :aria-label="t('cart.quantity')"
+                @click="incrementQty"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <button
+            v-if="quickBuyMode === 'add'"
+            type="button"
+            class="btn-primary w-full disabled:opacity-60"
             :disabled="!canAddToCart"
-            @click="handleAddToCart"
+            @click="confirmQuickBuy"
           >
             {{ added ? t('cart.added') : t('cart.add') }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="w-full min-h-[44px] px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
+                   hover:bg-primary-500 hover:text-white transition-colors disabled:opacity-60"
+            :disabled="!canAddToCart || buyNowLoading"
+            @click="confirmQuickBuy"
+          >
+            {{ t('products.buyNow') }}
           </button>
         </div>
       </div>
@@ -544,5 +637,22 @@ useProductStructuredData(product)
 .buybar-leave-to {
   transform: translateY(100%);
   opacity: 0;
+}
+
+.qbmodal-enter-active,
+.qbmodal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.qbmodal-enter-active .qbmodal-panel,
+.qbmodal-leave-active .qbmodal-panel {
+  transition: transform 0.25s ease;
+}
+.qbmodal-enter-from,
+.qbmodal-leave-to {
+  opacity: 0;
+}
+.qbmodal-enter-from .qbmodal-panel,
+.qbmodal-leave-to .qbmodal-panel {
+  transform: translateY(24px);
 }
 </style>
