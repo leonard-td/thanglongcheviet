@@ -51,6 +51,7 @@ useSeoMeta({
     :pending="pending"
     :group-label="t('products.browseCategories')"
     :heading="category?.label ?? ''"
+    :image="category?.thumbnail"
     :items="categories"
     :active-slug="slug"
     base-path="/san-pham/danh-muc"

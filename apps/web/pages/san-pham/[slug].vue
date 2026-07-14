@@ -257,40 +257,21 @@ useProductStructuredData(product)
           <!-- Gallery: thumbnail dọc bên trái, ảnh chính có kính lúp khi hover -->
           <div class="animate-on-scroll lg:sticky lg:top-24 lg:self-start">
             <div class="flex flex-col-reverse sm:flex-row gap-3">
-              <div
-                v-if="product.gallery.length > 1"
-                class="flex sm:flex-col gap-3 flex-none overflow-x-auto sm:overflow-x-visible sm:max-h-[440px] sm:overflow-y-auto"
-              >
-                <button
-                  v-for="(img, i) in product.gallery"
-                  :key="i"
-                  type="button"
+              <div v-if="product.gallery.length > 1"
+                class="flex sm:flex-col gap-3 flex-none overflow-x-auto sm:overflow-x-visible sm:max-h-[440px] sm:overflow-y-auto">
+                <button v-for="(img, i) in product.gallery" :key="i" type="button"
                   class="relative aspect-square w-16 flex-none overflow-hidden rounded-lg border-2 transition-colors"
                   :class="img === activeImage ? 'border-primary-500' : 'border-transparent opacity-60 hover:opacity-100'"
-                  @click="selectedImage = img"
-                >
+                  @click="selectedImage = img">
                   <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover">
                 </button>
               </div>
 
-              <div
-                ref="zoomFrameEl"
+              <div ref="zoomFrameEl"
                 class="relative flex-1 min-w-0 aspect-square overflow-hidden rounded-2xl bg-[#2a3326] shadow-2xl cursor-crosshair"
-                @mouseenter="onZoomEnter"
-                @mouseleave="zoomActive = false"
-                @mousemove="onZoomMove"
-              >
-                <img
-                  :src="activeImage"
-                  :alt="product.title"
-                  class="w-full h-full object-cover"
-                >
-                <div
-                  v-show="zoomActive"
-                  class="zoom-lens"
-                  :style="lensStyle"
-                  aria-hidden="true"
-                />
+                @mouseenter="onZoomEnter" @mouseleave="zoomActive = false" @mousemove="onZoomMove">
+                <img :src="activeImage" :alt="product.title" class="w-full h-full object-cover">
+                <div v-show="zoomActive" class="zoom-lens" :style="lensStyle" aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -298,41 +279,32 @@ useProductStructuredData(product)
           <!-- Info -->
           <div class="animate-on-scroll">
             <p class="modis-eyebrow mb-3">
-              <NuxtLink
-                v-if="category"
-                :to="localePath(`/san-pham/danh-muc/${category.slug}`)"
-                class="hover:text-primary-300 transition-colors"
-              >
+              <NuxtLink v-if="category" :to="localePath(`/san-pham/danh-muc/${category.slug}`)"
+                class="hover:text-primary-300 transition-colors">
                 {{ category.label }}
               </NuxtLink>
               <template v-else>{{ product.categoryName || t('products.label') }}</template>
             </p>
             <h1 class="font-heading text-3xl md:text-4xl font-bold mb-3 leading-tight">{{ product.title }}</h1>
             <p class="text-2xl font-semibold text-primary-400 mb-5">{{ priceText }}</p>
-            <p class="text-white/70 leading-relaxed mb-6">{{ product.shortDesc }}</p>
+            <!-- <p class="text-white/70 leading-relaxed mb-6">{{ product.shortDesc }}</p> -->
 
             <!-- Variant / option selectors -->
             <div v-if="product.options.length" class="space-y-5 mb-6">
               <div v-for="opt in product.options" :key="opt.id">
                 <p class="text-xs uppercase tracking-widest text-white/50 mb-2">
                   {{ opt.title }}
-                  <span v-if="selectedOptions[opt.title]" class="text-white/80">— {{ selectedOptions[opt.title] }}</span>
+                  <span v-if="selectedOptions[opt.title]" class="text-white/80">— {{ selectedOptions[opt.title]
+                    }}</span>
                 </p>
                 <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="val in opt.values"
-                    :key="val"
-                    type="button"
-                    class="min-h-[40px] px-4 border text-sm transition-colors"
-                    :class="[
+                  <button v-for="val in opt.values" :key="val" type="button"
+                    class="min-h-[40px] px-4 border text-sm transition-colors" :class="[
                       selectedOptions[opt.title] === val
                         ? 'border-primary-500 bg-primary-500/15 text-primary-300'
                         : 'border-white/20 text-white/70 hover:border-white/40',
                       !isValueAvailable(opt.title, val) ? 'opacity-30 cursor-not-allowed line-through' : '',
-                    ]"
-                    :disabled="!isValueAvailable(opt.title, val)"
-                    @click="chooseOption(opt.title, val)"
-                  >
+                    ]" :disabled="!isValueAvailable(opt.title, val)" @click="chooseOption(opt.title, val)">
                     {{ val }}
                   </button>
                 </div>
@@ -347,55 +319,44 @@ useProductStructuredData(product)
               <p class="text-xs uppercase tracking-widest text-white/50 mb-2">
                 {{ t('cart.quantity') }}
               </p>
-              <div class="flex flex-wrap items-stretch gap-3">
-              <div class="flex items-center border border-white/20">
-                <button
-                  type="button"
-                  class="w-11 min-h-[44px] flex items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
-                  :disabled="quantity <= 1"
-                  :aria-label="t('cart.decrease')"
-                  @click="decrementQty"
-                >
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
-                <span class="w-10 text-center text-sm tabular-nums">{{ quantity }}</span>
-                <button
-                  type="button"
-                  class="w-11 min-h-[44px] flex items-center justify-center text-white/70 hover:text-white"
-                  :aria-label="t('cart.increase')"
-                  @click="incrementQty"
-                >
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m18 15-6-6-6 6" />
-                  </svg>
-                </button>
-              </div>
+              <div class="flex flex-wrap flex-col items-stretch gap-3">
+                <div class="flex items-center border border-white/20 max-w-[fit-content]">
+                  <button type="button"
+                    class="w-11 min-h-[44px] flex items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
+                    :disabled="quantity <= 1" :aria-label="t('cart.decrease')" @click="decrementQty">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  <span class="w-10 text-center text-sm tabular-nums">{{ quantity }}</span>
+                  <button type="button"
+                    class="w-11 min-h-[44px] flex items-center justify-center text-white/70 hover:text-white"
+                    :aria-label="t('cart.increase')" @click="incrementQty">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="m18 15-6-6-6 6" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="flex-1 flex gap-3 flex items-center">
+                  <button type="button" class="btn-primary min-h-[44px] flex-1 disabled:opacity-60 max-w-[fit-content] rounded-full"
+                    :disabled="!canAddToCart" @click="handleAddToCart">
+                    {{ added ? t('cart.added') : t('cart.add') }}
+                  </button>
 
-              <button
-                type="button"
-                class="btn-primary min-h-[44px] flex-1 disabled:opacity-60"
-                :disabled="!canAddToCart"
-                @click="handleAddToCart"
-              >
-                {{ added ? t('cart.added') : t('cart.add') }}
-              </button>
-
-              <button
-                type="button"
-                class="min-h-[44px] flex-1 px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
-                       hover:bg-primary-500 hover:text-white transition-colors disabled:opacity-60"
-                :disabled="!canAddToCart || buyNowLoading"
-                @click="handleBuyNow"
-              >
-                {{ t('products.buyNow') }}
-              </button>
+                  <button type="button" class="min-h-[44px] flex-1 px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
+                         hover:bg-primary-500 hover:text-white transition-colors disabled:opacity-60 max-w-[fit-content] rounded-full"
+                    :disabled="!canAddToCart || buyNowLoading" @click="handleBuyNow">
+                    {{ t('products.buyNow') }}
+                  </button>
+                </div>
               </div>
             </div>
 
             <div class="flex flex-wrap gap-x-5 gap-y-2 mb-8 text-xs">
-              <NuxtLink :to="localePath('/gio-hang')" class="text-white/60 hover:text-primary-400 transition-colors underline">
+              <NuxtLink :to="localePath('/gio-hang')"
+                class="text-white/60 hover:text-primary-400 transition-colors underline">
                 {{ t('cart.view') }}
               </NuxtLink>
               <NuxtLink :to="listUrl" class="text-white/60 hover:text-primary-400 transition-colors underline">
@@ -405,15 +366,18 @@ useProductStructuredData(product)
 
             <!-- Trust badges -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 border-t border-white/10 pt-6">
-              <div class="flex items-center gap-2.5 text-xs text-white/65">
-                <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10Z" stroke-linecap="round" stroke-linejoin="round" />
+              <div class="flex items-center gap-2.5 text-xs text-white/65 max-w-[fit-content]">
+                <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path d="M12 21c-4.5-2.5-7-6-7-10a7 7 0 0 1 14 0c0 4-2.5 7.5-7 10Z" stroke-linecap="round"
+                    stroke-linejoin="round" />
                   <path d="M12 12v5" stroke-linecap="round" />
                 </svg>
                 <span>{{ t('products.trustQuality') }}</span>
               </div>
-              <div class="flex items-center gap-2.5 text-xs text-white/65">
-                <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+              <div class="flex items-center gap-2.5 text-xs text-white/65 max-w-[fit-content]">
+                <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                   <path d="M3 7h11v10H3z" stroke-linecap="round" stroke-linejoin="round" />
                   <path d="M14 10h4l3 3v4h-7z" stroke-linecap="round" stroke-linejoin="round" />
                   <circle cx="7" cy="18" r="1.6" />
@@ -421,9 +385,11 @@ useProductStructuredData(product)
                 </svg>
                 <span>{{ t('products.trustShipping') }}</span>
               </div>
-              <div class="flex items-center gap-2.5 text-xs text-white/65">
-                <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-                  <path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" stroke-linecap="round" stroke-linejoin="round" />
+              <div class="flex items-center gap-2.5 text-xs text-white/65 max-w-[fit-content]">
+                <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                  <path d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6z" stroke-linecap="round"
+                    stroke-linejoin="round" />
                   <path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
                 <span>{{ t('products.trustReturn') }}</span>
@@ -436,46 +402,27 @@ useProductStructuredData(product)
         <!-- Mô tả + Đặc điểm nổi bật: 2 tab ngang hàng trong cùng khối -->
         <div class="mt-16 max-w-3xl animate-on-scroll">
           <div class="flex gap-1 border-b border-white/10" role="tablist">
-            <button
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'desc'"
+            <button type="button" role="tab" :aria-selected="activeTab === 'desc'"
               class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
               :class="activeTab === 'desc'
                 ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-white/50 hover:text-white/80'"
-              @click="activeTab = 'desc'"
-            >
+                : 'border-transparent text-white/50 hover:text-white/80'" @click="activeTab = 'desc'">
               {{ t('products.descTitle') }}
             </button>
-            <button
-              v-if="specs.length"
-              type="button"
-              role="tab"
-              :aria-selected="activeTab === 'specs'"
+            <button v-if="specs.length" type="button" role="tab" :aria-selected="activeTab === 'specs'"
               class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
               :class="activeTab === 'specs'
                 ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-white/50 hover:text-white/80'"
-              @click="activeTab = 'specs'"
-            >
+                : 'border-transparent text-white/50 hover:text-white/80'" @click="activeTab = 'specs'">
               {{ t('products.featuresTitle') }}
             </button>
           </div>
 
-          <div
-            v-show="activeTab === 'desc'"
-            role="tabpanel"
-            class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5"
-            v-html="product.description"
-          />
-          <dl
-            v-if="specs.length"
-            v-show="activeTab === 'specs'"
-            role="tabpanel"
-            class="space-y-2 mt-5"
-          >
-            <div v-for="row in specs" :key="row.label" class="flex justify-between text-sm py-1.5 border-b border-white/5">
+          <div v-show="activeTab === 'desc'" role="tabpanel"
+            class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5" v-html="product.description" />
+          <dl v-if="specs.length" v-show="activeTab === 'specs'" role="tabpanel" class="space-y-2 mt-5">
+            <div v-for="row in specs" :key="row.label"
+              class="flex justify-between text-sm py-1.5 border-b border-white/5">
               <dt class="text-white/50">{{ row.label }}</dt>
               <dd class="text-white/85 text-right">{{ row.value }}</dd>
             </div>
@@ -490,20 +437,28 @@ useProductStructuredData(product)
         <div class="divider-gold mb-10" />
         <!-- Sản phẩm liên quan: 4 cột, kích thước thu ~50% -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <NuxtLink
-            v-for="p in relatedItems"
-            :key="p.id"
-            :to="localePath(`/san-pham/${p.slug}`)"
-            class="group block"
-          >
-            <div class="relative aspect-[346/197] overflow-hidden rounded-md bg-[#2a3326] shadow-lg">
-              <img :src="p.image" :alt="p.title" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+          <article v-for="p in relatedItems" :key="p.id" class="group flex flex-col">
+            <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" :aria-label="p.title"
+              class="relative block aspect-[346/197] overflow-hidden rounded-md bg-[#2a3326] shadow-lg">
+              <img :src="p.image" :alt="p.title" loading="lazy"
+                class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+              <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2 pt-6">
+                <h3
+                  class="text-white text-xs uppercase tracking-[0.12em] font-semibold transition-colors group-hover:text-primary-300 line-clamp-1">
+                  {{ p.title }}
+                </h3>
+              </div>
+            </NuxtLink>
+            <!-- <p v-if="p.shortDesc" class="mt-1 text-center text-white/45 text-[11px] leading-snug line-clamp-1">
+              {{ p.shortDesc }}
+            </p> -->
+            <div class="mt-2 flex items-center justify-between gap-2 mt-auto pt-2">
+              <p class="text-primary-400 text-xs font-semibold p-0 mb-0">
+                {{ formatMoney(p.price, p.currencyCode, locale === 'en' ? 'en-US' : 'vi-VN') }}
+              </p>
+              <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock" icon-only />
             </div>
-            <h3 class="mt-2 text-center text-white/75 text-xs uppercase tracking-[0.12em] transition-colors group-hover:text-primary-400 line-clamp-1">{{ p.title }}</h3>
-            <p class="mt-0.5 text-center text-primary-400 text-xs font-semibold">
-              {{ formatMoney(p.price, p.currencyCode, locale === 'en' ? 'en-US' : 'vi-VN') }}
-            </p>
-          </NuxtLink>
+          </article>
         </div>
       </div>
     </section>
@@ -512,36 +467,22 @@ useProductStructuredData(product)
          Hiện khi khối chọn thuộc tính/số lượng/CTA gốc ra khỏi màn hình,
          để thêm vào giỏ nhanh từ bất kỳ vị trí scroll nào. -->
     <Transition name="buybar">
-      <div
-        v-if="product && showBuyBar"
-        class="fixed inset-x-0 bottom-0 z-[900] border-t border-primary-500/25
-               bg-[#1f1f1f]/95 backdrop-blur shadow-[0_-8px_24px_rgba(0,0,0,0.35)]"
-      >
+      <div v-if="product && showBuyBar" class="fixed inset-x-0 bottom-0 z-[900] border-t border-primary-500/25
+               bg-[#1f1f1f]/95 backdrop-blur shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
         <div class="container-page flex items-center justify-end gap-3 md:gap-5 py-2.5">
-          <img
-            :src="activeImage"
-            :alt="product.title"
-            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10"
-          >
+          <img :src="activeImage" :alt="product.title"
+            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10">
           <div class="hidden sm:block min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-white">{{ product.title }}</p>
             <p class="text-sm font-semibold text-primary-400">{{ priceText }}</p>
           </div>
 
-          <button
-            type="button"
-            class="btn-primary !min-h-[40px] flex-none px-4 sm:px-6"
-            @click="openQuickBuy('add')"
-          >
+          <button type="button" class="btn-primary !min-h-[40px] flex-none px-4 sm:px-6" @click="openQuickBuy('add')">
             {{ t('cart.add') }}
           </button>
 
-          <button
-            type="button"
-            class="min-h-[40px] flex-none px-4 sm:px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
-                   hover:bg-primary-500 hover:text-white transition-colors"
-            @click="openQuickBuy('buy')"
-          >
+          <button type="button" class="min-h-[40px] flex-none px-4 sm:px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
+                   hover:bg-primary-500 hover:text-white transition-colors" @click="openQuickBuy('buy')">
             {{ t('products.buyNow') }}
           </button>
         </div>
@@ -552,35 +493,22 @@ useProductStructuredData(product)
          Mở từ thanh mua nhanh cố định: chọn thuộc tính + số lượng rồi
          xác nhận thêm vào giỏ hoặc mua ngay theo nút đã bấm. -->
     <Transition name="qbmodal">
-      <div
-        v-if="product && quickBuyOpen"
-        class="fixed inset-0 z-[950] flex items-end justify-center sm:items-center sm:p-4"
-      >
+      <div v-if="product && quickBuyOpen"
+        class="fixed inset-0 z-[950] flex items-end justify-center sm:items-center sm:p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" @click="quickBuyOpen = false" />
 
-        <div
-          role="dialog"
-          aria-modal="true"
-          :aria-label="product.title"
-          class="qbmodal-panel relative w-full sm:max-w-md max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl
-                 border border-white/10 bg-[#1f1f1f] p-5 shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
-        >
+        <div role="dialog" aria-modal="true" :aria-label="product.title" class="qbmodal-panel relative w-full sm:max-w-md max-h-[85vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl
+                 border border-white/10 bg-[#1f1f1f] p-5 shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
           <div class="flex items-start gap-3 mb-5">
-            <img
-              :src="activeImage"
-              :alt="product.title"
-              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10"
-            >
+            <img :src="activeImage" :alt="product.title"
+              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10">
             <div class="min-w-0 flex-1">
               <p class="text-sm font-semibold text-white leading-snug">{{ product.title }}</p>
               <p class="mt-1 text-base font-semibold text-primary-400">{{ priceText }}</p>
             </div>
-            <button
-              type="button"
+            <button type="button"
               class="flex h-8 w-8 flex-none items-center justify-center rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-              :aria-label="t('common.close')"
-              @click="quickBuyOpen = false"
-            >
+              :aria-label="t('common.close')" @click="quickBuyOpen = false">
               ✕
             </button>
           </div>
@@ -592,20 +520,13 @@ useProductStructuredData(product)
                 <span v-if="selectedOptions[opt.title]" class="text-white/80">— {{ selectedOptions[opt.title] }}</span>
               </p>
               <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="val in opt.values"
-                  :key="val"
-                  type="button"
-                  class="min-h-[40px] px-4 border text-sm transition-colors"
-                  :class="[
+                <button v-for="val in opt.values" :key="val" type="button"
+                  class="min-h-[40px] px-4 border text-sm transition-colors" :class="[
                     selectedOptions[opt.title] === val
                       ? 'border-primary-500 bg-primary-500/15 text-primary-300'
                       : 'border-white/20 text-white/70 hover:border-white/40',
                     !isValueAvailable(opt.title, val) ? 'opacity-30 cursor-not-allowed line-through' : '',
-                  ]"
-                  :disabled="!isValueAvailable(opt.title, val)"
-                  @click="chooseOption(opt.title, val)"
-                >
+                  ]" :disabled="!isValueAvailable(opt.title, val)" @click="chooseOption(opt.title, val)">
                   {{ val }}
                 </button>
               </div>
@@ -618,48 +539,33 @@ useProductStructuredData(product)
           <div class="flex items-center justify-between mb-5">
             <p class="text-xs uppercase tracking-widest text-white/50">{{ t('cart.quantity') }}</p>
             <div class="flex items-center border border-white/20">
-              <button
-                type="button"
+              <button type="button"
                 class="flex min-h-[40px] w-10 items-center justify-center text-white/70 hover:text-white disabled:opacity-30"
-                :disabled="quantity <= 1"
-                :aria-label="t('cart.decrease')"
-                @click="decrementQty"
-              >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                :disabled="quantity <= 1" :aria-label="t('cart.decrease')" @click="decrementQty">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="m6 9 6 6 6-6" />
                 </svg>
               </button>
               <span class="w-10 text-center text-sm tabular-nums">{{ quantity }}</span>
-              <button
-                type="button"
+              <button type="button"
                 class="flex min-h-[40px] w-10 items-center justify-center text-white/70 hover:text-white"
-                :aria-label="t('cart.increase')"
-                @click="incrementQty"
-              >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                :aria-label="t('cart.increase')" @click="incrementQty">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="m18 15-6-6-6 6" />
                 </svg>
               </button>
             </div>
           </div>
 
-          <button
-            v-if="quickBuyMode === 'add'"
-            type="button"
-            class="btn-primary w-full disabled:opacity-60"
-            :disabled="!canAddToCart"
-            @click="confirmQuickBuy"
-          >
+          <button v-if="quickBuyMode === 'add'" type="button" class="btn-primary w-full disabled:opacity-60"
+            :disabled="!canAddToCart" @click="confirmQuickBuy">
             {{ added ? t('cart.added') : t('cart.add') }}
           </button>
-          <button
-            v-else
-            type="button"
-            class="w-full min-h-[44px] px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
+          <button v-else type="button" class="w-full min-h-[44px] px-6 border-2 border-primary-500 text-primary-400 font-condensed text-xs uppercase tracking-[0.15em]
                    hover:bg-primary-500 hover:text-white transition-colors disabled:opacity-60"
-            :disabled="!canAddToCart || buyNowLoading"
-            @click="confirmQuickBuy"
-          >
+            :disabled="!canAddToCart || buyNowLoading" @click="confirmQuickBuy">
             {{ t('products.buyNow') }}
           </button>
         </div>
@@ -684,6 +590,7 @@ useProductStructuredData(product)
 .buybar-leave-active {
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
+
 .buybar-enter-from,
 .buybar-leave-to {
   transform: translateY(100%);
@@ -694,14 +601,17 @@ useProductStructuredData(product)
 .qbmodal-leave-active {
   transition: opacity 0.2s ease;
 }
+
 .qbmodal-enter-active .qbmodal-panel,
 .qbmodal-leave-active .qbmodal-panel {
   transition: transform 0.25s ease;
 }
+
 .qbmodal-enter-from,
 .qbmodal-leave-to {
   opacity: 0;
 }
+
 .qbmodal-enter-from .qbmodal-panel,
 .qbmodal-leave-to .qbmodal-panel {
   transform: translateY(24px);

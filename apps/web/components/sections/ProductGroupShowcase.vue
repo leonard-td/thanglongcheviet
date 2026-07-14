@@ -33,7 +33,9 @@ const sidebarItems = computed(() =>
     to: localePath(`/san-pham/${p.slug}`),
     image: p.image,
     title: p.title,
+    description: p.shortDesc,
     subtitle: formatMoney(p.price, p.currencyCode, priceLocale.value),
+    product: { variantId: p.variantId, slug: p.slug, inStock: p.inStock },
   })),
 )
 
@@ -53,20 +55,16 @@ useBannerHeader(bannerEl)
          phía sau; marquee inline ghim ngay dưới banner. -->
     <section ref="bannerEl" class="sticky top-0 z-40 -mt-[72px] bg-dark">
       <div class="relative h-[90px] sm:h-[112px] md:h-[140px] overflow-hidden">
-        <img
-          v-if="bannerImage"
-          :src="bannerImage"
-          :alt="heading"
-          class="absolute inset-0 h-full w-full object-cover"
-        >
+        <img v-if="bannerImage" :src="bannerImage" :alt="heading" class="absolute inset-0 h-full w-full object-cover">
         <div v-else class="absolute inset-0 bg-gradient-to-br from-primary-800 via-dark-700 to-dark" />
         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
-        <div class="relative h-full container-page flex flex-col justify-end pb-5 md:pb-8">
+        <div class="relative h-full container-page flex flex-col justify-end pb-0 md:pb-0">
           <!-- <p class="modis-eyebrow mb-2">{{ groupLabel }}</p> -->
           <h1 class="font-heading text-xl sm:text-2xl md:text-3xl font-bold max-w-3xl line-clamp-1">
             {{ heading }}
           </h1>
-          <p class="mt-1.5 hidden md:inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-primary-300">
+          <p
+            class="mt-0 md:inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-primary-300">
             <span class="h-[2px] w-8 bg-primary-400 inline-block" />
             {{ t('products.productCount', { count: products.length }) }}
           </p>
@@ -102,78 +100,67 @@ useBannerHeader(bannerEl)
       <div class="container-page">
         <h2 id="group-products-heading" class="sr-only">{{ heading }}</h2>
 
-        <div
-          class="grid grid-cols-1 gap-10 xl:gap-14"
-          :class="sidebarItems.length ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : ''"
-        >
-        <div class="min-w-0">
-        <!-- Loading skeleton -->
-        <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-          <div v-for="n in 8" :key="n" class="animate-pulse">
-            <div class="aspect-[4/5] rounded-xl bg-white/5 ring-1 ring-white/10" />
-            <div class="mx-auto mt-3 h-3 w-2/3 rounded bg-white/10" />
-            <div class="mx-auto mt-2 h-2.5 w-1/3 rounded bg-white/10" />
-          </div>
-        </div>
-
-        <!-- Empty state -->
-        <div v-else-if="!products.length" class="py-16 text-center">
-          <p class="font-heading text-xl text-white mb-2">{{ emptyMessage }}</p>
-          <NuxtLink :to="localePath('/san-pham-list')" class="btn-primary">
-            {{ t('products.viewAllProducts') }}
-          </NuxtLink>
-        </div>
-
-        <!-- Image-led minimal cards: photo, name, price — nothing else -->
-        <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-          <NuxtLink
-            v-for="p in products"
-            :key="p.id"
-            :to="localePath(`/san-pham/${p.slug}`)"
-            class="group block animate-on-scroll"
-            :aria-label="p.title"
-          >
-            <div
-              class="relative aspect-[4/5] overflow-hidden rounded-xl bg-[#2a3326] shadow-lg
-                     ring-1 ring-white/10 group-hover:ring-primary-400/60
-                     transition-all duration-300"
-            >
-              <img
-                :src="p.image"
-                :alt="p.title"
-                loading="lazy"
-                class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              >
-              <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div class="grid grid-cols-1 gap-10 xl:gap-14"
+          :class="sidebarItems.length ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : ''">
+          <div class="min-w-0">
+            <!-- Loading skeleton -->
+            <div v-if="pending" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+              <div v-for="n in 8" :key="n" class="animate-pulse">
+                <div class="aspect-[4/5] rounded-xl bg-white/5 ring-1 ring-white/10" />
+                <div class="mx-auto mt-3 h-3 w-2/3 rounded bg-white/10" />
+                <div class="mx-auto mt-2 h-2.5 w-1/3 rounded bg-white/10" />
+              </div>
             </div>
-            <h3
-              class="mt-3 text-center font-heading text-sm md:text-base font-semibold text-white
-                     group-hover:text-primary-400 transition-colors line-clamp-2"
-            >
-              {{ p.title }}
-            </h3>
-            <p class="mt-1 text-center text-primary-400 text-xs font-semibold">
-              {{ formatMoney(p.price, p.currencyCode, priceLocale) }}
-            </p>
-          </NuxtLink>
-        </div>
-        </div>
 
-        <!-- Menu phải: sản phẩm bộ sưu tập gắn với danh mục, tự cuộn từ dưới
+            <!-- Empty state -->
+            <div v-else-if="!products.length" class="py-16 text-center">
+              <p class="font-heading text-xl text-white mb-2">{{ emptyMessage }}</p>
+              <NuxtLink :to="localePath('/san-pham-list')" class="btn-primary">
+                {{ t('products.viewAllProducts') }}
+              </NuxtLink>
+            </div>
+
+            <!-- Image-led cards: photo, name, short desc, price + cart actions -->
+            <div v-else class="grid grid-cols-2 gap-3 md:gap-5" :class="sidebarItems.length ? 'sm:grid-cols-3 lg:grid-cols-3' : 'sm:grid-cols-4 lg:grid-cols-4'
+              ">
+              <article v-for="p in products" :key="p.id" class="group flex flex-col animate-on-scroll">
+                <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" :aria-label="p.title" class="relative block aspect-[4/5] overflow-hidden rounded-xl bg-[#2a3326] shadow-lg
+                     ring-1 ring-white/10 group-hover:ring-primary-400/60
+                     transition-all duration-300 h-[200px] md:h-[250px]">
+                  <img :src="p.image" :alt="p.title" loading="lazy"
+                    class="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+                  <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 pt-8">
+                    <h3 class="font-heading text-sm md:text-base font-semibold text-white
+                         group-hover:text-primary-300 transition-colors line-clamp-1">
+                      {{ p.title }}
+                    </h3>
+                  </div>
+                </NuxtLink>
+
+                <p class="mt-2 text-start text-primary-400 text-xs font-semibold">
+                  {{ formatMoney(p.price, p.currencyCode, priceLocale) }}
+                </p>
+                <!-- <p v-if="p.shortDesc" class="mt-0 text-start text-white/50 text-xs leading-relaxed line-clamp-1">
+                  {{ p.shortDesc }}
+                </p> -->
+                <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock"
+                  class="mt-auto pt-2.5" />
+              </article>
+            </div>
+          </div>
+
+          <!-- Menu phải: sản phẩm bộ sưu tập gắn với danh mục, tự cuộn từ dưới
              lên (giống bài viết cùng chủ đề). top tính theo cụm ghim:
              banner + marquee -->
-        <aside
-          v-if="sidebarItems.length"
-          class="lg:sticky lg:top-[190px] lg:self-start"
-          :aria-label="sidebarTitle || t('products.collectionSidebar')"
-        >
-          <h2 class="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-white">
-            <span class="h-[2px] w-6 bg-primary-400 inline-block flex-none" />
-            <span class="truncate">{{ sidebarTitle || t('products.collectionSidebar') }}</span>
-          </h2>
+          <aside v-if="sidebarItems.length" class="lg:sticky lg:top-[190px] lg:self-start"
+            :aria-label="sidebarTitle || t('products.collectionSidebar')">
+            <h2 class="mb-4 flex items-center gap-2 font-heading text-lg font-semibold text-white">
+              <span class="h-[2px] w-6 bg-primary-400 inline-block flex-none" />
+              <span class="truncate">{{ sidebarTitle || t('products.collectionSidebar') }}</span>
+            </h2>
 
-          <WidgetsAutoScrollSidebar :items="sidebarItems" />
-        </aside>
+            <WidgetsAutoScrollSidebar :items="sidebarItems" />
+          </aside>
         </div>
       </div>
     </section>

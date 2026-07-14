@@ -102,9 +102,7 @@ const formatPrice = (price: number) =>
             <p class="text-primary-400 font-semibold text-sm mb-3">
               {{ formatPrice(p.price) }}
             </p>
-            <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" class="btn-primary px-4 py-2 text-[11px]">
-              {{ t('products.viewDetail') }}
-            </NuxtLink>
+            <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock" />
           </div>
         </article>
         </div>

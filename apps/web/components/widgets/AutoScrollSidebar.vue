@@ -5,6 +5,10 @@ export interface AutoScrollSidebarItem {
   image?: string
   title: string
   subtitle?: string
+  /** Mô tả ngắn, hiện 1 dòng dưới tiêu đề. */
+  description?: string
+  /** Có mặt → mục là sản phẩm, hiện nút icon thêm giỏ / mua ngay. */
+  product?: { variantId: string, slug: string, inStock: boolean }
 }
 
 const props = defineProps<{
@@ -57,16 +61,28 @@ const marqueeStyle = computed(() => {
               loading="lazy"
               class="h-16 w-24 flex-none rounded-lg object-cover ring-1 ring-white/10"
             >
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <h3 class="text-sm font-semibold leading-snug text-white line-clamp-2 group-hover:text-primary-400 transition-colors">
                 {{ item.title }}
               </h3>
-              <span
-                v-if="item.subtitle"
-                class="mt-1.5 block text-[11px] uppercase tracking-[0.15em] text-primary-400/90"
-              >
-                {{ item.subtitle }}
-              </span>
+              <p v-if="item.description" class="mt-1 text-[11px] leading-snug text-white/50 line-clamp-1">
+                {{ item.description }}
+              </p>
+              <div class="mt-1.5 flex items-center justify-between gap-2">
+                <span
+                  v-if="item.subtitle"
+                  class="block text-[11px] uppercase tracking-[0.15em] text-primary-400/90"
+                >
+                  {{ item.subtitle }}
+                </span>
+                <ProductCardActions
+                  v-if="item.product"
+                  :variant-id="item.product.variantId"
+                  :slug="item.product.slug"
+                  :in-stock="item.product.inStock"
+                  icon-only
+                />
+              </div>
             </div>
           </NuxtLink>
         </li>
@@ -91,16 +107,28 @@ const marqueeStyle = computed(() => {
               loading="lazy"
               class="h-16 w-24 flex-none rounded-lg object-cover ring-1 ring-white/10"
             >
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <h3 class="text-sm font-semibold leading-snug text-white line-clamp-2 group-hover:text-primary-400 transition-colors">
                 {{ item.title }}
               </h3>
-              <span
-                v-if="item.subtitle"
-                class="mt-1.5 block text-[11px] uppercase tracking-[0.15em] text-primary-400/90"
-              >
-                {{ item.subtitle }}
-              </span>
+              <p v-if="item.description" class="mt-1 text-[11px] leading-snug text-white/50 line-clamp-1">
+                {{ item.description }}
+              </p>
+              <div class="mt-1.5 flex items-center justify-between gap-2">
+                <span
+                  v-if="item.subtitle"
+                  class="block text-[11px] uppercase tracking-[0.15em] text-primary-400/90"
+                >
+                  {{ item.subtitle }}
+                </span>
+                <ProductCardActions
+                  v-if="item.product"
+                  :variant-id="item.product.variantId"
+                  :slug="item.product.slug"
+                  :in-stock="item.product.inStock"
+                  icon-only
+                />
+              </div>
             </div>
           </NuxtLink>
         </li>

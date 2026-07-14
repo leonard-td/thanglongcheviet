@@ -10,6 +10,9 @@ const promotions = computed(() =>
     name: p.title,
     price: p.price,
     image: p.image,
+    shortDesc: p.shortDesc,
+    variantId: p.variantId,
+    inStock: p.inStock,
   })),
 )
 
@@ -24,7 +27,8 @@ const formatPrice = (price: number) =>
         {{ t('common.loading') }}
       </div>
       <div v-else class="promo-track">
-        <div v-for="n in 2" :key="n" class="promo-set" :aria-hidden="n === 2 ? 'true' : undefined">
+        <!-- inert trên bản nhân đôi để nút thêm giỏ/mua ngay không nhận tab/click trùng -->
+        <div v-for="n in 2" :key="n" class="promo-set" :aria-hidden="n === 2 ? 'true' : undefined" :inert="n === 2">
           <NuxtLink
             v-for="item in promotions"
             :key="`${n}-${item.id}`"
@@ -36,8 +40,16 @@ const formatPrice = (price: number) =>
             </div>
             <div class="promo-info">
               <h4 class="promo-name">{{ item.name }}</h4>
+              <p v-if="item.shortDesc" class="promo-desc">{{ item.shortDesc }}</p>
               <div class="promo-prices">
                 <span class="promo-price-new">{{ formatPrice(item.price) }}</span>
+                <ProductCardActions
+                  :variant-id="item.variantId"
+                  :slug="item.slug"
+                  :in-stock="item.inStock"
+                  icon-only
+                  class="ml-auto"
+                />
               </div>
             </div>
           </NuxtLink>
@@ -206,9 +218,20 @@ const formatPrice = (price: number) =>
   text-overflow: ellipsis;
 }
 
+.promo-desc {
+  margin: 3px 0 0;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, .55);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .promo-prices {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin-top: 4px;
 }
