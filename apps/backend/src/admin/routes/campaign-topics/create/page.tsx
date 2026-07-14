@@ -1,9 +1,10 @@
-import { Button, Heading, Text, toast } from "@medusajs/ui"
+import { Button, toast } from "@medusajs/ui"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CampaignTopicForm from "../../../components/campaign-topic-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { slugify } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
@@ -57,19 +58,29 @@ const CreateCampaignTopicPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("campaign-topics.create")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {t("campaign-topics.hint")}
-          </Text>
-        </div>
-        <Button variant="secondary" onClick={() => navigate("..")}>
-          {t("campaign-topics.actions.backToList")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("campaign-topics.create")}
+        subtitle={t("campaign-topics.hint")}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("campaign-topics.actions.backToList")}
+            </Button>
+            <Button
+              form="campaign-topic-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("campaign-topics.actions.create")}
+            </Button>
+          </>
+        }
+      />
 
       <CampaignTopicForm
+        formId="campaign-topic-form"
+        hideSubmit
         name={name}
         slug={slug}
         description={description}

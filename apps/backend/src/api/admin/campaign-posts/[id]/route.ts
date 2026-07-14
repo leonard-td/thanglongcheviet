@@ -8,6 +8,7 @@ const UpdateCampaignPostSchema = z.object({
   title: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
   content: z.record(z.string(), z.unknown()).optional(),
+  description: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
   topic_id: z.string().nullable().optional(),
   is_active: z.boolean().optional(),

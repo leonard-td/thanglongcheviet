@@ -10,6 +10,7 @@ interface CampaignPost {
   title: string
   slug: string
   content: unknown
+  description?: string | null
   thumbnail?: string | null
   topic?: { id: string, name: string, slug: string } | null
   publish_at: string | null
@@ -31,11 +32,16 @@ interface CampaignTopic {
 
 function transformCampaignPost(p: CampaignPost, resolveUrl: (url: string | null | undefined) => string): BlogPost {
   const content = tiptapToHtml(p.content, resolveUrl)
-  const plain = tiptapToText(p.content)
+  // Ưu tiên mô tả ngắn do admin nhập; nếu bỏ trống thì rơi về đoạn trích
+  // tự động từ nội dung (hành vi cũ, giữ cho các bài viết đã tạo trước đó).
+  const excerpt = p.description?.trim() || (() => {
+    const plain = tiptapToText(p.content)
+    return plain.slice(0, 200) + (plain.length > 200 ? '…' : '')
+  })()
   return {
     slug: p.slug,
     title: p.title,
-    excerpt: plain.slice(0, 200) + (plain.length > 200 ? '…' : ''),
+    excerpt,
     content,
     image: resolveUrl(p.thumbnail) || tiptapFirstImage(p.content, resolveUrl) || FALLBACK_POST_IMAGE,
     date: p.publish_at || p.created_at || '',

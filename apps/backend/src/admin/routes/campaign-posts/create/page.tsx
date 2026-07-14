@@ -1,7 +1,5 @@
 import {
   Button,
-  Heading,
-  Text,
   toast,
 } from "@medusajs/ui"
 import type { JSONContent } from "@tiptap/core"
@@ -11,6 +9,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CampaignPostForm from "../../../components/campaign-post-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { slugify, toIsoDateTime } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
@@ -21,6 +20,7 @@ const CreateCampaignPostPage = () => {
   const { t } = useTranslation()
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
+  const [description, setDescription] = useState("")
   const [thumbnail, setThumbnail] = useState("")
   const [topicId, setTopicId] = useState("")
   const [isActive, setIsActive] = useState(true)
@@ -48,6 +48,7 @@ const CreateCampaignPostPage = () => {
         title,
         slug: slug || slugify(title),
         content: content || EMPTY_TIPTAP_DOC,
+        description: description || null,
         thumbnail: thumbnail || null,
         topic_id: topicId || null,
         is_active: isActive,
@@ -70,21 +71,32 @@ const CreateCampaignPostPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <Heading level="h1">{t("campaign-posts.create")}</Heading>
-          <Text className="text-ui-fg-subtle" size="small">
-            {t("campaign-posts.scheduleHint")}
-          </Text>
-        </div>
-        <Button variant="secondary" onClick={() => navigate("..")}>
-          {t("campaign-posts.actions.backToList")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("campaign-posts.create")}
+        subtitle={t("campaign-posts.scheduleHint")}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("campaign-posts.actions.backToList")}
+            </Button>
+            <Button
+              form="campaign-post-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("campaign-posts.actions.create")}
+            </Button>
+          </>
+        }
+      />
 
       <CampaignPostForm
+        formId="campaign-post-form"
+        hideSubmit
         title={title}
         slug={slug}
+        description={description}
         thumbnail={thumbnail}
         topicId={topicId}
         isActive={isActive}
@@ -99,6 +111,7 @@ const CreateCampaignPostPage = () => {
         submitLabel={t("campaign-posts.actions.create")}
         onTitleChange={setTitle}
         onSlugChange={setSlug}
+        onDescriptionChange={setDescription}
         onThumbnailChange={setThumbnail}
         onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}

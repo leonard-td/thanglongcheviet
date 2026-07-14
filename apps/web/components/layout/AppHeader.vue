@@ -7,14 +7,19 @@ const isMenuOpen = ref(false)
 const openDropdown = ref<string | null>(null)
 const openMobileGroup = ref<string | null>(null)
 
+// Trang có banner nâng ngưỡng này lên bằng chiều cao banner (useBannerHeader);
+// reset về mặc định mỗi lần đổi route để trang thường giữ hành vi cũ.
+const solidThreshold = useHeaderSolidThreshold()
+
 watch(() => route.path, () => {
   isMenuOpen.value = false
   openDropdown.value = null
   openMobileGroup.value = null
+  solidThreshold.value = DEFAULT_HEADER_SOLID_THRESHOLD
 })
 
 const { y: scrollY } = useWindowScroll()
-const isSolid = computed(() => scrollY.value > 50 || isMenuOpen.value)
+const isSolid = computed(() => scrollY.value > solidThreshold.value || isMenuOpen.value)
 
 const { totalItems } = useCart()
 
@@ -47,7 +52,8 @@ const navLinks = computed<NavLink[]>(() => {
   }
 
   return [
-    { key: 'nav.home', path: '/' },
+    // { key: 'nav.home', path: '/' },
+    { key: 'nav.about', path: '/gioi-thieu' },
     {
       key: 'nav.products',
       path: '/san-pham-list',
@@ -260,9 +266,9 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 }
 
 .site-header.is-solid {
-  background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%);
-  border-bottom-color: rgba(201, 108, 108, 0.35);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .22);
+  /* background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%); */
+  /* border-bottom-color: rgba(201, 108, 108, 0.35); */
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, .22); */
 }
 
 .site-header-inner {

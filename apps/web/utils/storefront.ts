@@ -37,8 +37,11 @@ export interface Product {
   title: string
   shortDesc: string
   description: string
+  /** Danh mục đầu tiên — dùng để hiển thị (breadcrumb, thông số sản phẩm). */
   categoryId: string | null
   categoryName: string
+  /** Toàn bộ danh mục sản phẩm thuộc về — dùng để lọc theo danh mục. */
+  categoryIds: string[]
   collectionId: string | null
   collectionName: string
   inStock: boolean
@@ -107,6 +110,8 @@ export interface ProductCategory {
   id: string
   slug: string
   name: Record<string, string> | string
+  /** Banner đầu trang danh mục — lưu ở metadata.thumbnail (không có field ảnh gốc). */
+  thumbnail: string | null
 }
 
 export function stripHtml(html: string): string {

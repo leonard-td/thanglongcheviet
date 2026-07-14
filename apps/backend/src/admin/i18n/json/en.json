@@ -5,7 +5,239 @@
     "campaignTopics": "Post Topics",
     "media": "Media Library",
     "events": "Events",
-    "eventRegistrations": "Event Registrations"
+    "eventRegistrations": "Event Registrations",
+    "careChannels": "Care Channels",
+    "careMessages": "Care Messages",
+    "backup": "Backup & Restore",
+    "storeInfo": "Store Information"
+  },
+  "relatedCollection": {
+    "title": "Related collection",
+    "hint": "Products of this collection are shown in the right-hand menu of the category page on the website.",
+    "placeholder": "Select a collection",
+    "none": "None",
+    "save": "Save",
+    "saved": "Related collection saved",
+    "saveFailed": "Save failed"
+  },
+  "storeInfo": {
+    "title": "Store Information",
+    "subtitle": "Contact details, homepage background images and the about article",
+    "sections": {
+      "contact": "Contact information",
+      "heroImages": "Homepage background images",
+      "heroImagesHint": "The two background images shown on the website homepage.",
+      "about": "About article",
+      "aboutHint": "Content of the store's about page on the website."
+    },
+    "fields": {
+      "storeName": "Store name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "googleMapUrl": "Google Maps link",
+      "googleMapUrlHint": "Paste a place share link from Google Maps.",
+      "openHours": "Opening hours",
+      "openHoursPlaceholder": "E.g. 8:00 – 22:00 daily",
+      "facebookUrl": "Facebook link",
+      "zaloUrl": "Zalo link",
+      "instagramUrl": "Instagram link",
+      "heroImage1": "Background image 1",
+      "heroImage2": "Background image 2",
+      "aboutTitle": "About article title",
+      "aboutThumbnail": "Thumbnail image",
+      "aboutContent": "Article content",
+      "aboutCollection": "Accompanying collection",
+      "aboutCollectionPlaceholder": "Select a collection",
+      "aboutCollectionHint": "Products of this collection are shown in the right-hand menu of the about page.",
+      "noCollection": "None"
+    },
+    "actions": {
+      "save": "Save"
+    },
+    "messages": {
+      "saved": "Store information saved",
+      "saveFailed": "Save failed"
+    }
+  },
+  "backup": {
+    "title": "Backup & Restore",
+    "hint": "Compress the entire database and uploaded media library into a zip file, or restore the system from a backup file. Before every restore, the current state is automatically backed up (pre-restore).",
+    "createButton": "Create backup",
+    "restoreUploadButton": "Restore from file...",
+    "listTitle": "Available backups",
+    "empty": "No backups yet.",
+    "columns": {
+      "name": "File",
+      "size": "Size",
+      "createdAt": "Created at",
+      "actions": "Actions"
+    },
+    "actions": {
+      "download": "Download",
+      "restore": "Restore this backup",
+      "delete": "Delete"
+    },
+    "job": {
+      "runningBackup": "Creating backup...",
+      "runningRestore": "Restoring — do not close or restart the server...",
+      "completedBackup": "Backup created: {{file}}",
+      "completedRestore": "Restore completed. Current data was backed up beforehand as {{file}}. Reload the page — you may need to sign in again.",
+      "failed": "Job failed: {{error}}"
+    },
+    "steps": {
+      "starting": "Starting...",
+      "dump_db": "Exporting database...",
+      "collect_static": "Collecting media files...",
+      "zip": "Compressing archive...",
+      "validate": "Validating backup file integrity...",
+      "check_compat": "Checking schema compatibility...",
+      "pre_restore_backup": "Backing up current data (pre-restore)...",
+      "restore_db": "Restoring database...",
+      "restore_static": "Restoring media files..."
+    },
+    "restorePrompt": {
+      "title": "Restore system?",
+      "description": "All current data (database and media library) will be REPLACED by the contents of \"{{file}}\". The current state is automatically backed up first, but this is still a system-wide destructive action.",
+      "confirmText": "RESTORE",
+      "confirm": "Restore",
+      "cancel": "Cancel"
+    },
+    "deletePrompt": {
+      "title": "Delete backup?",
+      "description": "\"{{file}}\" will be permanently deleted from the server.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "toasts": {
+      "backupStarted": "Backup started",
+      "restoreStarted": "Restore started",
+      "deleted": "Backup deleted",
+      "jobRunning": "Another backup/restore job is already running",
+      "requestFailed": "Request failed"
+    }
+  },
+  "care-channels": {
+    "title": "Customer care channels",
+    "hint": "Connect Zalo OA, Telegram... to receive order notifications and chat with customers.",
+    "create": "Add channel",
+    "edit": "Edit channel",
+    "columns": {
+      "name": "Name",
+      "provider": "Platform",
+      "scopes": "Scope",
+      "status": "Status",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "provider": {
+      "telegram": "Telegram",
+      "zalo_oa": "Zalo OA"
+    },
+    "scopes": {
+      "orders": "Orders",
+      "messages": "Messages"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "fields": {
+      "name": "Channel name",
+      "provider": "Platform",
+      "notifyOrders": "Receive order notifications",
+      "notifyOrdersHint": "Send a message to this channel whenever a new order is placed (sales care).",
+      "receiveMessages": "Send/receive customer messages",
+      "receiveMessagesHint": "Receive messages customers send to this channel and let staff reply (general care).",
+      "active": "Active",
+      "telegramSectionTitle": "Telegram configuration",
+      "telegramSectionHint": "Create a bot with @BotFather, add it to the notification group, then fill in the fields below.",
+      "botToken": "Bot token",
+      "chatId": "Default chat ID",
+      "chatIdHint": "The group/chat ID that receives notifications (group IDs usually start with -100).",
+      "zaloSectionTitle": "Zalo OA configuration",
+      "zaloSectionHint": "Copy these values from the Official Account's Zalo Developer Console.",
+      "oaId": "OA ID",
+      "appId": "App ID",
+      "secretKey": "Secret key",
+      "accessToken": "Access token",
+      "refreshToken": "Refresh token",
+      "refreshTokenHint": "Tokens rotate automatically when the system refreshes them — only paste new ones obtained from Zalo.",
+      "notifyUserIds": "Zalo user IDs for notifications",
+      "notifyUserIdsHint": "Comma-separated user IDs of staff receiving notifications — each user must have messaged the OA at least once.",
+      "secretKeepHint": "When editing, leave blank to keep the stored value."
+    },
+    "webhook": {
+      "title": "Inbound message webhook",
+      "telegramHint": "Click the button to register the webhook with Telegram (requires a public HTTPS backend via MEDUSA_BACKEND_URL).",
+      "zaloHint": "Copy this URL and paste it into the Webhook section of the Zalo Developer Console.",
+      "register": "Register with Telegram",
+      "registered": "Webhook registered",
+      "registerFailed": "Failed to register webhook"
+    },
+    "actions": {
+      "create": "Create channel",
+      "edit": "Edit",
+      "sendTest": "Send test message",
+      "delete": "Delete",
+      "save": "Save",
+      "backToList": "Back"
+    },
+    "messages": {
+      "created": "Channel created",
+      "createFailed": "Failed to create channel",
+      "updated": "Channel saved",
+      "updateFailed": "Failed to save channel",
+      "deleted": "Channel deleted",
+      "deleteFailed": "Failed to delete channel",
+      "deleteConfirmTitle": "Delete channel?",
+      "deleteConfirmDesc": "Channel \"{{name}}\" will be removed and stop sending/receiving messages.",
+      "confirmDelete": "Delete",
+      "cancelDelete": "Cancel",
+      "testSent": "Test message sent — check your channel",
+      "testFailed": "Failed to send test message"
+    }
+  },
+  "care-messages": {
+    "title": "Care messages",
+    "columns": {
+      "createdAt": "Time",
+      "channel": "Channel",
+      "direction": "Direction",
+      "kind": "Type",
+      "user": "Customer",
+      "content": "Content",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "direction": {
+      "inbound": "Inbound",
+      "outbound": "Outbound"
+    },
+    "kind": {
+      "order": "Order",
+      "support": "Support",
+      "test": "Test"
+    },
+    "status": {
+      "sent": "Sent",
+      "failed": "Failed",
+      "received": "Received"
+    },
+    "filters": {
+      "channel": "Channel",
+      "allChannels": "All channels",
+      "direction": "Direction",
+      "allDirections": "All"
+    },
+    "reply": {
+      "title": "Conversation with {{user}}",
+      "placeholder": "Type a reply...",
+      "send": "Send",
+      "sent": "Message sent",
+      "sendFailed": "Failed to send message",
+      "empty": "No messages in this conversation yet"
+    }
   },
   "events": {
     "title": "Events",
@@ -144,7 +376,8 @@
       "topic": "Topic",
       "status": "Status",
       "publishAt": "Publish at",
-      "unpublishAt": "Unpublish at"
+      "unpublishAt": "Unpublish at",
+      "actions": "Actions"
     },
     "status": {
       "active": "Active",
@@ -154,6 +387,9 @@
       "title": "Title",
       "slug": "Slug",
       "slugPlaceholder": "auto-generated from title",
+      "description": "Short description",
+      "descriptionPlaceholder": "A brief summary of the post",
+      "descriptionHint": "Shown on post listings and used as the default SEO description when the SEO section below is left empty.",
       "topic": "Topic",
       "topicPlaceholder": "Select a topic",
       "noTopic": "No topic",
@@ -166,11 +402,11 @@
       "source": "Source",
       "sourceHint": "Credit the original source when this post is adapted from elsewhere, e.g. \"Via VnExpress\".",
       "seoSectionTitle": "SEO",
-      "seoSectionHint": "Optional — leave blank to fall back to the post title and auto-generated excerpt.",
+      "seoSectionHint": "Optional — leave blank to fall back to the post title and short description.",
       "seoTitle": "SEO title",
       "seoTitlePlaceholder": "defaults to the post title",
       "seoDescription": "SEO description",
-      "seoDescriptionPlaceholder": "defaults to an auto-generated excerpt from the content",
+      "seoDescriptionPlaceholder": "defaults to the short description above",
       "seoKeywords": "SEO keywords",
       "seoKeywordsPlaceholder": "comma-separated, e.g. lotus tea, vietnamese tea"
     },
@@ -178,19 +414,31 @@
       "create": "Create post",
       "save": "Save changes",
       "delete": "Delete",
+      "duplicate": "Duplicate",
       "backToList": "Back to list"
     },
     "messages": {
       "created": "Post created successfully",
       "updated": "Post updated successfully",
       "deleted": "Post deleted successfully",
+      "duplicated": "Post duplicated successfully — the copy is inactive",
       "createFailed": "Failed to create post",
       "updateFailed": "Failed to update post",
       "deleteFailed": "Failed to delete post",
+      "duplicateFailed": "Failed to duplicate post",
       "deleteConfirmTitle": "Delete post",
       "deleteConfirmDesc": "Are you sure you want to delete \"{{title}}\"?",
       "confirmDelete": "Delete",
       "cancelDelete": "Cancel"
+    }
+  },
+  "productDuplicate": {
+    "title": "Duplicate product",
+    "hint": "Create a draft copy including variants, options, images, prices, categories and sales channels. SKU / barcode are left blank for you to fill in.",
+    "action": "Duplicate",
+    "messages": {
+      "success": "Product duplicated successfully",
+      "failed": "Failed to duplicate product"
     }
   },
   "campaign-topics": {
@@ -377,6 +625,19 @@
       "cancel": "Cancel",
       "done": "Image deleted",
       "failed": "Failed to delete image"
+    },
+    "picker": {
+      "title": "Insert image",
+      "upload": "Upload a new image",
+      "uploading": "Uploading...",
+      "dropHint": "Drag an image here or click to choose a file",
+      "orPasteUrl": "or paste an existing image URL",
+      "urlPlaceholder": "https://...",
+      "useUrl": "Use this URL",
+      "library": "Image library",
+      "empty": "No images in the library yet — upload one above.",
+      "select": "Select this image",
+      "uploadFailed": "Image upload failed"
     }
   },
   "storefrontLink": {

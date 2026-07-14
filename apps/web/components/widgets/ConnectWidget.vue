@@ -5,6 +5,9 @@
 const { t } = useI18n()
 const { social } = useSettings()
 const { setOpen, closeEpoch } = useUiOverlay()
+// Trang chi tiết sản phẩm hiện "Thanh mua nhanh cố định" ở đáy màn hình —
+// dịch widget lên trên để không bị thanh đó che khuất.
+const { active: quickBuyBarActive } = useQuickBuyBar()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -67,7 +70,7 @@ async function submit() {
 </script>
 
 <template>
-  <div ref="root" class="connect">
+  <div ref="root" class="connect" :class="{ 'above-buybar': quickBuyBarActive }">
     <!-- Panel: chỉ còn form "Để lại thông tin" -->
     <Transition name="cpop">
       <div v-if="open" class="panel" role="dialog" :aria-label="t('connect.leaveInfo')">
@@ -134,6 +137,14 @@ async function submit() {
   left: 20px;
   bottom: 20px;
   z-index: 1000;
+  transition: bottom .25s ease;
+}
+
+/* Thanh mua nhanh cố định (trang chi tiết sản phẩm) cao ~64px — dịch widget
+   lên trên nó thay vì để đè lên nhau. Hai class gộp lại (specificity cao hơn
+   .connect một mình) nên thắng cả rule mobile bên dưới. */
+.connect.above-buybar {
+  bottom: 88px;
 }
 
 /* ── Hàng ngang: FAB ngoài cùng bên trái + icon kênh liên lạc luôn hiện ── */

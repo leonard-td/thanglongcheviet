@@ -41,10 +41,10 @@ const posts = computed(() =>
       <h2 v-else id="blog-list-heading" class="sr-only">{{ t('blog.title') }}</h2>
 
       <!-- Loading skeleton -->
-      <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        <div v-for="n in 6" :key="n" class="rounded-2xl overflow-hidden bg-white/5 animate-pulse">
+      <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        <div v-for="n in 8" :key="n" class="rounded-2xl overflow-hidden bg-white/5 animate-pulse">
           <div class="aspect-[16/10]" />
-          <div class="p-6 space-y-3">
+          <div class="p-4 space-y-3">
             <div class="h-3 w-24 rounded bg-white/10" />
             <div class="h-5 w-3/4 rounded bg-white/10" />
             <div class="h-3 w-full rounded bg-white/10" />
@@ -52,18 +52,20 @@ const posts = computed(() =>
         </div>
       </div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        <!-- overflow-hidden chỉ đặt trên khung ảnh (không đặt trên card)
+             để tooltip của tiêu đề không bị cắt -->
         <article
           v-for="post in posts"
           :key="post.id"
-          class="group flex flex-col overflow-hidden rounded-2xl bg-white/[0.04] animate-on-scroll
+          class="group flex flex-col rounded-2xl bg-white/[0.04] animate-on-scroll
                  ring-1 ring-white/10 hover:ring-primary-400/50
                  hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30
                  transition-all duration-300"
         >
           <NuxtLink
             :to="localePath(`/tin-tuc/${post.slug}`)"
-            class="relative block aspect-[16/10] overflow-hidden"
+            class="relative block aspect-[16/10] overflow-hidden rounded-t-2xl"
             :aria-label="post.title"
           >
             <img
@@ -72,31 +74,27 @@ const posts = computed(() =>
               loading="lazy"
               class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             >
-            <span
-              v-if="post.topic"
-              class="absolute left-4 top-4 inline-flex items-center rounded-full
-                     bg-primary-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white shadow"
-            >
-              {{ post.topic.name }}
-            </span>
+            <!-- Nhãn chủ đề đã ẩn trên danh sách bài viết theo yêu cầu UI -->
           </NuxtLink>
 
-          <div class="flex flex-1 flex-col p-6">
+          <div class="flex flex-1 flex-col p-4">
             <time class="text-primary-400 text-xs uppercase tracking-[0.2em]">{{ post.dateLabel }}</time>
             <h3
-              class="font-heading text-lg md:text-xl font-semibold text-white mt-2 mb-3
-                     group-hover:text-primary-400 transition-colors line-clamp-2"
+              class="font-heading text-base font-semibold text-white mt-2 mb-2
+                     group-hover:text-primary-400 transition-colors"
             >
-              <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)">
-                {{ post.title }}
-              </NuxtLink>
+              <WidgetsTooltip :text="post.title" placement="top" multiline class="w-full min-w-0">
+                <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)" class="block w-full truncate">
+                  {{ post.title }}
+                </NuxtLink>
+              </WidgetsTooltip>
             </h3>
-            <p class="text-white/50 text-sm leading-relaxed line-clamp-3">
+            <p class="text-white/50 text-sm leading-relaxed line-clamp-2">
               {{ post.excerpt }}
             </p>
             <NuxtLink
               :to="localePath(`/tin-tuc/${post.slug}`)"
-              class="mt-auto pt-4 inline-flex items-center gap-1.5 text-primary-400 text-xs
+              class="mt-auto pt-3 inline-flex items-center gap-1.5 text-primary-400 text-xs
                      font-condensed uppercase tracking-[0.15em] hover:text-primary-300 transition-colors"
             >
               {{ t('blog.readMore') }}

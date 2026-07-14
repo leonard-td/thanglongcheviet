@@ -5,7 +5,239 @@
     "campaignTopics": "Chủ đề bài viết",
     "media": "Thư viện ảnh",
     "events": "Sự kiện",
-    "eventRegistrations": "Đăng ký sự kiện"
+    "eventRegistrations": "Đăng ký sự kiện",
+    "careChannels": "Kênh CSKH",
+    "careMessages": "Tin nhắn CSKH",
+    "backup": "Sao lưu & Phục hồi",
+    "storeInfo": "Thông tin cửa hàng"
+  },
+  "relatedCollection": {
+    "title": "Bộ sưu tập liên quan",
+    "hint": "Sản phẩm của bộ sưu tập này hiển thị ở menu bên phải trang danh mục trên website.",
+    "placeholder": "Chọn bộ sưu tập",
+    "none": "Không chọn",
+    "save": "Lưu",
+    "saved": "Đã lưu bộ sưu tập liên quan",
+    "saveFailed": "Lưu thất bại"
+  },
+  "storeInfo": {
+    "title": "Thông tin cửa hàng",
+    "subtitle": "Thông tin liên hệ, ảnh nền trang chủ và bài giới thiệu",
+    "sections": {
+      "contact": "Thông tin liên hệ",
+      "heroImages": "Ảnh nền trang chủ",
+      "heroImagesHint": "Hai ảnh nền hiển thị trên trang chủ của website.",
+      "about": "Bài giới thiệu",
+      "aboutHint": "Nội dung trang giới thiệu cửa hàng trên website."
+    },
+    "fields": {
+      "storeName": "Tên cửa hàng",
+      "email": "Email",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "googleMapUrl": "Link Google Maps",
+      "googleMapUrlHint": "Dán link chia sẻ địa điểm từ Google Maps.",
+      "openHours": "Giờ mở cửa",
+      "openHoursPlaceholder": "VD: 8:00 – 22:00 hằng ngày",
+      "facebookUrl": "Link Facebook",
+      "zaloUrl": "Link Zalo",
+      "instagramUrl": "Link Instagram",
+      "heroImage1": "Ảnh nền 1",
+      "heroImage2": "Ảnh nền 2",
+      "aboutTitle": "Tiêu đề bài giới thiệu",
+      "aboutThumbnail": "Ảnh thumbnail",
+      "aboutContent": "Nội dung bài viết",
+      "aboutCollection": "Bộ sưu tập hiển thị kèm",
+      "aboutCollectionPlaceholder": "Chọn bộ sưu tập",
+      "aboutCollectionHint": "Sản phẩm của bộ sưu tập này hiển thị ở menu bên phải trang giới thiệu.",
+      "noCollection": "Không chọn"
+    },
+    "actions": {
+      "save": "Lưu"
+    },
+    "messages": {
+      "saved": "Đã lưu thông tin cửa hàng",
+      "saveFailed": "Lưu thất bại"
+    }
+  },
+  "backup": {
+    "title": "Sao lưu & Phục hồi",
+    "hint": "Nén toàn bộ database và thư viện media đã upload thành file zip, hoặc khôi phục hệ thống từ file backup. Trước mỗi lần phục hồi, dữ liệu hiện tại luôn được tự động sao lưu (pre-restore).",
+    "createButton": "Tạo bản sao lưu",
+    "restoreUploadButton": "Phục hồi từ file...",
+    "listTitle": "Các bản sao lưu",
+    "empty": "Chưa có bản sao lưu nào.",
+    "columns": {
+      "name": "File",
+      "size": "Dung lượng",
+      "createdAt": "Thời điểm tạo",
+      "actions": "Thao tác"
+    },
+    "actions": {
+      "download": "Tải về",
+      "restore": "Phục hồi từ bản này",
+      "delete": "Xóa"
+    },
+    "job": {
+      "runningBackup": "Đang tạo bản sao lưu...",
+      "runningRestore": "Đang phục hồi — không tắt hay khởi động lại server...",
+      "completedBackup": "Đã tạo bản sao lưu: {{file}}",
+      "completedRestore": "Phục hồi hoàn tất. Dữ liệu trước đó đã được tự động sao lưu thành {{file}}. Hãy tải lại trang — có thể bạn cần đăng nhập lại.",
+      "failed": "Tác vụ thất bại: {{error}}"
+    },
+    "steps": {
+      "starting": "Đang khởi động...",
+      "dump_db": "Đang xuất database...",
+      "collect_static": "Đang thu thập file media...",
+      "zip": "Đang nén file...",
+      "validate": "Đang kiểm tra toàn vẹn file backup...",
+      "check_compat": "Đang kiểm tra tương thích schema...",
+      "pre_restore_backup": "Đang tự động sao lưu dữ liệu hiện tại (pre-restore)...",
+      "restore_db": "Đang phục hồi database...",
+      "restore_static": "Đang phục hồi file media..."
+    },
+    "restorePrompt": {
+      "title": "Phục hồi hệ thống?",
+      "description": "Toàn bộ dữ liệu hiện tại (database và thư viện media) sẽ bị THAY THẾ bằng nội dung của \"{{file}}\". Hệ thống sẽ tự động sao lưu hiện trạng trước, nhưng đây vẫn là thao tác thay đổi toàn hệ thống.",
+      "confirmText": "RESTORE",
+      "confirm": "Phục hồi",
+      "cancel": "Hủy"
+    },
+    "deletePrompt": {
+      "title": "Xóa bản sao lưu?",
+      "description": "\"{{file}}\" sẽ bị xóa vĩnh viễn khỏi server.",
+      "confirm": "Xóa",
+      "cancel": "Hủy"
+    },
+    "toasts": {
+      "backupStarted": "Đã bắt đầu tạo bản sao lưu",
+      "restoreStarted": "Đã bắt đầu phục hồi",
+      "deleted": "Đã xóa bản sao lưu",
+      "jobRunning": "Đang có tác vụ sao lưu/phục hồi khác chạy",
+      "requestFailed": "Yêu cầu thất bại"
+    }
+  },
+  "care-channels": {
+    "title": "Kênh chăm sóc khách hàng",
+    "hint": "Tích hợp Zalo OA, Telegram... để nhận thông báo đơn hàng và nhắn tin với khách hàng.",
+    "create": "Thêm kênh",
+    "edit": "Chỉnh sửa kênh",
+    "columns": {
+      "name": "Tên kênh",
+      "provider": "Nền tảng",
+      "scopes": "Phạm vi",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "provider": {
+      "telegram": "Telegram",
+      "zalo_oa": "Zalo OA"
+    },
+    "scopes": {
+      "orders": "Đơn hàng",
+      "messages": "Tin nhắn"
+    },
+    "status": {
+      "active": "Đang hoạt động",
+      "inactive": "Tạm dừng"
+    },
+    "fields": {
+      "name": "Tên kênh",
+      "provider": "Nền tảng",
+      "notifyOrders": "Nhận thông báo đơn hàng",
+      "notifyOrdersHint": "Gửi tin tới kênh này khi có đơn hàng mới (chăm sóc bán hàng).",
+      "receiveMessages": "Nhận/gửi tin nhắn khách hàng",
+      "receiveMessagesHint": "Nhận tin khách nhắn tới kênh và cho phép nhân viên trả lời (CSKH chung).",
+      "active": "Kích hoạt",
+      "telegramSectionTitle": "Cấu hình Telegram",
+      "telegramSectionHint": "Tạo bot qua @BotFather, thêm bot vào group nhận thông báo rồi điền thông tin bên dưới.",
+      "botToken": "Bot token",
+      "chatId": "Chat ID mặc định",
+      "chatIdHint": "ID group/chat nhận thông báo (group ID thường bắt đầu bằng -100).",
+      "zaloSectionTitle": "Cấu hình Zalo OA",
+      "zaloSectionHint": "Lấy thông tin từ Zalo Developer Console của Official Account.",
+      "oaId": "OA ID",
+      "appId": "App ID",
+      "secretKey": "Secret key",
+      "accessToken": "Access token",
+      "refreshToken": "Refresh token",
+      "refreshTokenHint": "Token tự xoay vòng khi hệ thống refresh — chỉ dán lại khi lấy token mới từ Zalo.",
+      "notifyUserIds": "Zalo user ID nhận thông báo",
+      "notifyUserIdsHint": "Danh sách user ID (phân tách bằng dấu phẩy) của nhân viên nhận thông báo — user phải nhắn tin cho OA trước ít nhất một lần.",
+      "secretKeepHint": "Khi chỉnh sửa, để trống nếu muốn giữ giá trị đã lưu."
+    },
+    "webhook": {
+      "title": "Webhook nhận tin nhắn",
+      "telegramHint": "Bấm nút để đăng ký webhook với Telegram (yêu cầu backend có HTTPS công khai qua MEDUSA_BACKEND_URL).",
+      "zaloHint": "Sao chép URL này và dán vào mục Webhook trong Zalo Developer Console.",
+      "register": "Đăng ký với Telegram",
+      "registered": "Đã đăng ký webhook",
+      "registerFailed": "Đăng ký webhook thất bại"
+    },
+    "actions": {
+      "create": "Tạo kênh",
+      "edit": "Chỉnh sửa",
+      "sendTest": "Gửi tin thử",
+      "delete": "Xoá",
+      "save": "Lưu",
+      "backToList": "Quay lại"
+    },
+    "messages": {
+      "created": "Đã tạo kênh",
+      "createFailed": "Tạo kênh thất bại",
+      "updated": "Đã lưu kênh",
+      "updateFailed": "Lưu kênh thất bại",
+      "deleted": "Đã xoá kênh",
+      "deleteFailed": "Xoá kênh thất bại",
+      "deleteConfirmTitle": "Xoá kênh?",
+      "deleteConfirmDesc": "Kênh \"{{name}}\" sẽ bị xoá và ngừng nhận/gửi tin.",
+      "confirmDelete": "Xoá",
+      "cancelDelete": "Huỷ",
+      "testSent": "Đã gửi tin thử — kiểm tra kênh của bạn",
+      "testFailed": "Gửi tin thử thất bại"
+    }
+  },
+  "care-messages": {
+    "title": "Tin nhắn CSKH",
+    "columns": {
+      "createdAt": "Thời gian",
+      "channel": "Kênh",
+      "direction": "Chiều",
+      "kind": "Loại",
+      "user": "Khách hàng",
+      "content": "Nội dung",
+      "status": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "direction": {
+      "inbound": "Nhận",
+      "outbound": "Gửi"
+    },
+    "kind": {
+      "order": "Đơn hàng",
+      "support": "CSKH",
+      "test": "Tin thử"
+    },
+    "status": {
+      "sent": "Đã gửi",
+      "failed": "Lỗi",
+      "received": "Đã nhận"
+    },
+    "filters": {
+      "channel": "Kênh",
+      "allChannels": "Tất cả kênh",
+      "direction": "Chiều",
+      "allDirections": "Tất cả"
+    },
+    "reply": {
+      "title": "Hội thoại với {{user}}",
+      "placeholder": "Nhập tin nhắn trả lời...",
+      "send": "Gửi",
+      "sent": "Đã gửi tin nhắn",
+      "sendFailed": "Gửi tin nhắn thất bại",
+      "empty": "Chưa có tin nhắn trong hội thoại này"
+    }
   },
   "events": {
     "title": "Sự kiện",
@@ -144,7 +376,8 @@
       "topic": "Chủ đề",
       "status": "Trạng thái",
       "publishAt": "Thời gian đăng",
-      "unpublishAt": "Thời gian gỡ"
+      "unpublishAt": "Thời gian gỡ",
+      "actions": "Thao tác"
     },
     "status": {
       "active": "Đang hoạt động",
@@ -154,6 +387,9 @@
       "title": "Tiêu đề",
       "slug": "Đường dẫn (slug)",
       "slugPlaceholder": "tự động tạo từ tiêu đề",
+      "description": "Mô tả ngắn",
+      "descriptionPlaceholder": "Tóm tắt ngắn gọn nội dung bài viết",
+      "descriptionHint": "Hiển thị ở danh sách bài viết và dùng làm mô tả SEO mặc định nếu không đặt riêng ở mục SEO bên dưới.",
       "topic": "Chủ đề",
       "topicPlaceholder": "Chọn chủ đề",
       "noTopic": "Không thuộc chủ đề nào",
@@ -166,11 +402,11 @@
       "source": "Nguồn bài viết",
       "sourceHint": "Ghi rõ xuất xứ nếu bài viết được biên tập lại từ nơi khác, ví dụ \"Theo VnExpress\".",
       "seoSectionTitle": "Thông tin SEO",
-      "seoSectionHint": "Tùy chọn — nếu bỏ trống, website sẽ tự dùng tiêu đề và đoạn trích của bài viết.",
+      "seoSectionHint": "Tùy chọn — nếu bỏ trống, website sẽ tự dùng tiêu đề và mô tả ngắn của bài viết.",
       "seoTitle": "Tiêu đề SEO",
       "seoTitlePlaceholder": "mặc định dùng tiêu đề bài viết",
       "seoDescription": "Mô tả SEO",
-      "seoDescriptionPlaceholder": "mặc định dùng đoạn trích tự động từ nội dung",
+      "seoDescriptionPlaceholder": "mặc định dùng mô tả ngắn ở trên",
       "seoKeywords": "Từ khóa SEO",
       "seoKeywordsPlaceholder": "phân tách bằng dấu phẩy, ví dụ: trà sen, trà việt"
     },
@@ -178,19 +414,31 @@
       "create": "Tạo bài viết",
       "save": "Lưu thay đổi",
       "delete": "Xóa",
+      "duplicate": "Nhân bản",
       "backToList": "Quay lại danh sách"
     },
     "messages": {
       "created": "Tạo bài viết thành công",
       "updated": "Cập nhật bài viết thành công",
       "deleted": "Xóa bài viết thành công",
+      "duplicated": "Nhân bản bài viết thành công — bản sao đang ở trạng thái tạm dừng",
       "createFailed": "Tạo bài viết thất bại",
       "updateFailed": "Cập nhật bài viết thất bại",
       "deleteFailed": "Xóa bài viết thất bại",
+      "duplicateFailed": "Nhân bản bài viết thất bại",
       "deleteConfirmTitle": "Xóa bài viết",
       "deleteConfirmDesc": "Bạn có chắc muốn xóa \"{{title}}\" không?",
       "confirmDelete": "Xóa",
       "cancelDelete": "Hủy"
+    }
+  },
+  "productDuplicate": {
+    "title": "Nhân bản sản phẩm",
+    "hint": "Tạo bản sao ở trạng thái nháp gồm biến thể, tùy chọn, hình ảnh, giá, danh mục và kênh bán. SKU / mã vạch để trống để bạn đặt lại.",
+    "action": "Nhân bản",
+    "messages": {
+      "success": "Nhân bản sản phẩm thành công",
+      "failed": "Nhân bản sản phẩm thất bại"
     }
   },
   "campaign-topics": {
@@ -377,6 +625,19 @@
       "cancel": "Hủy",
       "done": "Đã xóa ảnh",
       "failed": "Xóa ảnh thất bại"
+    },
+    "picker": {
+      "title": "Chèn ảnh",
+      "upload": "Tải ảnh mới",
+      "uploading": "Đang tải lên...",
+      "dropHint": "Kéo thả ảnh vào đây hoặc bấm để chọn file",
+      "orPasteUrl": "hoặc dán URL ảnh có sẵn",
+      "urlPlaceholder": "https://...",
+      "useUrl": "Dùng URL này",
+      "library": "Thư viện ảnh",
+      "empty": "Chưa có ảnh nào trong thư viện — tải ảnh mới ở trên.",
+      "select": "Chọn ảnh này",
+      "uploadFailed": "Tải ảnh lên thất bại"
     }
   },
   "storefrontLink": {

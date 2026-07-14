@@ -1,62 +1,60 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { z } from "zod"
 import { SITE_SETTINGS_MODULE } from "../../../modules/site-settings"
+import type SiteSettingsModuleService from "../../../modules/site-settings/service"
+import {
+  normalizeTiptapImageUrls,
+  toRelativeMediaUrl,
+} from "../../utils/media-url"
 
-export async function GET(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
-  const siteSettingsService = req.scope.resolve(SITE_SETTINGS_MODULE)
-  
-  const settings = await siteSettingsService.listSiteSettings()
-  
-  // Transform array into an object mapping key -> value
-  const formattedSettings = settings.reduce((acc, setting) => {
-    acc[setting.key] = setting.value
-    return acc
-  }, {})
+const UpdateSiteSettingsSchema = z.object({
+  store_name: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  google_map_url: z.string().nullable().optional(),
+  open_hours: z.string().nullable().optional(),
+  facebook_url: z.string().nullable().optional(),
+  zalo_url: z.string().nullable().optional(),
+  instagram_url: z.string().nullable().optional(),
+  hero_images: z.array(z.string()).max(2).optional(),
+  about_title: z.string().nullable().optional(),
+  about_thumbnail: z.string().nullable().optional(),
+  about_content: z.record(z.string(), z.unknown()).nullable().optional(),
+  about_collection_id: z.string().nullable().optional(),
+})
 
-  res.json({
-    site_settings: formattedSettings,
-  })
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const service: SiteSettingsModuleService =
+    req.scope.resolve(SITE_SETTINGS_MODULE)
+
+  const settings = await service.getSingleton()
+
+  res.json({ site_settings: settings })
 }
 
-export async function POST(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
-  const siteSettingsService = req.scope.resolve(SITE_SETTINGS_MODULE)
-  const { settings } = req.body as { settings: Record<string, any> }
-  
-  if (!settings || typeof settings !== 'object') {
-    res.status(400).json({ message: "Invalid settings payload" })
-    return
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const service: SiteSettingsModuleService =
+    req.scope.resolve(SITE_SETTINGS_MODULE)
+
+  const body = UpdateSiteSettingsSchema.parse(req.body)
+
+  const data: Record<string, unknown> = { ...body }
+  if (body.hero_images) {
+    data.hero_images = body.hero_images
+      .map((url) => toRelativeMediaUrl(url))
+      .filter(Boolean)
+  }
+  if ("about_thumbnail" in body) {
+    data.about_thumbnail = toRelativeMediaUrl(body.about_thumbnail)
+  }
+  if (body.about_content) {
+    data.about_content = normalizeTiptapImageUrls(
+      body.about_content as Record<string, unknown>
+    )
   }
 
-  // settings is an object of key -> value. We need to update or create each one.
-  for (const [key, value] of Object.entries(settings)) {
-    // Check if it exists
-    const existing = await siteSettingsService.listSiteSettings({ key })
-    
-    if (existing.length > 0) {
-      await siteSettingsService.updateSiteSettings({
-        id: existing[0].id,
-        value,
-      })
-    } else {
-      await siteSettingsService.createSiteSettings({
-        key,
-        value,
-      })
-    }
-  }
+  const settings = await service.updateSingleton(data)
 
-  const updatedSettings = await siteSettingsService.listSiteSettings()
-  const formattedSettings = updatedSettings.reduce((acc, setting) => {
-    acc[setting.key] = setting.value
-    return acc
-  }, {})
-
-  res.json({
-    site_settings: formattedSettings,
-  })
+  res.json({ site_settings: settings })
 }

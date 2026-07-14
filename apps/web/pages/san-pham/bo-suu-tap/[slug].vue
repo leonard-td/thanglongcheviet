@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// Banner của ProductGroupShowcase tự render marquee inline ngay dưới nó
+definePageMeta({ bannerMarquee: true })
+
 const { t } = useI18n()
 const route = useRoute()
 const { site } = useSettings()
@@ -28,6 +31,7 @@ useSeoMeta({
     :pending="pending"
     :group-label="t('products.browseCollections')"
     :heading="collection?.label ?? ''"
+    :image="collection?.thumbnail"
     :items="collections"
     :active-slug="slug"
     base-path="/san-pham/bo-suu-tap"

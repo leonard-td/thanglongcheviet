@@ -2,6 +2,11 @@
 .env
 .DS_Store
 /uploads
+# file zip backup do admin Settings > Backup tạo ra
+/.backups
+# thư mục runtime của quá trình restore media (bản cũ giữ lại để quay lui)
+/static/.old-*
+/static/.restore-tmp
 /node_modules
 yarn-error.log
 

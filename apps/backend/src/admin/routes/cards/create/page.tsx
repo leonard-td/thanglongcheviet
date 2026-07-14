@@ -1,9 +1,10 @@
-import { Button, Heading, toast } from "@medusajs/ui"
+import { Button, toast } from "@medusajs/ui"
 import { useMutation } from "@tanstack/react-query"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CardForm from "../../../components/card-form"
+import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { sdk } from "../../../lib/sdk"
 import type { CardResponse } from "../../../types/card"
@@ -45,14 +46,28 @@ const CreateCardPage = () => {
 
   return (
     <PageLayout>
-      <div className="flex items-center justify-between px-6 py-4">
-        <Heading level="h1">{t("cards.create")}</Heading>
-        <Button variant="secondary" onClick={() => navigate("..")}>
-          {t("cards.actions.backToList")}
-        </Button>
-      </div>
+      <PageHeader
+        title={t("cards.create")}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate("..")}>
+              {t("cards.actions.backToList")}
+            </Button>
+            <Button
+              form="card-form"
+              type="submit"
+              variant="primary"
+              isLoading={isPending}
+            >
+              {t("cards.actions.create")}
+            </Button>
+          </>
+        }
+      />
 
       <CardForm
+        formId="card-form"
+        hideSubmit
         titleVi={titleVi}
         titleEn={titleEn}
         image={image}

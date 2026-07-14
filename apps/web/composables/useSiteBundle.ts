@@ -51,7 +51,9 @@ export function useSiteBundle() {
           hours: remoteSettings.hours || localFallback.settings.hours,
           social: {
             ...localFallback.settings.social,
-            facebook: remoteSettings.facebook || localFallback.settings.social.facebook,
+            facebook: remoteSettings.facebook_url || localFallback.settings.social.facebook,
+            zalo: remoteSettings.zalo_url || localFallback.settings.social.zalo,
+            instagram: remoteSettings.instagram_url || localFallback.settings.social.instagram,
           }
         }
       } as SiteBundle

@@ -5,15 +5,18 @@
 withDefaults(defineProps<{
   text: string
   placement?: 'top' | 'bottom' | 'left' | 'right'
+  /** Cho phép nội dung dài xuống dòng (mặc định bubble 1 dòng nowrap). */
+  multiline?: boolean
 }>(), {
   placement: 'top',
+  multiline: false,
 })
 </script>
 
 <template>
   <span class="tt-wrap">
     <slot />
-    <span class="tt-bubble" :class="`tt-${placement}`" role="tooltip">
+    <span class="tt-bubble" :class="[`tt-${placement}`, { 'tt-multiline': multiline }]" role="tooltip">
       {{ text }}
     </span>
   </span>
@@ -42,6 +45,14 @@ withDefaults(defineProps<{
   visibility: hidden;
   pointer-events: none;
   transition: opacity .16s ease, transform .16s ease, visibility .16s;
+}
+
+.tt-multiline {
+  white-space: normal;
+  width: max-content;
+  max-width: min(280px, 80vw);
+  text-align: left;
+  line-height: 1.4;
 }
 
 .tt-bubble::before {

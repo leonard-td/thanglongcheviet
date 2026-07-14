@@ -11,6 +11,8 @@ type CardFormProps = {
   isActive: boolean
   isSubmitting?: boolean
   submitLabel: string
+  formId?: string
+  hideSubmit?: boolean
   onTitleViChange: (value: string) => void
   onTitleEnChange: (value: string) => void
   onImageChange: (value: string) => void
@@ -28,6 +30,8 @@ const CardForm = ({
   isActive,
   isSubmitting = false,
   submitLabel,
+  formId,
+  hideSubmit = false,
   onTitleViChange,
   onTitleEnChange,
   onImageChange,
@@ -38,7 +42,7 @@ const CardForm = ({
   const { t } = useTranslation()
 
   return (
-    <form className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
+    <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
       {locked && (
         <Text className="text-ui-fg-subtle rounded-md bg-ui-bg-subtle p-3" size="small">
           {t("cards.lockedNotice")}
@@ -80,11 +84,13 @@ const CardForm = ({
         <Label>{t("cards.fields.active")}</Label>
       </div>
 
-      <div className="flex justify-end">
-        <Button isLoading={isSubmitting} type="submit" variant="primary">
-          {submitLabel}
-        </Button>
-      </div>
+      {!hideSubmit && (
+        <div className="flex justify-end">
+          <Button isLoading={isSubmitting} type="submit" variant="primary">
+            {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }

@@ -3,8 +3,14 @@
     "name": "Thăng Long Chè Việt",
     "tagline": "Nghệ thuật làm đẹp truyền thống"
   },
+  "about": {
+    "title": "Giới thiệu",
+    "comingSoon": "Nội dung đang được cập nhật.",
+    "sidebarTitle": "Sản phẩm nổi bật"
+  },
   "nav": {
     "home": "Trang chủ",
+    "about": "Giới thiệu",
     "products": "Sản phẩm",
     "productsMenu": {
       "teaViet": "Thăng Long Chè Việt",
@@ -172,6 +178,7 @@
     "browseCategories": "Danh mục",
     "browseCollections": "Bộ sưu tập",
     "productCount": "{count} sản phẩm",
+    "collectionSidebar": "Bộ sưu tập liên quan",
     "emptyCollection": "Chưa có sản phẩm trong bộ sưu tập này.",
     "viewAllProducts": "Xem tất cả sản phẩm",
     "collectionsEyebrow": "Bộ sưu tập",
@@ -188,6 +195,8 @@
     "empty": "Giỏ hàng của bạn đang trống.",
     "continueShopping": "Tiếp tục mua sắm",
     "quantity": "Số lượng",
+    "increase": "Tăng số lượng",
+    "decrease": "Giảm số lượng",
     "remove": "Xóa",
     "total": "Tổng cộng",
     "checkoutTitle": "Thông tin giao hàng",
@@ -330,6 +339,7 @@
     "readMore": "Đọc tiếp",
     "readingTime": "{minutes} phút đọc",
     "related": "Bài viết liên quan",
+    "sameTopic": "Bài viết cùng chủ đề",
     "backToTopic": "Quay lại chủ đề {topic}",
     "topics": {
       "eyebrow": "Chủ đề",

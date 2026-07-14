@@ -1,4 +1,10 @@
 <script setup lang="ts">
+// inline: nằm trong luồng trang (dưới banner / đầu main) thay vì fixed top —
+// dùng trên mọi trang ngoài trang chủ; trang chủ giữ biến thể fixed.
+const props = withDefaults(defineProps<{ inline?: boolean }>(), {
+  inline: false,
+})
+
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { posts: rawPosts, latestPosts } = useBlog()
@@ -16,7 +22,12 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
 </script>
 
 <template>
-  <div class="home-marquee" role="region" :aria-label="t('site.name')">
+  <div
+    class="home-marquee"
+    :class="{ 'is-inline': props.inline }"
+    role="region"
+    :aria-label="t('site.name')"
+  >
     <div class="home-marquee-brand">
       <LayoutSiteLogo variant="marquee" />
     </div>
@@ -47,7 +58,7 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
         </ul>
       </div>
     </div>
-    <WidgetsLangSwitch />
+    <WidgetsLangSwitch v-if="!props.inline" />
   </div>
 </template>
 
@@ -162,6 +173,15 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
   color: var(--marquee-text);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* Biến thể inline: nằm trong luồng trang thay vì ghim fixed lên đầu viewport */
+.home-marquee.is-inline {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: 30;
 }
 
 @keyframes marquee-rtl {

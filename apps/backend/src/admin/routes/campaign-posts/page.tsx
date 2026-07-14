@@ -1,25 +1,32 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { DocumentText } from "@medusajs/icons"
+import { DocumentText, SquareTwoStack } from "@medusajs/icons"
 import {
   Badge,
   Button,
   DataTable,
   Heading,
+  IconButton,
   createDataTableColumnHelper,
+  toast,
   useDataTable,
   type DataTablePaginationState,
 } from "@medusajs/ui"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import PageLayout from "../../components/page-layout"
 import { sdk } from "../../lib/sdk"
-import type { CampaignPost, CampaignPostsResponse } from "../../types/campaign-post"
+import type {
+  CampaignPost,
+  CampaignPostResponse,
+  CampaignPostsResponse,
+} from "../../types/campaign-post"
 import type { CampaignTopicsResponse } from "../../types/campaign-topic"
 
 const CampaignPostsPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { t } = useTranslation()
   const limit = 15
   const [pagination, setPagination] = useState<DataTablePaginationState>({
@@ -57,6 +64,26 @@ const CampaignPostsPage = () => {
     }
     return map
   }, [topicsData])
+
+  const { mutate: duplicatePost, isPending: isDuplicating } = useMutation({
+    mutationFn: (postId: string) =>
+      sdk.client.fetch<CampaignPostResponse>(
+        `/admin/campaign-posts/${postId}/duplicate`,
+        { method: "POST" }
+      ),
+    onSuccess: ({ campaign_post }) => {
+      queryClient.invalidateQueries({ queryKey: [["campaign-posts"]] })
+      toast.success(t("campaign-posts.messages.duplicated"))
+      navigate(campaign_post.id)
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("campaign-posts.messages.duplicateFailed")
+      )
+    },
+  })
 
   const columnHelper = createDataTableColumnHelper<CampaignPost>()
 
@@ -100,6 +127,23 @@ const CampaignPostsPage = () => {
       header: t("campaign-posts.columns.unpublishAt"),
       cell: ({ getValue }) =>
         getValue() ? new Date(getValue() as string).toLocaleString() : "—",
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: t("campaign-posts.columns.actions"),
+      cell: ({ row }) => (
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <IconButton
+            size="small"
+            variant="transparent"
+            aria-label={t("campaign-posts.actions.duplicate")}
+            disabled={isDuplicating}
+            onClick={() => duplicatePost(row.original.id)}
+          >
+            <SquareTwoStack />
+          </IconButton>
+        </div>
+      ),
     }),
   ]
 

@@ -1,6 +1,7 @@
 import { Button } from "@medusajs/ui"
 import type { Editor } from "@tiptap/react"
-import { useRef } from "react"
+import { useRef, useState } from "react"
+import MediaPickerModal from "../media-picker-modal"
 import {
   Undo,
   Redo,
@@ -40,7 +41,6 @@ import {
 
 type TiptapToolbarProps = {
   editor: Editor
-  onUploadImage: (file: File) => Promise<string>
 }
 
 const ToolbarDivider = () => (
@@ -73,26 +73,9 @@ const ToolbarButton = ({
   </Button>
 )
 
-const TiptapToolbar = ({ editor, onUploadImage }: TiptapToolbarProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
   const colorInputRef = useRef<HTMLInputElement>(null)
-
-  const handleImageSelected = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0]
-
-    if (!file) {
-      return
-    }
-
-    try {
-      const url = await onUploadImage(file)
-      editor.chain().focus().setImage({ src: url }).run()
-    } finally {
-      event.target.value = ""
-    }
-  }
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
 
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href as string | undefined
@@ -356,7 +339,7 @@ const TiptapToolbar = ({ editor, onUploadImage }: TiptapToolbarProps) => {
         </ToolbarButton>
         <ToolbarButton
           title="Insert image"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setMediaPickerOpen(true)}
         >
           <ImageIcon size={16} />
         </ToolbarButton>
@@ -404,12 +387,10 @@ const TiptapToolbar = ({ editor, onUploadImage }: TiptapToolbarProps) => {
         </ToolbarButton>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleImageSelected}
+      <MediaPickerModal
+        open={mediaPickerOpen}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(url) => editor.chain().focus().setImage({ src: url }).run()}
       />
     </div>
   )

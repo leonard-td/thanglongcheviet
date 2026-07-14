@@ -110,6 +110,9 @@ services:
       # working dir) — named volume so uploads outlive redeploys, which wipe
       # and re-extract the surrounding .medusa/server artifact dir.
       - backend_static:/workspace/apps/backend/.medusa/server/static
+      # Backup zips (admin Settings > Backup writes to ./.backups under the
+      # working dir) — named volume for the same redeploy-survival reason.
+      - backend_backups:/workspace/apps/backend/.medusa/server/.backups
     # seed-base runs BEFORE seed-cards: on an empty database it creates the
     # base commerce data (sales channel, VND currency, Vietnam region, stock
     # location + shipping, publishable key) that every /store request needs.
@@ -180,3 +183,4 @@ volumes:
   postgres_data:
   backend_server_node_modules:
   backend_static:
+  backend_backups:

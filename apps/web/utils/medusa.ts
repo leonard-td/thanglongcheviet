@@ -27,12 +27,15 @@ export interface MedusaCategory {
   id: string
   name: string
   handle: string
+  // metadata.related_collection_id: bộ sưu tập gắn với danh mục (đặt trong admin)
+  metadata?: Record<string, unknown> | null
 }
 
 export interface MedusaCollection {
   id: string
   title: string
   handle: string
+  metadata?: Record<string, unknown> | null
 }
 
 export interface MedusaProduct {
@@ -51,7 +54,8 @@ export interface MedusaProduct {
 }
 
 export function transformMedusaCategory(c: MedusaCategory): ProductCategory {
-  return { id: c.id, slug: c.handle, name: c.name }
+  const thumbnail = typeof c.metadata?.thumbnail === 'string' ? c.metadata.thumbnail : null
+  return { id: c.id, slug: c.handle, name: c.name, thumbnail }
 }
 
 export function transformMedusaProduct(p: MedusaProduct): Product {
@@ -93,6 +97,7 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     description,
     categoryId: p.categories?.[0]?.id ?? null,
     categoryName: p.categories?.[0]?.name ?? '',
+    categoryIds: (p.categories ?? []).map(c => c.id),
     collectionId: p.collection?.id ?? null,
     collectionName: p.collection?.title ?? '',
     inStock: true,

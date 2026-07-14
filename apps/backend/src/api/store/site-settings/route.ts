@@ -1,21 +1,12 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { SITE_SETTINGS_MODULE } from "../../../modules/site-settings"
+import type SiteSettingsModuleService from "../../../modules/site-settings/service"
 
-export async function GET(
-  req: MedusaRequest,
-  res: MedusaResponse
-) {
-  const siteSettingsService = req.scope.resolve(SITE_SETTINGS_MODULE)
-  
-  const settings = await siteSettingsService.listSiteSettings()
-  
-  // Transform array into an object mapping key -> value
-  const formattedSettings = settings.reduce((acc, setting) => {
-    acc[setting.key] = setting.value
-    return acc
-  }, {})
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const service: SiteSettingsModuleService =
+    req.scope.resolve(SITE_SETTINGS_MODULE)
 
-  res.json({
-    site_settings: formattedSettings,
-  })
+  const settings = await service.getSingleton()
+
+  res.json({ site_settings: settings })
 }

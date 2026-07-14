@@ -1,8 +1,7 @@
 import type { JSONContent } from "@tiptap/core"
 import { EditorContent, useEditor } from "@tiptap/react"
-import { useCallback, useMemo } from "react"
+import { useMemo } from "react"
 
-import { sdk } from "../../lib/sdk"
 import {
   EMPTY_TIPTAP_DOC,
   getCampaignEditorExtensions,
@@ -34,20 +33,6 @@ const TiptapEditor = ({
     return EMPTY_TIPTAP_DOC
   }, [editorKey])
 
-  const uploadImage = useCallback(async (file: File) => {
-    const result = await sdk.admin.upload.create({
-      files: [file],
-    })
-
-    const url = result.files?.[0]?.url
-
-    if (!url) {
-      throw new Error("Image upload failed")
-    }
-
-    return url
-  }, [])
-
   const editor = useEditor(
     {
       extensions,
@@ -75,7 +60,7 @@ const TiptapEditor = ({
       onKeyDown={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
     >
-      {!readOnly && <TiptapToolbar editor={editor} onUploadImage={uploadImage} />}
+      {!readOnly && <TiptapToolbar editor={editor} />}
 
       <div className="campaign-tiptap-editor__content">
         <EditorContent editor={editor} />

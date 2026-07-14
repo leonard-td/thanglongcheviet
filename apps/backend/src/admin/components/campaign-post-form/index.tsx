@@ -22,6 +22,7 @@ const NO_TOPIC = "__none__"
 type CampaignPostFormProps = {
   title: string
   slug: string
+  description: string
   thumbnail: string
   topicId: string
   isActive: boolean
@@ -35,8 +36,11 @@ type CampaignPostFormProps = {
   editorKey?: string
   isSubmitting?: boolean
   submitLabel: string
+  formId?: string
+  hideSubmit?: boolean
   onTitleChange: (value: string) => void
   onSlugChange: (value: string) => void
+  onDescriptionChange: (value: string) => void
   onThumbnailChange: (value: string) => void
   onTopicIdChange: (value: string) => void
   onIsActiveChange: (value: boolean) => void
@@ -53,6 +57,7 @@ type CampaignPostFormProps = {
 const CampaignPostForm = ({
   title,
   slug,
+  description,
   thumbnail,
   topicId,
   isActive,
@@ -66,8 +71,11 @@ const CampaignPostForm = ({
   editorKey,
   isSubmitting = false,
   submitLabel,
+  formId,
+  hideSubmit = false,
   onTitleChange,
   onSlugChange,
+  onDescriptionChange,
   onThumbnailChange,
   onTopicIdChange,
   onIsActiveChange,
@@ -93,7 +101,7 @@ const CampaignPostForm = ({
   const topics = topicsData?.campaign_topics ?? []
 
   return (
-    <form className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
+    <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
       <div className="flex flex-col gap-y-2">
         <Label htmlFor="title">{t("campaign-posts.fields.title")}</Label>
         <Input
@@ -113,6 +121,20 @@ const CampaignPostForm = ({
           value={slug}
           onChange={(e) => onSlugChange(e.target.value)}
         />
+      </div>
+
+      <div className="flex flex-col gap-y-2">
+        <Label htmlFor="description">{t("campaign-posts.fields.description")}</Label>
+        <Textarea
+          id="description"
+          rows={3}
+          placeholder={t("campaign-posts.fields.descriptionPlaceholder")}
+          value={description}
+          onChange={(e) => onDescriptionChange(e.target.value)}
+        />
+        <span className="text-ui-fg-subtle text-xs">
+          {t("campaign-posts.fields.descriptionHint")}
+        </span>
       </div>
 
       <div className="flex flex-col gap-y-2">
@@ -234,11 +256,13 @@ const CampaignPostForm = ({
         />
       </div>
 
-      <div className="flex justify-end">
-        <Button isLoading={isSubmitting} type="submit" variant="primary">
-          {submitLabel}
-        </Button>
-      </div>
+      {!hideSubmit && (
+        <div className="flex justify-end">
+          <Button isLoading={isSubmitting} type="submit" variant="primary">
+            {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   )
 }

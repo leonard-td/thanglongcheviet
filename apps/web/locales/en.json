@@ -3,8 +3,14 @@
     "name": "Thăng Long Chè Việt",
     "tagline": "The Art of Traditional Beauty"
   },
+  "about": {
+    "title": "About us",
+    "comingSoon": "Content is being updated.",
+    "sidebarTitle": "Featured products"
+  },
   "nav": {
     "home": "Home",
+    "about": "About",
     "products": "Products",
     "productsMenu": {
       "teaViet": "Thang Long Che Viet",
@@ -172,6 +178,7 @@
     "browseCategories": "Categories",
     "browseCollections": "Collections",
     "productCount": "{count} products",
+    "collectionSidebar": "Related collection",
     "emptyCollection": "No products in this collection yet.",
     "viewAllProducts": "View all products",
     "collectionsEyebrow": "Collections",
@@ -188,6 +195,8 @@
     "empty": "Your cart is empty.",
     "continueShopping": "Continue shopping",
     "quantity": "Quantity",
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity",
     "remove": "Remove",
     "total": "Total",
     "checkoutTitle": "Shipping information",
@@ -330,6 +339,7 @@
     "readMore": "Read more",
     "readingTime": "{minutes} min read",
     "related": "Related articles",
+    "sameTopic": "More from this topic",
     "backToTopic": "Back to {topic}",
     "topics": {
       "eyebrow": "Topics",

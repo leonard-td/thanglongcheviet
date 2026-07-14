@@ -9,6 +9,8 @@ export interface ProductGroup {
   id: string
   slug: string
   label: string
+  /** Banner đầu trang — lưu ở metadata.thumbnail (danh mục/bộ sưu tập không có field ảnh gốc). */
+  thumbnail: string | null
 }
 
 const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,*images,*categories,'
@@ -38,20 +40,22 @@ export function useProducts() {
 
   const { data: categoriesData } = useAsyncData(
     'medusa-product-categories',
-    () => fetchMedusa<{ product_categories: MedusaCategory[] }>('/store/product-categories?limit=100'),
+    () => fetchMedusa<{ product_categories: MedusaCategory[] }>(
+      '/store/product-categories?limit=100&fields=id,name,handle,rank,metadata',
+    ),
     { default: () => ({ product_categories: [] as MedusaCategory[] }) },
   )
 
   const categories = computed<ProductGroup[]>(() =>
     (categoriesData.value?.product_categories ?? []).map((c) => {
       const cat = transformMedusaCategory(c)
-      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value) }
+      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail }
     }),
   )
 
   const { data: collectionsData } = useAsyncData(
     'medusa-collections',
-    () => fetchMedusa<{ collections: MedusaCollection[] }>('/store/collections?limit=100'),
+    () => fetchMedusa<{ collections: MedusaCollection[] }>('/store/collections?limit=100&fields=id,title,handle,metadata'),
     { default: () => ({ collections: [] as MedusaCollection[] }) },
   )
 
@@ -60,6 +64,7 @@ export function useProducts() {
       id: c.id,
       slug: c.handle,
       label: categoryLabel(c.title, locale.value),
+      thumbnail: typeof c.metadata?.thumbnail === 'string' ? c.metadata.thumbnail : null,
     })),
   )
 
@@ -88,10 +93,10 @@ export function useProducts() {
    * neither yields a match, fall back to 5–10 random picks from the whole
    * catalog so the section never renders empty on a lonely product.
    */
-  const related = (product: Pick<Product, 'slug' | 'categoryId' | 'collectionId'>, count = 6) => {
+  const related = (product: Pick<Product, 'slug' | 'categoryIds' | 'collectionId'>, count = 6) => {
     const others = products.value.filter(p => p.slug !== product.slug)
     const pool = others.filter(p =>
-      (product.categoryId && p.categoryId === product.categoryId)
+      product.categoryIds.some(id => p.categoryIds.includes(id))
       || (product.collectionId && p.collectionId === product.collectionId),
     )
     if (pool.length) return pool.slice(0, count)
@@ -102,12 +107,20 @@ export function useProducts() {
 
   const byCategory = (categoryId: string | null) => {
     if (!categoryId) return products.value
-    return products.value.filter(p => p.categoryId === categoryId)
+    return products.value.filter(p => p.categoryIds.includes(categoryId))
   }
 
   const byCollection = (collectionId: string | null) => {
     if (!collectionId) return products.value
     return products.value.filter(p => p.collectionId === collectionId)
+  }
+
+  /** Bộ sưu tập gắn với danh mục (admin đặt qua metadata.related_collection_id) */
+  const relatedCollectionIdByCategory = (categoryId: string | null) => {
+    if (!categoryId) return null
+    const raw = (categoriesData.value?.product_categories ?? []).find(c => c.id === categoryId)
+    const value = raw?.metadata?.related_collection_id
+    return typeof value === 'string' && value ? value : null
   }
 
   return {
@@ -120,5 +133,6 @@ export function useProducts() {
     related,
     byCategory,
     byCollection,
+    relatedCollectionIdByCategory,
   }
 }
