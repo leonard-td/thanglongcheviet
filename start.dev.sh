@@ -28,6 +28,22 @@ $COMPOSE down
 WATCH_PID=$!
 trap 'kill "$WATCH_PID" 2>/dev/null' EXIT
 
+$COMPOSE up -d
+
+# Keeps apps/web talking to the Store API: the publishable key + region id in
+# .env.dev only stay valid for the Postgres volume they were provisioned
+# against, so a fresh/reset DB (or a stale checkout) leaves them pointing at
+# records that no longer exist -> Store API calls fail with
+# {"type":"not_allowed","message":"A valid publishable key is required..."}.
+# The script is idempotent (checks-then-creates for every resource) and waits
+# out backend startup itself, so it's safe/cheap to run unconditionally on
+# every start rather than trying to detect when it's "needed".
+echo "==> Ensuring web/store integration (publishable key, region, navigation)..."
+node scripts/setup-web-integration.mjs || echo "WARN: setup-web-integration.mjs failed — see output above; apps/web may show a publishable-key error until this is fixed and start.dev.sh is re-run."
+
+# Re-attach in the foreground: containers are already up, so this only starts
+# streaming their logs (no recreate) and restores Ctrl+C -> stop-everything,
+# matching the plain `$COMPOSE up` behavior this replaces.
 $COMPOSE up
 # $COMPOSE --profile storefront up -d
 

@@ -64,3 +64,4 @@ Thumbs.db
 **/vendor
 my-medusa-store/
 be/
+.backups/
