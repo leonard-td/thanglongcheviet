@@ -174,6 +174,14 @@ export function useCart() {
   const addToCart = async (variantId: string, quantity = 1) => {
     loading.value = true
     try {
+      try {
+        await fetchMedusa<{ ok: boolean }>(
+          `/store/variants/${variantId}/availability?quantity=${quantity}`,
+        )
+      } catch {
+        return { success: false, message: t('cart.outOfStock') }
+      }
+
       const current = await ensureCart()
       const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${current.id}/line-items?fields=${CART_FIELDS}`, {
         method: 'POST',
@@ -339,6 +347,15 @@ export function useCart() {
         method: 'POST',
         body: { provider_id: data.payment_provider_id || 'pp_system_default' },
       })
+
+      try {
+        await fetchMedusa<{ ok: boolean }>(
+          `/store/carts/${current.id}/validate-inventory`,
+          { method: 'POST' },
+        )
+      } catch {
+        throw new Error(t('cart.outOfStock'))
+      }
 
       const result = await fetchMedusa<{ type: string, order?: { display_id: number }, error?: { message: string } }>(
         `/store/carts/${current.id}/complete`,

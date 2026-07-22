@@ -18,9 +18,9 @@
 # mount, so they're fast and don't collide with Windows-built node_modules on
 # /mnt/d.
 #
-# No Redis: @medusajs/event-bus-redis reproducibly hung server boot forever in
-# this WSL2/Docker environment, and cache/locking/workflow-engine gain little
-# for a single-instance dev stack. Medusa runs fully in-memory.
+# Redis: used for rate limits, idempotency keys, and shared store cache.
+# Medusa core modules (event-bus-redis, etc.) stay in-memory — they hung on
+# boot in this WSL2/Docker setup. App-level Redis via ioredis is separate.
 #
 # The project is bind-mounted at /workspace (NOT /app) inside every Node
 # container. Medusa's admin dashboard is served at the URL path /app
@@ -71,6 +71,17 @@ services:
       timeout: 5s
       retries: 12
 
+  redis:
+    image: redis:7-alpine
+    container_name: tlcv-redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   # --- One-shot dependency install (whole npm workspace, populates volumes) --
   install:
     image: node:20
@@ -89,6 +100,44 @@ services:
     restart: "no"
 
   # --- Medusa backend (API + admin dashboard, proxied at /app, /admin, /store)
+  # --- One-shot DB migrate + base seed (not repeated on every backend restart) -
+  backend-init:
+    image: node:20
+    container_name: tlcv_backend_init
+    working_dir: /workspace/apps/backend
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      install:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
+      REDIS_URL: redis://redis:6379
+      STORE_CORS: ${STORE_CORS:-http://localhost:8800,http://localhost:3000}
+      ADMIN_CORS: ${ADMIN_CORS:-http://localhost:9000,http://localhost:5173,http://localhost}
+      AUTH_CORS: ${AUTH_CORS:-http://localhost:9000,http://localhost:8800,http://localhost:5173,http://localhost}
+      JWT_SECRET: ${JWT_SECRET:-supersecret}
+      COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      DOMAIN: ${DOMAIN:-localhost}
+      HTTP_PORT: ${HTTP_PORT:-8800}
+    volumes:
+      - ../:/workspace
+      - root_node_modules:/workspace/node_modules
+      - backend_node_modules:/workspace/apps/backend/node_modules
+      - backend_medusa:/workspace/apps/backend/.medusa
+    command: >
+      sh -c "npx medusa db:migrate &&
+             npx medusa exec ./src/scripts/seed-base.ts &&
+             (npx medusa exec ./src/scripts/seed-cards.ts || true) &&
+             (npx medusa exec ./src/scripts/seed-navigation.ts || true) &&
+             (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true)"
+
   backend:
     image: node:20
     container_name: tlcv_backend
@@ -97,16 +146,22 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       install:
+        condition: service_completed_successfully
+      backend-init:
         condition: service_completed_successfully
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
+      REDIS_URL: redis://redis:6379
       STORE_CORS: ${STORE_CORS:-http://localhost:8800,http://localhost:3000}
       ADMIN_CORS: ${ADMIN_CORS:-http://localhost:9000,http://localhost:5173,http://localhost}
       AUTH_CORS: ${AUTH_CORS:-http://localhost:9000,http://localhost:8800,http://localhost:5173,http://localhost}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       # Public origin for uploaded-file URLs (file-local provider appends
       # /static). Must be the nginx entrypoint — the backend's own :9000 is no
       # longer published, so URLs built from it would be unreachable.
@@ -121,7 +176,7 @@ services:
       HTTP_PORT: ${HTTP_PORT:-8800}
       # Poll the filesystem so hot-reload works over the WSL/Windows bind mount.
       CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: "1000"
+      CHOKIDAR_INTERVAL: "2000"
     ports:
       # Backend API + admin. Storefront's port is published here too because the
       # storefront shares this container's network namespace (see below).
@@ -135,13 +190,7 @@ services:
     # seed-base runs BEFORE seed-cards: on an empty database it creates the
     # base commerce data (sales channel, VND currency, Vietnam region, stock
     # location + shipping, publishable key) that every /store request needs.
-    command: >
-      sh -c "npx medusa db:migrate &&
-             (npx medusa exec ./src/scripts/seed-base.ts || true) &&
-             (npx medusa exec ./src/scripts/seed-cards.ts || true) &&
-             (npx medusa exec ./src/scripts/seed-navigation.ts || true) &&
-             (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
-             npx medusa develop"
+    command: sh -c "npx medusa develop"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
@@ -175,7 +224,7 @@ services:
       NUXT_PUBLIC_MEDUSA_REGION_ID: ${NUXT_PUBLIC_MEDUSA_REGION_ID:-}
       # Bind mount over 9p (WSL/Windows) doesn't emit inotify events.
       CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: "1000"
+      CHOKIDAR_INTERVAL: "2000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -204,10 +253,8 @@ services:
       - "${HTTP_PORT:-80}:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # Dev routing only (plain HTTP, no domain/SSL). Production uses
-      # nginx/sites/salon.conf (real domain + certbot) via a separate prod
-      # compose file instead of this conf.d directory.
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ../apps/backend/static:/var/www/medusa-static:ro
 
 volumes:
   postgres_data:

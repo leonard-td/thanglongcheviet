@@ -142,8 +142,8 @@ export function localText(field: unknown, locale: string): string {
   return String(field)
 }
 
-export const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1594631252845-29fc4cc8c011?q=80&w=800'
-export const FALLBACK_POST_IMAGE = 'https://images.unsplash.com/photo-1544787219-7f47ccb7fae6?q=80&w=800'
+export const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?auto=format&fit=crop&w=800&q=80'
+export const FALLBACK_POST_IMAGE = 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=800&q=80'
 
 export function parseApiError(err: unknown, fallback: string): string {
   if (err && typeof err === 'object') {

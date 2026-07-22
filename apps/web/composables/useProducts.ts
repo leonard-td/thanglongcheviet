@@ -13,9 +13,12 @@ export interface ProductGroup {
   thumbnail: string | null
 }
 
-const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
+const PRODUCT_LIST_FIELDS = 'id,title,handle,thumbnail,metadata,*categories,*collection,*variants,*variants.calculated_price,'
+  + '*variants.manage_inventory,*variants.allow_backorder,*variants.inventory_quantity'
+
+const PRODUCT_DETAIL_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
   + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price,'
-  + '*variants.manage_inventory,*variants.allow_backorder'
+  + '*variants.manage_inventory,*variants.allow_backorder,*variants.inventory_quantity'
 
 export function useProducts() {
   const { locale } = useI18n()
@@ -24,7 +27,7 @@ export function useProducts() {
   const productsAsync = useAsyncData(
     'medusa-products',
     () => fetchMedusa<{ products: MedusaProduct[] }>(
-      `/store/products?limit=100&region_id=${regionId}&fields=${PRODUCT_FIELDS}`,
+      `/store/products?limit=100&region_id=${regionId}&fields=${PRODUCT_LIST_FIELDS}`,
     ),
     { default: () => ({ products: [] as MedusaProduct[] }) },
   )
@@ -73,7 +76,7 @@ export function useProducts() {
   const getBySlug = async (slug: string) => {
     try {
       const res = await fetchMedusa<{ products: MedusaProduct[] }>(
-        `/store/products?handle=${encodeURIComponent(slug)}&region_id=${regionId}&fields=${PRODUCT_FIELDS}`,
+        `/store/products?handle=${encodeURIComponent(slug)}&region_id=${regionId}&fields=${PRODUCT_DETAIL_FIELDS}`,
       )
       const raw = res.products?.[0]
       if (raw) {

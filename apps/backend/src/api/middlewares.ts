@@ -7,6 +7,7 @@ import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import multer from "multer"
 import os from "node:os"
 import path from "node:path"
+import { inventoryGuardMiddleware } from "./middlewares/inventory-guard"
 
 export const GetCampaignPostsSchema = createFindParams()
 export const GetEventsSchema = createFindParams()
@@ -56,6 +57,11 @@ export default defineMiddlewares({
     {
       matcher: "/store/my-bookings*",
       middlewares: [authenticate("customer", ["bearer", "session"])],
+    },
+    {
+      matcher: "/store/carts/*/complete",
+      method: ["POST"],
+      middlewares: [inventoryGuardMiddleware],
     },
     {
       matcher: "/admin/backup/restore",

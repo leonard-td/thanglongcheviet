@@ -363,7 +363,6 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 
 .site-nav-active {
   color: #e8d5a8 !important;
-  box-shadow: inset 0 -2px 0 #e8d5a8;
 }
 
 .site-nav-caret {

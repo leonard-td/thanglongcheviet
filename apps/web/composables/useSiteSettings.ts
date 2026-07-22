@@ -19,48 +19,53 @@ export interface SiteSettingsDto {
 }
 
 /**
- * Thông tin cửa hàng cấu hình trong admin (Settings → Thông tin cửa hàng):
- * liên hệ, ảnh nền trang chủ và bài giới thiệu (GET /store/site-settings).
+ * About page + hero fields from Medusa. Populated by useSiteBundle bootstrap;
+ * falls back to a dedicated fetch when needed.
  */
 export function useSiteSettings() {
   const { fetchMedusa } = useMedusaApi()
   const { resolveMediaUrl } = useMediaUrl()
+  const dtoState = useState<SiteSettingsDto | null>('site-settings-dto', () => null)
 
-  const { data, pending } = useAsyncData(
+  const { pending } = useAsyncData(
     'site-settings-dto',
     async () => {
+      if (dtoState.value) return dtoState.value
       try {
         const res = await fetchMedusa<{ site_settings: SiteSettingsDto }>(
           '/store/site-settings',
         )
-        return res.site_settings ?? null
+        dtoState.value = res.site_settings ?? null
+        return dtoState.value
       } catch (e) {
-        console.warn('Site settings API unavailable', e)
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Site settings API unavailable', e)
+        }
         return null
       }
     },
     { default: () => null },
   )
 
-  const settings = computed(() => data.value)
+  const settings = computed(() => dtoState.value)
 
   const heroImages = computed(() =>
-    (data.value?.hero_images ?? [])
+    (settings.value?.hero_images ?? [])
       .map(url => resolveMediaUrl(url))
       .filter(Boolean),
   )
 
-  const aboutTitle = computed(() => data.value?.about_title || '')
+  const aboutTitle = computed(() => settings.value?.about_title || '')
   const aboutThumbnail = computed(
-    () => resolveMediaUrl(data.value?.about_thumbnail) || '',
+    () => resolveMediaUrl(settings.value?.about_thumbnail) || '',
   )
   const aboutHtml = computed(() =>
-    data.value?.about_content
-      ? tiptapToHtml(data.value.about_content, resolveMediaUrl)
+    settings.value?.about_content
+      ? tiptapToHtml(settings.value.about_content, resolveMediaUrl)
       : '',
   )
   const aboutCollectionId = computed(
-    () => data.value?.about_collection_id || null,
+    () => settings.value?.about_collection_id || null,
   )
 
   return {

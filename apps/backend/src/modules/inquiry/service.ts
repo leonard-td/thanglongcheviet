@@ -1,5 +1,6 @@
 import { MedusaService } from "@medusajs/framework/utils"
 import Inquiry from "./models/inquiry"
+import { countBookingsByDate } from "../../lib/pg-query"
 
 export type BookingSlot = {
   time: string
@@ -28,20 +29,7 @@ class InquiryModuleService extends MedusaService({
    * whether it still has capacity (cancelled bookings don't count).
    */
   async getAvailability(date: string): Promise<BookingSlot[]> {
-    const bookings = await this.listInquiries(
-      {
-        type: "booking",
-        preferred_date: date,
-        status: ["new", "confirmed"],
-      },
-      { select: ["id", "preferred_time"], take: 1000 }
-    )
-
-    const counts = new Map<string, number>()
-    for (const b of bookings) {
-      if (!b.preferred_time) continue
-      counts.set(b.preferred_time, (counts.get(b.preferred_time) ?? 0) + 1)
-    }
+    const counts = await countBookingsByDate(date)
 
     return DAILY_SLOTS.map((time) => ({
       time,

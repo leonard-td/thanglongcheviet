@@ -5,6 +5,7 @@ import {
   verifyZaloSignature,
   type ZaloConfig,
 } from "../../../../modules/care-channel/providers/zalo"
+import { claimIdempotencyKey } from "../../../../lib/idempotency"
 
 type ZaloEvent = {
   event_name?: string
@@ -57,7 +58,12 @@ export async function POST(
   const signature = req.headers["x-zevent-signature"]
   const body = req.body ?? {}
 
-  if (config.app_id && config.secret_key && typeof signature === "string") {
+  if (config.app_id && config.secret_key) {
+    if (typeof signature !== "string") {
+      res.status(401).json({ ok: false })
+      return
+    }
+
     const rawBody = req.rawBody
       ? req.rawBody.toString()
       : JSON.stringify(body)
@@ -77,9 +83,21 @@ export async function POST(
   }
 
   if (body.event_name === "user_send_text" && body.message?.text && body.sender?.id) {
+    const msgId = body.message.msg_id ? String(body.message.msg_id) : null
+    if (!msgId) {
+      res.status(200).json({ ok: true, skipped: true })
+      return
+    }
+
+    const claimed = await claimIdempotencyKey(`zalo:${channel.id}:${msgId}`, 86_400)
+    if (claimed === false) {
+      res.status(200).json({ ok: true, duplicate: true })
+      return
+    }
+
     await service.recordInboundMessage(channel.id, {
       externalUserId: String(body.sender.id),
-      externalMessageId: body.message.msg_id ? String(body.message.msg_id) : null,
+      externalMessageId: msgId,
       text: String(body.message.text),
     })
   }

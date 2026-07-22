@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { NAVIGATION_MODULE } from "../../../../modules/navigation"
+import { invalidateStoreCache } from "../../../../lib/store-cache"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
@@ -13,11 +14,13 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     id: req.params.id,
     ...req.body,
   })
+  invalidateStoreCache("store:")
   res.json({ navigation: item })
 }
 
 export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
   const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
   await navigationModuleService.deleteNavigationItems(req.params.id)
+  invalidateStoreCache("store:")
   res.json({ id: req.params.id, deleted: true })
 }

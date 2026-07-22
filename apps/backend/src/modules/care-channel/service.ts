@@ -122,6 +122,19 @@ class CareChannelModuleService extends MedusaService({
       content: message.text,
       status: "received",
       error: null,
+    }).catch(async (err: unknown) => {
+      if (message.externalMessageId) {
+        const [existing] = await this.listCareMessages(
+          {
+            channel_id: channelId,
+            direction: "inbound",
+            external_message_id: message.externalMessageId,
+          },
+          { take: 1 },
+        )
+        if (existing) return existing
+      }
+      throw err
     })
   }
 

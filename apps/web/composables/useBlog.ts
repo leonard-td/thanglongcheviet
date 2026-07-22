@@ -82,7 +82,7 @@ export function useBlog() {
       title: p.title?.[locale.value] ?? p.title?.vi ?? '',
       excerpt: p.excerpt?.[locale.value] ?? p.excerpt?.vi ?? '',
       content: '',
-      image: FALLBACK_POST_IMAGE,
+      image: resolveMediaUrl(p.thumbnail) || FALLBACK_POST_IMAGE,
       date: p.date ?? '',
       author: 'Thăng Long Chè Việt',
       topic: null,

@@ -10,13 +10,11 @@ import { normalizePhone } from "../../utils/phone"
 /**
  * GET /store/my-bookings
  *
- * Bookings belonging to the logged-in customer, matched by the phone number
- * (and email) on their customer profile. Requires customer authentication
- * (see src/api/middlewares.ts).
+ * Bookings belonging to the logged-in customer (matched by profile phone/email).
  */
 export async function GET(
   req: AuthenticatedMedusaRequest,
-  res: MedusaResponse
+  res: MedusaResponse,
 ) {
   const customerId = req.auth_context.actor_id
 
@@ -33,15 +31,21 @@ export async function GET(
   }
 
   const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
-  const all = await inquiryService.listInquiries(
-    { type: "booking" },
-    { order: { created_at: "DESC" }, take: 200 }
-  )
-
   const customerPhone = normalizePhone(customer.phone ?? "")
-  const bookings = all.filter((b) => {
-    if (customerPhone && normalizePhone(b.phone) === customerPhone) return true
-    return Boolean(customer.email && b.email === customer.email)
+  const filters: Record<string, unknown> = { type: "booking" }
+
+  if (customerPhone) {
+    filters.phone = customer.phone ?? customerPhone
+  } else if (customer.email) {
+    filters.email = customer.email
+  } else {
+    res.json({ bookings: [] })
+    return
+  }
+
+  const bookings = await inquiryService.listInquiries(filters, {
+    order: { created_at: "DESC" },
+    take: 50,
   })
 
   res.json({

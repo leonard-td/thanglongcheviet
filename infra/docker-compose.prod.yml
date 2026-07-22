@@ -46,6 +46,17 @@ services:
       timeout: 5s
       retries: 12
 
+  redis:
+    image: redis:7-alpine
+    container_name: tlcv-redis-prod
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   # --- One-shot: runtime deps for the PREBUILT output (no build!) -------------
   # 1. backend: `medusa build` output ships package.json but no node_modules —
   #    install its runtime deps into a named volume (kept off the deploy dir,
@@ -83,11 +94,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       deps:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
+      REDIS_URL: redis://redis:6379
       # All public-facing origins derive from DOMAIN + HTTP_PORT (.env.prod) —
       # localhost only ever appears as the fallback when DOMAIN is unset.
       STORE_CORS: ${STORE_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
@@ -123,7 +137,7 @@ services:
                exit 1;
              fi &&
              npx medusa db:migrate &&
-             (npx medusa exec ./src/scripts/seed-base.js || true) &&
+             npx medusa exec ./src/scripts/seed-base.js &&
              (npx medusa exec ./src/scripts/seed-cards.js || true) &&
              (npx medusa exec ./src/scripts/seed-navigation.js || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&

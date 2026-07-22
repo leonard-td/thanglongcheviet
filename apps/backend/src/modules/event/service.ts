@@ -6,6 +6,7 @@ import {
 import type { Context } from "@medusajs/framework/types"
 import Event from "./models/event"
 import EventRegistration from "./models/event-registration"
+import { sumRegisteredSeatsByEvent } from "../../lib/pg-query"
 
 type EventFilters = {
   id?: string | string[]
@@ -50,29 +51,9 @@ class EventModuleService extends MedusaService({
   @InjectManager()
   async countRegisteredSeats(
     eventIds: string[],
-    @MedusaContext() sharedContext: Context = {}
+    @MedusaContext() _sharedContext: Context = {}
   ): Promise<Map<string, number>> {
-    const seatsByEvent = new Map<string, number>()
-
-    if (!eventIds.length) {
-      return seatsByEvent
-    }
-
-    const registrations = await this.listEventRegistrations(
-      { event_id: eventIds, status: { $ne: "cancelled" } },
-      { select: ["event_id", "quantity"] },
-      sharedContext
-    )
-
-    for (const registration of registrations) {
-      seatsByEvent.set(
-        registration.event_id,
-        (seatsByEvent.get(registration.event_id) ?? 0) +
-          (registration.quantity ?? 1)
-      )
-    }
-
-    return seatsByEvent
+    return sumRegisteredSeatsByEvent(eventIds)
   }
 }
 

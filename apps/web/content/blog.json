@@ -3,7 +3,7 @@
     "id": "b1",
     "date": "2026-02-26",
     "pinned": true,
-    "thumbnail": "sp-001.jpg",
+    "thumbnail": "https://images.unsplash.com/photo-1556881286-fc6915169721?auto=format&fit=crop&w=800&q=80",
     "category": { "vi": "Văn hóa trà", "en": "Tea culture" },
     "title": {
       "vi": "Nghệ thuật thưởng trà Việt",
@@ -18,7 +18,7 @@
   {
     "id": "b2",
     "date": "2026-02-20",
-    "thumbnail": "sp-003.jpg",
+    "thumbnail": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=800&q=80",
     "category": { "vi": "Sức khỏe", "en": "Wellness" },
     "title": {
       "vi": "5 loại trà tốt cho sức khỏe",
@@ -33,7 +33,7 @@
   {
     "id": "b3",
     "date": "2026-02-16",
-    "thumbnail": "sp-005.jpg",
+    "thumbnail": "https://images.unsplash.com/photo-1563822249548-9a72b6353cd1?auto=format&fit=crop&w=800&q=80",
     "category": { "vi": "Hướng dẫn", "en": "Guide" },
     "title": {
       "vi": "Cách pha trà ngon đúng điệu",
@@ -48,7 +48,7 @@
   {
     "id": "b4",
     "date": "2026-02-08",
-    "thumbnail": "sp-007.jpg",
+    "thumbnail": "https://images.unsplash.com/photo-1582793988951-9aed5509eb97?auto=format&fit=crop&w=800&q=80",
     "category": { "vi": "Đặc sản", "en": "Specialty" },
     "title": {
       "vi": "Trà sen Tây Hồ — tinh hoa Hà thành",
@@ -63,7 +63,7 @@
   {
     "id": "b5",
     "date": "2026-01-28",
-    "thumbnail": "sp-002.jpg",
+    "thumbnail": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80",
     "category": { "vi": "Mẹo hay", "en": "Tips" },
     "title": {
       "vi": "Bí quyết bảo quản trà đúng cách",
@@ -78,7 +78,7 @@
   {
     "id": "b6",
     "date": "2026-01-15",
-    "thumbnail": "sp-004.jpg",
+    "thumbnail": "https://images.unsplash.com/photo-1594631252845-29fc4cc8cde9?auto=format&fit=crop&w=800&q=80",
     "category": { "vi": "Quà tặng", "en": "Gifts" },
     "title": {
       "vi": "Chọn quà Tết từ trà Việt",

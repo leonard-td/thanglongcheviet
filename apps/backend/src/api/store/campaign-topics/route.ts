@@ -1,6 +1,14 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CAMPAIGN_MODULE } from "../../../modules/campaign"
 import type CampaignModuleService from "../../../modules/campaign/service"
+import { countActivePostsByTopic } from "../../../lib/pg-query"
+import {
+  getCachedAsync,
+  setCached,
+  setPublicCacheHeaders,
+  STORE_CACHE_TTL,
+} from "../../../lib/store-cache"
+import { toCampaignTopicListItem } from "../../../lib/store-dto"
 
 /**
  * GET /store/campaign-topics
@@ -9,30 +17,34 @@ import type CampaignModuleService from "../../../modules/campaign/service"
  * currently visible posts.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const cached = await getCachedAsync<{ campaign_topics: unknown[] }>("store:campaign-topics")
+  if (cached) {
+    setPublicCacheHeaders(res, 60)
+    res.json(cached)
+    return
+  }
+
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const topics = await campaignModuleService.listCampaignTopics(
-    { is_active: true },
-    { order: { rank: "ASC", name: "ASC" } }
-  )
+  const [topics, countByTopic] = await Promise.all([
+    campaignModuleService.listCampaignTopics(
+      { is_active: true },
+      { order: { rank: "ASC", name: "ASC" } },
+    ),
+    countActivePostsByTopic(),
+  ])
 
-  const activePosts = await campaignModuleService.listActiveCampaignPosts(
-    {},
-    { select: ["id", "topic_id"] }
-  )
-
-  const countByTopic = new Map<string, number>()
-  for (const post of activePosts) {
-    if (post.topic_id) {
-      countByTopic.set(post.topic_id, (countByTopic.get(post.topic_id) ?? 0) + 1)
-    }
+  const payload = {
+    campaign_topics: topics.map((topic) =>
+      toCampaignTopicListItem(
+        topic as Record<string, unknown>,
+        countByTopic.get(topic.id) ?? 0,
+      ),
+    ),
   }
 
-  res.json({
-    campaign_topics: topics.map((topic) => ({
-      ...topic,
-      post_count: countByTopic.get(topic.id) ?? 0,
-    })),
-  })
+  setCached("store:campaign-topics", payload, STORE_CACHE_TTL.campaignTopics)
+  setPublicCacheHeaders(res, 60)
+  res.json(payload)
 }

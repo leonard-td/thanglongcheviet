@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { FALLBACK_PRODUCT_IMAGE } from '~/utils/storefront'
+
 const { t } = useI18n()
 const localePath = useLocalePath()
 const { products, categories, byCategory, pending } = useProducts()
@@ -29,6 +31,8 @@ const hasVisibleProducts = computed(() => displayProducts.value.some(p => p.visi
 
 const formatPrice = (price: number) =>
   `${price.toLocaleString('vi-VN')} ${t('common.currency')}`
+
+const fallbackImage = FALLBACK_PRODUCT_IMAGE
 </script>
 
 <template>
@@ -88,6 +92,7 @@ const formatPrice = (price: number) =>
               :alt="p.title"
               loading="lazy"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              @error="(e) => { (e.target as HTMLImageElement).src = fallbackImage }"
             >
           </NuxtLink>
           <div class="p-3 md:p-4 text-center">

@@ -62,9 +62,9 @@ function variantInStock(v: MedusaVariant): boolean {
   // Inventory not managed → always orderable.
   if (!v.manage_inventory) return true
   if (v.allow_backorder) return true
-  // When quantity is exposed by the API, respect it; otherwise stay optimistic.
+  // When quantity is exposed by the API, respect it; otherwise treat as unavailable.
   if (typeof v.inventory_quantity === 'number') return v.inventory_quantity > 0
-  return true
+  return false
 }
 
 export function transformMedusaCategory(c: MedusaCategory): ProductCategory {

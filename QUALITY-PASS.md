@@ -59,9 +59,24 @@ Branch based on `dev/be_medusajs_merge`. Not pushed yet.
 41. **site-settings** create uses `hero_images: []` (NOT NULL column)
 42. **navigation_item** migration from old nested schema → flat `label/order/is_active`
 
+## Pass 6 — backend perf + hardening
+
+43. **`/store/storefront-bootstrap`** — one SSR call for settings + nav (cached)
+44. In-memory **Store API cache** + `Cache-Control` headers; admin writes invalidate
+45. **Slim list DTOs** — campaign posts omit TipTap `content`; site-settings trimmed
+46. **SQL aggregates** — topic post counts, event seats, booking slots by date
+47. **Booking/event locks** — `pg_advisory_lock` on slot/event registration
+48. **Rate limits** on contact, bookings, events, order lookup
+49. **Zalo webhook** requires signature when credentials configured
+50. **`my-bookings`** filters in DB by phone/email (not scan 200 rows)
+51. **Docker `backend-init`** — migrate/seed once; backend only `medusa develop`
+52. **nginx serves `/static/`** from disk (7d cache)
+53. Nuxt **product list fields** slimmed; detail page keeps full payload
+54. Nav seeds aligned in `setup-web-integration.mjs`
+
 ## Still open
 
 - Online payment gateway redirect
-- Inventory quantity from stock locations (needs inventory module query)
-- Culture stub pages still “coming soon”
+- Real inventory quantity from stock locations
+- Redis cache for multi-instance prod
 - Push `fix/tlcv-quality-pass` when ready

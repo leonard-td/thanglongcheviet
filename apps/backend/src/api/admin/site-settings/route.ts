@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
 import { SITE_SETTINGS_MODULE } from "../../../modules/site-settings"
 import type SiteSettingsModuleService from "../../../modules/site-settings/service"
+import { invalidateStoreCache } from "../../../lib/store-cache"
 import {
   normalizeTiptapImageUrls,
   toRelativeMediaUrl,
@@ -56,5 +57,6 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const settings = await service.updateSingleton(data)
 
+  invalidateStoreCache("store:")
   res.json({ site_settings: settings })
 }

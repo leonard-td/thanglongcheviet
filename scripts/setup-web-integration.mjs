@@ -349,14 +349,12 @@ async function ensureNavigation(token) {
   }
 
   const DEFAULT_ITEMS = [
-    { label: "Trang chủ", url: "/", order: 0 },
+    { label: "Giới thiệu", url: "/gioi-thieu", order: 0 },
     { label: "Sản phẩm", url: "/san-pham-list", order: 1 },
-    { label: "Làng nghề", url: "/lang-nghe", order: 2 },
-    { label: "Dịch vụ", url: "/dich-vu", order: 3 },
-    { label: "Bộ sưu tập", url: "/gallery", order: 4 },
-    { label: "Tin tức", url: "/tin-tuc", order: 5 },
-    { label: "Liên hệ", url: "/lien-he", order: 6 },
-    { label: "Tài khoản", url: "/tai-khoan", order: 7 },
+    { label: "Quà tặng doanh nghiệp", url: "/qua-tang-doanh-nghiep", order: 2 },
+    { label: "Trải nghiệm", url: "/trai-nghiem", order: 3 },
+    { label: "Tin tức", url: "/tin-tuc", order: 4 },
+    { label: "Liên hệ", url: "/lien-he", order: 5 },
   ]
 
   try {

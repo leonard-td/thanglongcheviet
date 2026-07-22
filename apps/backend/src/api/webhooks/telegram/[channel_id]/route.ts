@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CARE_CHANNEL_MODULE } from "../../../../modules/care-channel"
 import type CareChannelModuleService from "../../../../modules/care-channel/service"
+import { claimIdempotencyKey } from "../../../../lib/idempotency"
 
 type TelegramUpdate = {
   message?: {
@@ -67,6 +68,16 @@ export async function POST(
     text.length &&
     !message.from?.is_bot
   ) {
+    const externalMessageId = `${message.chat.id}:${message.message_id}`
+    const claimed = await claimIdempotencyKey(
+      `telegram:${channel.id}:${externalMessageId}`,
+      86_400,
+    )
+    if (claimed === false) {
+      res.status(200).json({ ok: true, duplicate: true })
+      return
+    }
+
     const name =
       [message.from?.first_name, message.from?.last_name]
         .filter(Boolean)
@@ -77,8 +88,7 @@ export async function POST(
     await service.recordInboundMessage(channel.id, {
       externalUserId: String(message.chat.id),
       externalUserName: name,
-      // message_id của Telegram chỉ duy nhất trong từng chat — ghép chat id
-      externalMessageId: `${message.chat.id}:${message.message_id}`,
+      externalMessageId,
       text,
     })
   }
