@@ -118,9 +118,14 @@ services:
     # location + shipping, publishable key) that every /store request needs.
     # The seed scripts were compiled into .medusa/server by the local build.
     command: >
-      sh -c "npx medusa db:migrate &&
+      sh -c "if [ \"$${JWT_SECRET:-supersecret}\" = \"supersecret\" ] || [ \"$${COOKIE_SECRET:-supersecret}\" = \"supersecret\" ]; then
+               echo 'ERROR: Set strong JWT_SECRET and COOKIE_SECRET in .env.prod before starting production.';
+               exit 1;
+             fi &&
+             npx medusa db:migrate &&
              (npx medusa exec ./src/scripts/seed-base.js || true) &&
              (npx medusa exec ./src/scripts/seed-cards.js || true) &&
+             (npx medusa exec ./src/scripts/seed-navigation.js || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npm run start"
     healthcheck:

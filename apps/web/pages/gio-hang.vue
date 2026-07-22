@@ -7,6 +7,7 @@ const {
   loading,
   totals,
   promoCodes,
+  fetchCart,
   updateCart,
   removeFromCart,
   applyPromoCode,
@@ -26,6 +27,7 @@ const form = reactive({
 })
 
 onMounted(async () => {
+  await fetchCart()
   await fetchPaymentMethods()
   if (isLoggedIn.value && !customer.value) {
     await fetchProfile()

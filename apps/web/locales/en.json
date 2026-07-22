@@ -407,6 +407,12 @@
       "promotions": "Monthly Promotions"
     }
   },
+  "error": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for does not exist or has been moved.",
+    "genericTitle": "Something went wrong",
+    "genericBody": "Please try again later."
+  },
   "gallery": {
     "eyebrow": "Photos",
     "title": "Gallery",

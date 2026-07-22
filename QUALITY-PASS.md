@@ -1,27 +1,37 @@
 # Quality pass — Thăng Long Chè Việt (`fix/tlcv-quality-pass`)
 
-Branch based on `dev/be_medusajs_merge`. Fixes from the quality review.
+Branch based on `dev/be_medusajs_merge`. Not pushed yet.
 
-## Fixed
+## Pass 1
 
-1. **`.env.example`** — removed git conflict markers; cleaned duplicate `HTTP_PORT`; VN defaults
-2. **`useAsyncData` collision** — `site-bundle` vs `site-settings-dto`
-3. **Navigation seed** — rewritten for `createNavigationItems` + real tea site URLs
-4. **`setup-web-integration.mjs`** — navigation creates flat items; health wait ~3 min
-5. **nginx** — added `/webhooks/` proxy for Telegram/Zalo care channels
-6. **Cookies** — `sameSite: 'lax'`, `secure` in production (`customer_token`, `medusa_cart_id`)
-7. **Auth SSR** — login/register use `authBaseUrl` (Docker-safe)
-8. **Checkout** — optional city field; phone-based fallback email (no shared `khach@`)
-9. **Related products** — `await productsAsync.execute()` instead of no-op
-10. **Gallery filters** — tea / oolong / herbal / gift / space (match `gallery.json`)
-11. **Locales** — removed salon/beauty copy; Order Now / tea branding
-12. **Docker compose** — runs `seed-navigation.ts` on backend boot
+1. `.env.example` — conflict markers removed
+2. `useAsyncData` keys — `site-bundle` / `site-settings-dto`
+3. Navigation seed + setup script fixed for flat NavigationItem API
+4. Health wait ~3 min in setup script
+5. nginx `/webhooks/`
+6. Cookie `sameSite` + `secure` in prod
+7. Auth SSR `authBaseUrl`
+8. Checkout city field + safer email fallback
+9. Related products `execute()`
+10. Gallery filters + tea locale copy
+11. Compose seeds navigation on boot
 
-## Still open (next)
+## Pass 2
 
-- Real payment gateway (paymentUrl still null for online pay)
-- Inventory from Medusa stock locations
-- Link cart to customer after login
-- Sitemap for Medusa catalog
-- Sanitize product `v-html` description
-- Strong secrets required in prod compose
+12. **Cart → customer transfer** after login/register (`POST /store/carts/:id/customer`)
+13. **`sanitizeHtml`** for product description `v-html`
+14. **Sitemap** reads Medusa products + campaign posts (not Laravel `:8000`)
+15. Cart page **`fetchCart` on mount** (no empty SSR flash)
+16. Custom **`error.vue`** page
+17. **robots.txt** disallows cart/account/admin/app
+18. Removed dead Nitro proxy to Laravel `:8000`
+19. Homepage **SEO meta**
+20. Prod compose **refuses default JWT/COOKIE secrets** + seeds navigation
+21. Removed salon discount IDs (`nail-gel` / `hair-color`) from services
+
+## Still open
+
+- Online payment gateway (`paymentUrl`)
+- Real Medusa inventory / stock
+- Stronger HTML sanitizer library if needed
+- Full README rewrite for Medusa + Nuxt

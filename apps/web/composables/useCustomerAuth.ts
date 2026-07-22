@@ -85,6 +85,9 @@ export function useCustomerAuth() {
 
       token.value = loginToken
       customer.value = mapCustomer(res.customer)
+      try {
+        await useCart().transferCartToCustomer()
+      } catch { /* non-fatal */ }
       return { success: true }
     } catch (err) {
       return { success: false, message: parseApiError(err, t('account.registerError')) }
@@ -99,6 +102,9 @@ export function useCustomerAuth() {
       )
       token.value = loginToken
       await fetchProfile()
+      try {
+        await useCart().transferCartToCustomer()
+      } catch { /* non-fatal */ }
       return { success: true }
     } catch (err) {
       return { success: false, message: parseApiError(err, t('account.loginError')) }

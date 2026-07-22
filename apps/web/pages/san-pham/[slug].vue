@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatMoney } from '~/utils/storefront'
+import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const { t, locale } = useI18n()
 const { getBySlug, categories } = useProducts()
@@ -419,7 +420,9 @@ useProductStructuredData(product)
           </div>
 
           <div v-show="activeTab === 'desc'" role="tabpanel"
-            class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5" v-html="product.description" />
+            class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5"
+            v-html="sanitizeHtml(product.description)"
+          />
           <dl v-if="specs.length" v-show="activeTab === 'specs'" role="tabpanel" class="space-y-2 mt-5">
             <div v-for="row in specs" :key="row.label"
               class="flex justify-between text-sm py-1.5 border-b border-white/5">

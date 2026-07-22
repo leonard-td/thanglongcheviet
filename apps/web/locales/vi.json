@@ -227,8 +227,8 @@
     "selectTime": "Chọn giờ",
     "loadingSlots": "Đang tải khung giờ...",
     "noSlots": "Không còn khung giờ trống trong ngày này.",
-    "success": "Đặt lịch thành công! Chúng tôi sẽ xác nhận sớm.",
-    "error": "Không thể gửi yêu cầu đặt lịch. Vui lòng gọi trực tiếp."
+    "success": "Gửi yêu cầu thành công! Chúng tôi sẽ liên hệ sớm.",
+    "error": "Không thể gửi yêu cầu. Vui lòng gọi trực tiếp."
   },
   "account": {
     "title": "Tài khoản",
@@ -243,7 +243,7 @@
     "noAppointments": "Chưa có lịch hẹn nào.",
     "orders": "Đơn hàng của tôi",
     "noOrders": "Chưa có đơn hàng nào.",
-    "generalBooking": "Đặt lịch dịch vụ",
+    "generalBooking": "Đặt dịch vụ",
     "cancel": "Hủy lịch",
     "cancelled": "Đã hủy lịch hẹn.",
     "loginError": "Đăng nhập thất bại.",
@@ -406,6 +406,12 @@
       "projects": "Dự án & Đối tác",
       "promotions": "Ưu đãi trong tháng"
     }
+  },
+  "error": {
+    "notFoundTitle": "Không tìm thấy trang",
+    "notFoundBody": "Trang bạn tìm không tồn tại hoặc đã được di chuyển.",
+    "genericTitle": "Đã xảy ra lỗi",
+    "genericBody": "Vui lòng thử lại sau."
   },
   "gallery": {
     "eyebrow": "Hình ảnh",

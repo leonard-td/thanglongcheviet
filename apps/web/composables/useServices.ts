@@ -17,9 +17,7 @@ export function useServices() {
         duration: item.duration,
         image: item.image,
         featured: item.featured,
-        discount: item.featured
-          ? (item.id === 'nail-gel' ? '5%' : item.id === 'hair-color' ? '10%' : null)
-          : null,
+        discount: null as string | null,
       })),
     })),
   )

@@ -139,6 +139,23 @@ export function useCart() {
     return cart.value!
   }
 
+  /**
+   * After login/register, attach the guest cart to the authenticated customer
+   * so checkout and order history stay linked (POST /store/carts/:id/customer).
+   */
+  const transferCartToCustomer = async () => {
+    if (!cartId.value) return
+    try {
+      const res = await fetchMedusa<{ cart: MedusaCart }>(
+        `/store/carts/${cartId.value}/customer?fields=${CART_FIELDS}`,
+        { method: 'POST' },
+      )
+      applyCart(res.cart)
+    } catch (err) {
+      console.warn('Could not transfer cart to customer', err)
+    }
+  }
+
   const addToCart = async (variantId: string, quantity = 1) => {
     loading.value = true
     try {
@@ -347,6 +364,7 @@ export function useCart() {
     totalItems,
     totalPrice,
     fetchCart,
+    transferCartToCustomer,
     addToCart,
     updateCart,
     removeFromCart,
