@@ -1,8 +1,13 @@
 <script setup lang="ts">
-// Nút chuyển ngôn ngữ — cố định góc trên bên phải.
-// Chỉ hiển thị ngôn ngữ đang chọn; bấm để mở danh sách ngôn ngữ.
+// Language switcher — floating (legacy pages) or in-header (aligned with CTA).
 const { locale, locales, setLocale } = useI18n()
 const { setOpen, closeEpoch } = useUiOverlay()
+
+const props = withDefaults(defineProps<{
+  variant?: 'floating' | 'header'
+}>(), {
+  variant: 'floating',
+})
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
@@ -22,8 +27,7 @@ function choose(code: string) {
 </script>
 
 <template>
-  <div ref="root" class="lang">
-    <!-- Nút hiện ngôn ngữ đang chọn -->
+  <div ref="root" class="lang" :class="`lang--${props.variant}`">
     <button
       type="button"
       class="lang-cur"
@@ -37,7 +41,6 @@ function choose(code: string) {
       <span class="caret" aria-hidden="true"></span>
     </button>
 
-    <!-- Danh sách ngôn ngữ -->
     <Transition name="lpop">
       <ul v-if="open" class="lang-menu" role="listbox">
         <li v-for="l in locales" :key="l.code">
@@ -59,19 +62,28 @@ function choose(code: string) {
 </template>
 
 <style scoped>
-.lang {
+.lang--floating {
   position: fixed;
   top: calc(var(--site-marquee-h, 0px) + 18px);
   right: 18px;
   z-index: 1000;
 }
 
-/* Nút hiện ngôn ngữ hiện tại */
+.lang--header {
+  position: relative;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+}
+
 .lang-cur {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  padding: 7px 11px;
+  height: 40px;
+  padding: 0 12px;
   border: 1px solid rgba(255, 255, 255, .14);
   border-radius: 999px;
   background: rgba(20, 20, 20, .5);
@@ -79,19 +91,26 @@ function choose(code: string) {
   backdrop-filter: blur(8px);
   color: #fff;
   cursor: pointer;
+  line-height: 1;
   transition: border-color .25s ease, background .25s ease;
+}
+.lang--header .lang-cur {
+  background: rgba(255, 255, 255, .06);
 }
 .lang-cur:hover { border-color: rgba(201, 168, 108, .6); }
 .lang-cur.on { border-color: #c9a86c; }
 .lang-cur .code { font-size: 11px; font-weight: 700; letter-spacing: .12em; }
 .lang-cur .caret {
-  font-size: 9px;
-  color: rgba(255, 255, 255, .6);
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 4px solid rgba(255, 255, 255, .6);
   transition: transform .25s ease;
 }
 .lang-cur.on .caret { transform: rotate(180deg); }
 
-/* Danh sách */
 .lang-menu {
   position: absolute;
   top: calc(100% + 8px);
@@ -129,7 +148,6 @@ function choose(code: string) {
 }
 .ci-name { font-size: 13px; }
 
-/* Transition */
 .lpop-enter-active, .lpop-leave-active {
   transition: opacity .2s ease, transform .2s cubic-bezier(.22, .61, .36, 1);
 }
@@ -139,7 +157,7 @@ function choose(code: string) {
 }
 
 @media (max-width: 480px) {
-  .lang { top: 12px; right: 12px; }
+  .lang--floating { top: 12px; right: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .lang-cur .caret, .lpop-enter-active, .lpop-leave-active { transition: none; }

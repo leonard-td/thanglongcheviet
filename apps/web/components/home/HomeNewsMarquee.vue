@@ -58,7 +58,6 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
         </ul>
       </div>
     </div>
-    <WidgetsLangSwitch v-if="!props.inline" />
   </div>
 </template>
 
