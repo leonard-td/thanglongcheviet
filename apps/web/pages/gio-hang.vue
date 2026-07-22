@@ -21,6 +21,7 @@ const form = reactive({
   phone: '',
   email: '',
   address: '',
+  city: '',
   paymentMethod: 'pp_system_default',
 })
 
@@ -76,6 +77,7 @@ const handleCheckout = async () => {
     name: form.name,
     phone: form.phone,
     address: form.address,
+    city: form.city.trim() || undefined,
     email: form.email.trim() || undefined,
     payment_provider_id: form.paymentMethod,
   })
@@ -91,6 +93,7 @@ const handleCheckout = async () => {
     form.phone = ''
     form.email = ''
     form.address = ''
+    form.city = ''
     couponCode.value = ''
   } else {
     error.value = res.message
@@ -249,6 +252,13 @@ useSeoMeta({
               inputmode="email"
               autocomplete="email"
               :placeholder="t('cart.emailOptional')"
+              class="w-full px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px]"
+            >
+            <input
+              v-model="form.city"
+              type="text"
+              autocomplete="address-level2"
+              :placeholder="t('cart.city')"
               class="w-full px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px]"
             >
             <textarea

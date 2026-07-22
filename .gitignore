@@ -65,3 +65,6 @@ Thumbs.db
 my-medusa-store/
 be/
 .backups/
+docker-up.log
+*.log
+

@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "Thăng Long Chè Việt",
-    "tagline": "The Art of Traditional Beauty"
+    "tagline": "The essence of Vietnamese tea — from craft village to cup"
   },
   "about": {
     "title": "About us",
@@ -32,27 +32,27 @@
     },
     "library": "Vietnamese Culture Library",
     "contact": "Contact",
-    "bookNow": "Book Now"
+    "bookNow": "Order Now"
   },
   "hero": {
-    "cta": "Book Now",
+    "cta": "Explore products",
     "learnMore": "Explore More",
     "openingTimes": "Opening Times",
     "ourLocation": "Our Location"
   },
   "services": {
     "title": "Our Services",
-    "subtitle": "Experience premium beauty services with our team of leading experts",
+    "subtitle": "Premium teas, gift sets and brewing workshops with craft-village artisans",
     "fullServices": "Full Services",
     "viewAll": "View All Services",
     "from": "From",
     "duration": "Duration",
     "minutes": "min",
-    "bookService": "Book This Service"
+    "bookService": "Contact to book"
   },
   "team": {
     "title": "Meet Our Experts",
-    "subtitle": "Talented artisans with years of experience in the beauty industry",
+    "subtitle": "Artisans preserving and developing traditional Vietnamese tea craft",
     "viewAll": "View Full Team",
     "specialist": "Specialist"
   },
@@ -201,6 +201,7 @@
     "total": "Total",
     "checkoutTitle": "Shipping information",
     "address": "Shipping address",
+    "city": "City / Province",
     "emailOptional": "Email (order confirmation)",
     "paymentMethod": "Payment method",
     "submit": "Place order",
@@ -333,7 +334,7 @@
     "eyebrow": "News",
     "title": "Latest Articles",
     "featured": "Featured",
-    "subtitle": "Beauty tips, trends and news from Thăng Long Chè Việt",
+    "subtitle": "Tea culture, brewing guides and news from Thăng Long Chè Việt",
     "viewAll": "View All Articles",
     "comingSoon": "Full article content is being updated.",
     "readMore": "Read more",
@@ -407,9 +408,9 @@
     }
   },
   "gallery": {
-    "eyebrow": "Our Works",
+    "eyebrow": "Photos",
     "title": "Gallery",
-    "subtitle": "Our space and works from our expert team",
+    "subtitle": "Products, craft villages and Vietnamese tea experiences",
     "comingSoon": "More photos will be added soon."
   }
 }

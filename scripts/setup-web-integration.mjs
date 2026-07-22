@@ -55,7 +55,8 @@ function log(msg) {
 
 async function waitForHealth() {
   log("Waiting for backend health...")
-  for (let i = 0; i < 30; i++) {
+  // Backend start_period is ~90s (migrate + seeds + Vite); allow ~3 minutes.
+  for (let i = 0; i < 90; i++) {
     try {
       const res = await fetch(`${BACKEND_URL}/health`)
       if (res.ok) {
@@ -322,16 +323,12 @@ async function ensurePublishableKey(token, salesChannel) {
 }
 
 /**
- * Ensures the storefront navigation menu exists via the medusa-navigation-menu
- * plugin REST API (/store/navigation). Creates a default Vietnamese menu if
- * none named "storefront-header" exists yet, then returns the navigation id.
- * Safe to re-run — idempotent.
+ * Ensures storefront navigation items exist via the custom Navigation module
+ * (GET/POST /admin/navigations → flat NavigationItem rows). Idempotent.
  */
 async function ensureNavigation(token) {
-  const NAV_NAME = "storefront-header"
-  const NAV_API_BASE = "/admin/navigations"  // plugin registers: /admin/navigations
+  const NAV_API_BASE = "/admin/navigations"
 
-  // Step 1: Check if navigation already exists
   try {
     const res = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
       headers: {
@@ -341,68 +338,57 @@ async function ensureNavigation(token) {
     })
     if (res.ok) {
       const data = await res.json()
-      // Plugin returns { navigations: [...] }
       const list = Array.isArray(data) ? data : (data.navigations || [])
-      const existing = list.find((n) => n.name === NAV_NAME)
-      if (existing) {
-        log(`Navigation "${NAV_NAME}" already exists (id: ${existing.id}).`)
-        return existing.id
+      if (list.length > 0) {
+        log(`Navigation already has ${list.length} item(s).`)
+        return list[0].id
       }
     }
   } catch (e) {
     log(`Could not list navigations: ${e.message}`)
   }
 
-  // Step 2: Create with correct Vietnamese menu structure
   const DEFAULT_ITEMS = [
-    { name: "Trang ch\u1ee7",         url: "/",                      index: 0 },
-    { name: "S\u1ea3n ph\u1ea9m",          url: "/san-pham-list",          index: 1, children: [
-      { name: "Tr\u00e0 Vi\u1ec7t",             url: "/san-pham-list",          index: 0 },
-      { name: "An Quang Caff\u00e9",       url: "/an-quang-caffe",         index: 1 },
-      { name: "Qu\u00e0 t\u1eb7ng doanh nghi\u1ec7p", url: "/qua-tang-doanh-nghiep", index: 2 },
-    ]},
-    { name: "D\u1ef1 \u00e1n & \u0110\u1ed1i t\u00e1c",   url: "/du-an-doi-tac",          index: 2 },
-    { name: "S\u1ef1 ki\u1ec7n",           url: "/trai-nghiem",             index: 3 },
-    { name: "Tin t\u1ee9c",           url: "/tin-tuc",                 index: 4, children: [
-      { name: "N\u1ebfp Tr\u00e0 Vi\u1ec7t",         url: "/nep-tra-viet",           index: 0 },
-      { name: "V\u0103n ho\u00e1 Vi\u1ec7t",         url: "/van-hoa-viet",           index: 1 },
-      { name: "Di s\u1ea3n tr\u00e0 c\u0169",        url: "/di-san-tra-cu",          index: 2 },
-      { name: "V\u01b0\u1eddn An Quang",        url: "/vuon-an-quang",          index: 3 },
-    ]},
-    { name: "Th\u01b0 vi\u1ec7n v\u0103n ho\u00e1",  url: "/thu-vien-van-hoa",       index: 5 },
-    { name: "Li\u00ean h\u1ec7",           url: "/lien-he",                 index: 6 },
+    { label: "Trang chủ", url: "/", order: 0 },
+    { label: "Sản phẩm", url: "/san-pham-list", order: 1 },
+    { label: "Làng nghề", url: "/lang-nghe", order: 2 },
+    { label: "Dịch vụ", url: "/dich-vu", order: 3 },
+    { label: "Bộ sưu tập", url: "/gallery", order: 4 },
+    { label: "Tin tức", url: "/tin-tuc", order: 5 },
+    { label: "Liên hệ", url: "/lien-he", order: 6 },
+    { label: "Tài khoản", url: "/tai-khoan", order: 7 },
   ]
 
   try {
-    const res = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name: NAV_NAME, items: DEFAULT_ITEMS }),
-    })
-    // Plugin POST returns the string 'ok', not a navigation object.
-    // We need to re-fetch to get the ID.
-    if (res.ok) {
-      const listRes = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
+    let firstId = null
+    for (const item of DEFAULT_ITEMS) {
+      const res = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          label: item.label,
+          url: item.url,
+          order: item.order,
+          parent_id: null,
+          is_active: true,
+          openInNewTab: false,
+        }),
       })
-      if (listRes.ok) {
-        const data = await listRes.json()
-        const list = Array.isArray(data) ? data : (data.navigations || [])
-        const created = list.find((n) => n.name === NAV_NAME)
-        if (created) {
-          log(`Created navigation "${NAV_NAME}" (id: ${created.id}).`)
-          return created.id
-        }
+      if (!res.ok) {
+        const text = await res.text()
+        log(`Warning: Could not create navigation item "${item.label}" (${res.status}): ${text}`)
+        continue
       }
-    } else {
-      const text = await res.text()
-      log(`Warning: Could not create navigation (${res.status}): ${text}`)
+      const body = await res.json()
+      const created = body.navigation || body
+      if (!firstId && created?.id) firstId = created.id
+    }
+    if (firstId) {
+      log(`Created ${DEFAULT_ITEMS.length} storefront navigation items.`)
+      return firstId
     }
   } catch (e) {
     log(`Warning: Navigation API error: ${e.message}`)

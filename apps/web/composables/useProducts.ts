@@ -76,9 +76,8 @@ export function useProducts() {
       const raw = res.products?.[0]
       if (raw) {
         const product = transformMedusaProduct(raw)
-        // related() reads the full catalog fetched in parallel — wait for it
-        // so a direct hit on a product URL still gets related items.
-        await Promise.resolve(productsAsync).catch(() => null)
+        // Wait for the catalog async-data so related() has products on cold hits.
+        await productsAsync.execute().catch(() => null)
         return { product, relatedFromApi: related(product) }
       }
     } catch (e) {

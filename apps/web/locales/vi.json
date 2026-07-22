@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "Thăng Long Chè Việt",
-    "tagline": "Nghệ thuật làm đẹp truyền thống"
+    "tagline": "Tinh hoa trà Việt — từ làng nghề đến tách trà"
   },
   "about": {
     "title": "Giới thiệu",
@@ -32,27 +32,27 @@
     },
     "library": "Thư viện văn hóa Việt",
     "contact": "Liên hệ",
-    "bookNow": "Đặt lịch ngay"
+    "bookNow": "Đặt mua ngay"
   },
   "hero": {
-    "cta": "Đặt lịch ngay",
+    "cta": "Khám phá sản phẩm",
     "learnMore": "Khám phá thêm",
     "openingTimes": "Giờ mở cửa",
     "ourLocation": "Địa chỉ"
   },
   "services": {
     "title": "Dịch vụ của chúng tôi",
-    "subtitle": "Trải nghiệm dịch vụ làm đẹp đẳng cấp với đội ngũ chuyên gia hàng đầu",
+    "subtitle": "Trà cao cấp, quà tặng và workshop pha trà cùng nghệ nhân làng nghề",
     "fullServices": "Dịch vụ toàn diện",
     "viewAll": "Xem tất cả dịch vụ",
     "from": "Từ",
     "duration": "Thời gian",
     "minutes": "phút",
-    "bookService": "Đặt lịch dịch vụ này"
+    "bookService": "Liên hệ đặt"
   },
   "team": {
     "title": "Đội ngũ chuyên gia",
-    "subtitle": "Những nghệ nhân tài năng với nhiều năm kinh nghiệm trong ngành làm đẹp",
+    "subtitle": "Những người gìn giữ và phát triển nghề trà truyền thống Việt Nam",
     "viewAll": "Xem toàn bộ đội ngũ",
     "specialist": "Chuyên gia"
   },
@@ -76,7 +76,7 @@
     "terms": "Áp dụng đến hết tháng này"
   },
   "contact": {
-    "title": "Liên hệ & Đặt lịch",
+    "title": "Liên hệ & Đặt hàng",
     "subtitle": "Chúng tôi luôn sẵn sàng phục vụ bạn",
     "address": "Địa chỉ",
     "phone": "Điện thoại",
@@ -201,6 +201,7 @@
     "total": "Tổng cộng",
     "checkoutTitle": "Thông tin giao hàng",
     "address": "Địa chỉ giao hàng",
+    "city": "Tỉnh / Thành phố",
     "emailOptional": "Email (nhận xác nhận đơn hàng)",
     "paymentMethod": "Phương thức thanh toán",
     "submit": "Đặt hàng",
@@ -333,7 +334,7 @@
     "eyebrow": "Tin tức",
     "title": "Bài viết mới nhất",
     "featured": "Tin nổi bật",
-    "subtitle": "Mẹo làm đẹp, xu hướng và tin tức từ Thăng Long Chè Việt",
+    "subtitle": "Văn hóa trà, hướng dẫn pha trà và tin tức từ Thăng Long Chè Việt",
     "viewAll": "Xem tất cả bài viết",
     "comingSoon": "Nội dung đang được cập nhật.",
     "readMore": "Đọc tiếp",
@@ -407,9 +408,9 @@
     }
   },
   "gallery": {
-    "eyebrow": "Tác phẩm của chúng tôi",
+    "eyebrow": "Hình ảnh",
     "title": "Bộ sưu tập",
-    "subtitle": "Không gian và tác phẩm từ đội ngũ chuyên gia",
+    "subtitle": "Sản phẩm, làng nghề và trải nghiệm trà Việt",
     "comingSoon": "Nhiều hình ảnh hơn sẽ được cập nhật sớm."
   }
 }

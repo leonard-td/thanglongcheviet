@@ -22,7 +22,7 @@ const localFallback: SiteBundle = {
 }
 
 export function useSiteBundle() {
-  const { data, status, refresh } = useAsyncData('site-settings', async () => {
+  const { data, status, refresh } = useAsyncData('site-bundle', async () => {
     try {
       const config = useRuntimeConfig()
       const medusaUrl = import.meta.client ? config.public.medusaBackendUrl : (config.medusaBackendUrlServer || config.public.medusaBackendUrl)

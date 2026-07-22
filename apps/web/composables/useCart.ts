@@ -78,7 +78,12 @@ export function useCart() {
   const { fetchMedusa, regionId } = useMedusaApi()
   const { t } = useAppI18n()
 
-  const cartId = useCookie<string | null>('medusa_cart_id', { maxAge: 60 * 60 * 24 * 30 })
+  const isProd = process.env.NODE_ENV === 'production'
+  const cartId = useCookie<string | null>('medusa_cart_id', {
+    maxAge: 60 * 60 * 24 * 30,
+    sameSite: 'lax',
+    secure: isProd,
+  })
   const cart = useState<Cart | null>('cart', () => null)
   const items = useState<CartItem[]>('cart_items', () => [])
   const totals = useState<CartTotals>('cart_totals', () => ({ subtotal: 0, discount: 0, shipping: 0, total: 0 }))
@@ -240,6 +245,7 @@ export function useCart() {
     name: string
     phone: string
     address: string
+    city?: string
     email?: string
     payment_provider_id?: string
   }) => {
@@ -248,8 +254,7 @@ export function useCart() {
       const current = await ensureCart()
       const [firstName, ...rest] = data.name.trim().split(/\s+/)
 
-      // Use a country that actually belongs to the cart's region ('vn' once
-      // the Vietnam region is seeded; the demo seed only has EU countries).
+      // Prefer Vietnam when the region supports it; otherwise first country.
       const { region } = await fetchMedusa<{ region: { countries: { iso_2: string }[] } }>(
         `/store/regions/${current.region_id}`,
       )
@@ -257,15 +262,19 @@ export function useCart() {
         ?? region.countries[0]?.iso_2
         ?? 'vn'
 
+      const shippingCity = (data.city || '').trim() || 'Hà Nội'
+      const shippingEmail = (data.email || '').trim()
+        || `order+${data.phone.replace(/\D/g, '')}@thanglongcheviet.vn`
+
       await fetchMedusa(`/store/carts/${current.id}`, {
         method: 'POST',
         body: {
-          email: data.email || 'khach@thanglongcheviet.vn',
+          email: shippingEmail,
           shipping_address: {
             first_name: firstName || data.name,
             last_name: rest.join(' ') || data.name,
             address_1: data.address,
-            city: 'Hà Nội',
+            city: shippingCity,
             country_code: countryCode,
             phone: data.phone,
           },

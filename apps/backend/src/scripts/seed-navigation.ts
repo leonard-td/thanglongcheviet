@@ -1,42 +1,59 @@
 import type { ExecArgs } from "@medusajs/framework/types"
+import { NAVIGATION_MODULE } from "../modules/navigation"
 
-const NAVIGATION_MODULE = "navigation"
-const NAVIGATION_NAME = "storefront-header"
-
+/**
+ * Seeds flat NavigationItem rows used by GET /store/navigations and the
+ * Nuxt header. Idempotent: skips create when any active items already exist.
+ */
 const DEFAULT_ITEMS = [
-  { name: "Trang chủ", url: "/", index: 0 },
-  { name: "Cửa hàng", url: "/store", index: 1 },
-  { name: "Bài viết", url: "/campaign-posts", index: 2 },
-  { name: "Tài khoản", url: "/account", index: 3 },
-  { name: "Giỏ hàng", url: "/cart", index: 4 },
+  { label: "Trang chủ", url: "/", order: 0 },
+  { label: "Sản phẩm", url: "/san-pham-list", order: 1 },
+  { label: "Làng nghề", url: "/lang-nghe", order: 2 },
+  { label: "Dịch vụ", url: "/dich-vu", order: 3 },
+  { label: "Bộ sưu tập", url: "/gallery", order: 4 },
+  { label: "Tin tức", url: "/tin-tuc", order: 5 },
+  { label: "Liên hệ", url: "/lien-he", order: 6 },
+  { label: "Tài khoản", url: "/tai-khoan", order: 7 },
 ]
 
 export default async function seedNavigation({ container }: ExecArgs) {
   const navigationService = container.resolve(NAVIGATION_MODULE) as {
-    listNavigations: (filters?: { name?: string }) => Promise<{ id: string; name: string }[]>
-    createNestedNavigation: (
-      service: unknown,
-      name: string,
-      items: typeof DEFAULT_ITEMS,
-    ) => Promise<{ id: string; name: string }>
+    listNavigationItems: (
+      filters?: Record<string, unknown>,
+      config?: Record<string, unknown>,
+    ) => Promise<{ id: string; label: string; url: string }[]>
+    createNavigationItems: (
+      data: Array<{
+        label: string
+        url: string
+        order: number
+        parent_id?: string | null
+        is_active?: boolean
+        openInNewTab?: boolean
+      }>,
+    ) => Promise<unknown>
   }
 
-  const existing = await navigationService.listNavigations({ name: NAVIGATION_NAME })
+  const existing = await navigationService.listNavigationItems(
+    { is_active: true },
+    { take: 1 },
+  )
 
   if (existing.length) {
     console.log(
-      `Navigation "${NAVIGATION_NAME}" already exists (id: ${existing[0].id}).`,
+      `Navigation already has ${existing.length}+ item(s); skipping seed.`,
     )
-    console.log(`Set in .env: NEXT_PUBLIC_MEDUSA_NAVIGATION_ID=${existing[0].id}`)
     return
   }
 
-  const navigation = await navigationService.createNestedNavigation(
-    navigationService,
-    NAVIGATION_NAME,
-    DEFAULT_ITEMS,
+  await navigationService.createNavigationItems(
+    DEFAULT_ITEMS.map((item) => ({
+      ...item,
+      parent_id: null,
+      is_active: true,
+      openInNewTab: false,
+    })),
   )
 
-  console.log(`Created navigation "${NAVIGATION_NAME}" (id: ${navigation.id}).`)
-  console.log(`Set in .env: NEXT_PUBLIC_MEDUSA_NAVIGATION_ID=${navigation.id}`)
+  console.log(`Created ${DEFAULT_ITEMS.length} storefront navigation items.`)
 }

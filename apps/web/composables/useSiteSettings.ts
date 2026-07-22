@@ -27,7 +27,7 @@ export function useSiteSettings() {
   const { resolveMediaUrl } = useMediaUrl()
 
   const { data, pending } = useAsyncData(
-    'site-settings',
+    'site-settings-dto',
     async () => {
       try {
         const res = await fetchMedusa<{ site_settings: SiteSettingsDto }>(
