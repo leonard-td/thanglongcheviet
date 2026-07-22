@@ -29,9 +29,21 @@ Branch based on `dev/be_medusajs_merge`. Not pushed yet.
 20. Prod compose **refuses default JWT/COOKIE secrets** + seeds navigation
 21. Removed salon discount IDs (`nail-gel` / `hair-color`) from services
 
+## Pass 3
+
+22. **Inventory-aware variants** — `manage_inventory` / `allow_backorder` → `inStock`
+23. **Featured products** — `metadata.featured` (fallback first 6)
+24. **Payment UX** — hide VNPay/Stripe until gateway wired (COD only)
+25. Deleted dead **`useApi.ts`** (Laravel storefront proxy)
+26. Promo banner — tea images, CTA → products
+27. Header — **account** icon + i18n menu aria-labels
+28. `@nuxt/image` domains for production host
+29. i18n routes: `/about`, `/corporate-gifts`
+30. **README** rewritten for Medusa + Nuxt + Docker
+31. New carts auto-linked when customer already logged in
+
 ## Still open
 
-- Online payment gateway (`paymentUrl`)
-- Real Medusa inventory / stock
-- Stronger HTML sanitizer library if needed
-- Full README rewrite for Medusa + Nuxt
+- Online payment gateway redirect
+- Inventory quantity from stock locations (needs inventory module query)
+- Push `fix/tlcv-quality-pass` when ready

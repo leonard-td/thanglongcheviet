@@ -48,6 +48,8 @@ export default defineNuxtConfig({
       'trai-nghiem-slug': { en: '/events/[slug]', vi: '/trai-nghiem/[slug]' },
       'gio-hang': { en: '/cart', vi: '/gio-hang' },
       'lien-he': { en: '/contact', vi: '/lien-he' },
+      'gioi-thieu': { en: '/about', vi: '/gioi-thieu' },
+      'qua-tang-doanh-nghiep': { en: '/corporate-gifts', vi: '/qua-tang-doanh-nghiep' },
       'tai-khoan': { en: '/account', vi: '/tai-khoan' },
       'tra-cuu-don': { en: '/order-tracking', vi: '/tra-cuu-don' },
       'thanh-toan-ket-qua': { en: '/payment/result', vi: '/thanh-toan/ket-qua' },
@@ -72,7 +74,13 @@ export default defineNuxtConfig({
   image: {
     quality: 85,
     formats: ['webp', 'avif'],
-    domains: ['images.unsplash.com', 'localhost', '127.0.0.1'],
+    domains: [
+      'images.unsplash.com',
+      'localhost',
+      '127.0.0.1',
+      'thanglongcheviet.vn',
+      'thanglongcheviet.ddnsfree.com',
+    ],
     screens: {
       xs: 375,
       sm: 640,

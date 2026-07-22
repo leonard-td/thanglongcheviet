@@ -21,6 +21,11 @@ export function usePayment() {
     return providerId.replace(/^pp_/, '')
   }
 
+  /** Online gateways need a redirect URL we don't generate yet — keep COD only. */
+  const isSupportedCheckoutProvider = (providerId: string) =>
+    providerId === 'pp_system_default'
+    || providerId.startsWith('pp_system_default')
+
   const fetchPaymentMethods = async () => {
     if (loaded.value) return methods.value
     try {
@@ -28,7 +33,7 @@ export function usePayment() {
         `/store/payment-providers?region_id=${regionId}`,
       )
       methods.value = (res.payment_providers ?? [])
-        .filter(p => p.is_enabled !== false)
+        .filter(p => p.is_enabled !== false && isSupportedCheckoutProvider(p.id))
         .map(p => ({ id: p.id, label: labelFor(p.id) }))
       loaded.value = true
     } catch {

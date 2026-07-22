@@ -149,6 +149,16 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 
       <div class="max-lg:hidden lg:flex items-center gap-3">
         <NuxtLink
+          :to="localePath('/tai-khoan')"
+          class="site-cart-link"
+          :aria-label="t('account.title')"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5 19c1.5-3.5 4-5 7-5s5.5 1.5 7 5" stroke-linecap="round" />
+          </svg>
+        </NuxtLink>
+        <NuxtLink
           :to="localePath('/gio-hang')"
           class="site-cart-link"
           :aria-label="t('cart.title')"
@@ -168,7 +178,7 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 
       <button
         class="lg:hidden p-2 text-[#f5f0e6] min-h-[44px] min-w-[44px] flex items-center justify-center"
-        :aria-label="isMenuOpen ? 'Đóng menu' : 'Mở menu'"
+        :aria-label="isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')"
         :aria-expanded="isMenuOpen"
         @click="isMenuOpen = !isMenuOpen"
       >
@@ -229,6 +239,13 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
               </NuxtLink>
             </div>
           </div>
+          <NuxtLink
+            :to="localePath('/tai-khoan')"
+            class="site-mobile-link"
+            @click="isMenuOpen = false"
+          >
+            {{ t('account.title') }}
+          </NuxtLink>
           <NuxtLink
             :to="localePath('/gio-hang')"
             class="site-mobile-link"

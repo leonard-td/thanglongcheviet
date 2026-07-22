@@ -32,7 +32,9 @@
     },
     "library": "Thư viện văn hóa Việt",
     "contact": "Liên hệ",
-    "bookNow": "Đặt mua ngay"
+    "bookNow": "Đặt mua ngay",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu"
   },
   "hero": {
     "cta": "Khám phá sản phẩm",

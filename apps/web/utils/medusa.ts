@@ -21,6 +21,10 @@ export interface MedusaVariant {
   title: string
   calculated_price?: { calculated_amount: number | null, currency_code: string } | null
   options?: MedusaVariantOptionValue[]
+  manage_inventory?: boolean | null
+  allow_backorder?: boolean | null
+  /** Present when requested via Store API fields (+variants.inventory_quantity). */
+  inventory_quantity?: number | null
 }
 
 export interface MedusaCategory {
@@ -49,8 +53,18 @@ export interface MedusaProduct {
   images?: { url: string }[]
   categories?: MedusaCategory[]
   collection?: MedusaCollection | null
+  metadata?: Record<string, unknown> | null
   options?: MedusaOption[]
   variants?: MedusaVariant[]
+}
+
+function variantInStock(v: MedusaVariant): boolean {
+  // Inventory not managed → always orderable.
+  if (!v.manage_inventory) return true
+  if (v.allow_backorder) return true
+  // When quantity is exposed by the API, respect it; otherwise stay optimistic.
+  if (typeof v.inventory_quantity === 'number') return v.inventory_quantity > 0
+  return true
 }
 
 export function transformMedusaCategory(c: MedusaCategory): ProductCategory {
@@ -72,9 +86,7 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
         .filter(o => o.option?.title)
         .map(o => [o.option!.title, o.value]),
     ),
-    // Medusa v2 stock levels require a separate inventory-location query —
-    // out of scope here, so every listed variant is treated as orderable.
-    inStock: true,
+    inStock: variantInStock(v),
   }))
   const firstVariant = variants[0]
 
@@ -100,7 +112,8 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     categoryIds: (p.categories ?? []).map(c => c.id),
     collectionId: p.collection?.id ?? null,
     collectionName: p.collection?.title ?? '',
-    inStock: true,
+    inStock: variants.some(v => v.inStock),
+    featured: p.metadata?.featured === true || p.metadata?.featured === 'true',
     variants,
     options,
     material: p.material ?? null,

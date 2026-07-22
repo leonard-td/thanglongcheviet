@@ -45,6 +45,8 @@ export interface Product {
   collectionId: string | null
   collectionName: string
   inStock: boolean
+  /** Curated via Medusa product metadata.featured = true */
+  featured?: boolean
   variants: ProductVariant[]
   options: ProductOption[]
   material: string | null

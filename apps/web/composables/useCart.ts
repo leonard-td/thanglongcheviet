@@ -110,6 +110,20 @@ export function useCart() {
       body: { region_id: regionId },
     })
     applyCart(res.cart)
+    // If the customer is already logged in, attach ownership immediately.
+    const token = useCookie<string | null>('customer_token')
+    if (token.value) {
+      try {
+        const linked = await fetchMedusa<{ cart: MedusaCart }>(
+          `/store/carts/${res.cart.id}/customer?fields=${CART_FIELDS}`,
+          { method: 'POST' },
+        )
+        applyCart(linked.cart)
+        return linked.cart
+      } catch {
+        /* guest cart still usable */
+      }
+    }
     return res.cart
   }
 

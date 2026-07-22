@@ -32,7 +32,9 @@
     },
     "library": "Vietnamese Culture Library",
     "contact": "Contact",
-    "bookNow": "Order Now"
+    "bookNow": "Order Now",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
     "cta": "Explore products",

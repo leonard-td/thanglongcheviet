@@ -13,8 +13,9 @@ export interface ProductGroup {
   thumbnail: string | null
 }
 
-const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,*images,*categories,'
-  + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price'
+const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
+  + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price,'
+  + '*variants.manage_inventory,*variants.allow_backorder'
 
 export function useProducts() {
   const { locale } = useI18n()
@@ -33,10 +34,11 @@ export function useProducts() {
     (productsData.value?.products ?? []).map(transformMedusaProduct),
   )
 
-  // Medusa has no built-in "featured" flag out of the box — surface the
-  // first few products instead. Curate via a real flag (e.g. metadata.featured)
-  // once real product data replaces the seeded demo catalog.
-  const featuredProducts = computed<Product[]>(() => products.value.slice(0, 6))
+  // Prefer products marked metadata.featured in admin; fall back to first 6.
+  const featuredProducts = computed<Product[]>(() => {
+    const marked = products.value.filter(p => p.featured)
+    return (marked.length ? marked : products.value).slice(0, 6)
+  })
 
   const { data: categoriesData } = useAsyncData(
     'medusa-product-categories',
