@@ -77,13 +77,14 @@ function mapLineItem(item: MedusaLineItem): CartItem {
 export function useCart() {
   const { fetchMedusa, regionId } = useMedusaApi()
   const { t } = useAppI18n()
+  const config = useRuntimeConfig()
 
-  const isProd = process.env.NODE_ENV === 'production'
   const cartId = useCookie<string | null>('medusa_cart_id', {
     maxAge: 60 * 60 * 24 * 30,
     sameSite: 'lax',
-    secure: isProd,
+    secure: Boolean(config.public.cookieSecure),
   })
+
   const cart = useState<Cart | null>('cart', () => null)
   const items = useState<CartItem[]>('cart_items', () => [])
   const totals = useState<CartTotals>('cart_totals', () => ({ subtotal: 0, discount: 0, shipping: 0, total: 0 }))
@@ -191,7 +192,9 @@ export function useCart() {
   }
 
   const updateCart = async (itemId: string, quantity: number) => {
-    if (!cart.value) return
+    if (!cart.value) {
+      return { success: false as const, message: t('cart.updateError') }
+    }
     loading.value = true
     try {
       const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${cart.value.id}/line-items/${itemId}?fields=${CART_FIELDS}`, {
@@ -199,15 +202,19 @@ export function useCart() {
         body: { quantity },
       })
       applyCart(res.cart)
+      return { success: true as const }
     } catch (err) {
       console.error('Failed to update cart', err)
+      return { success: false as const, message: parseApiError(err, t('cart.updateError')) }
     } finally {
       loading.value = false
     }
   }
 
   const removeFromCart = async (itemId: string) => {
-    if (!cart.value) return
+    if (!cart.value) {
+      return { success: false as const, message: t('cart.removeError') }
+    }
     loading.value = true
     try {
       await fetchMedusa(`/store/carts/${cart.value.id}/line-items/${itemId}`, {
@@ -217,8 +224,10 @@ export function useCart() {
       // keep totals/promotions consistent.
       const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${cart.value.id}?fields=${CART_FIELDS}`)
       applyCart(res.cart)
+      return { success: true as const }
     } catch (err) {
       console.error('Failed to remove from cart', err)
+      return { success: false as const, message: parseApiError(err, t('cart.removeError')) }
     } finally {
       loading.value = false
     }

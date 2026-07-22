@@ -7,9 +7,16 @@ const priceLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 
 const { products } = useProducts()
 
-const giftProducts = computed(() => 
-  products.value.filter(p => (p.slug && p.slug.includes('qua-')) || (p.title && p.title.toLowerCase().includes('quà')))
-)
+function isCorporateGift(p: { slug?: string; title?: string; categoryName?: string; collectionName?: string; corporateGift?: boolean }) {
+  if (p.corporateGift) return true
+  const hay = [p.slug, p.title, p.categoryName, p.collectionName]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  return /qua-|gift|quà|qua tang|corporate/.test(hay)
+}
+
+const giftProducts = computed(() => products.value.filter(isCorporateGift))
 
 useScrollAnimation()
 
@@ -25,7 +32,7 @@ useSeoMeta({
     <section class="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden">
       <!-- Background Image -->
       <div class="absolute inset-0 z-0">
-        <NuxtImg src="/images/hero/hero-2.jpg" alt="Corporate Gifts" class="w-full h-full object-cover object-center" priority />
+        <NuxtImg src="/images/hero/hero-2.jpg" :alt="t('corporate.heroAlt')" class="w-full h-full object-cover object-center" priority />
         <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
       </div>
       
@@ -97,10 +104,10 @@ useSeoMeta({
       <div class="container-page overflow-hidden">
         <div class="text-center mb-12 animate-on-scroll">
           <h3 class="text-xs uppercase tracking-widest text-primary-400 mb-2 mt-1">
-            Mẫu quà tặng
+            {{ t('corporate.featuredEyebrow') }}
           </h3>
           <h2 class="text-3xl lg:text-4xl font-light">
-            Sản phẩm tiêu biểu
+            {{ t('corporate.featuredTitle') }}
           </h2>
         </div>
 
@@ -126,7 +133,7 @@ useSeoMeta({
               />
               <div v-else class="h-full w-full bg-dark flex flex-col items-center justify-center text-white/30 border-2 border-dashed border-white/10">
                 <span class="text-5xl mb-2">🎁</span>
-                <span class="text-sm">Gift Box</span>
+                <span class="text-sm">{{ t('corporate.giftBoxFallback') }}</span>
               </div>
               <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
@@ -146,7 +153,7 @@ useSeoMeta({
 
     <!-- 3. Showcase Banner -->
     <section class="w-full h-[50vh] min-h-[400px] relative overflow-hidden group">
-      <NuxtImg src="/images/hero/hero-1.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[20s]" loading="lazy" alt="Corporate Gifts Banner" />
+      <NuxtImg src="/images/hero/hero-1.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[20s]" loading="lazy" :alt="t('corporate.heroAlt')" />
       <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
         <div class="text-center px-4 animate-on-scroll">
           <p class="text-primary-400 text-sm md:text-lg uppercase tracking-[0.3em] mb-4 font-medium drop-shadow-lg">Thăng Long Chè Việt</p>

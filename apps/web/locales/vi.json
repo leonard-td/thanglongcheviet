@@ -101,7 +101,7 @@
       "submitting": "Đang gửi...",
       "success": "Cảm ơn! Chúng tôi sẽ liên hệ với bạn sớm.",
       "error": "Có lỗi xảy ra. Vui lòng thử lại hoặc gọi trực tiếp.",
-      "bookingHint": "Đăng ký tài khoản cùng SĐT tại trang Tài khoản để theo dõi lịch hẹn."
+      "bookingHint": "Đăng ký tài khoản cùng SĐT tại trang Tài khoản để theo dõi lịch thưởng trà."
     }
   },
   "orderLookup": {
@@ -211,6 +211,8 @@
     "formRequired": "Vui lòng điền đầy đủ thông tin giao hàng.",
     "orderSuccess": "Đặt hàng thành công! Mã đơn: {number}",
     "addError": "Không thể thêm vào giỏ hàng.",
+    "updateError": "Không thể cập nhật giỏ hàng.",
+    "removeError": "Không thể xóa sản phẩm khỏi giỏ.",
     "checkoutError": "Thanh toán thất bại. Vui lòng thử lại.",
     "lookupError": "Không tìm thấy đơn hàng.",
     "coupon": "Mã giảm giá",
@@ -224,8 +226,8 @@
     "shipping": "Phí vận chuyển"
   },
   "booking": {
-    "preferredDate": "Ngày hẹn",
-    "preferredTime": "Giờ hẹn",
+    "preferredDate": "Ngày thưởng trà",
+    "preferredTime": "Giờ mong muốn",
     "selectTime": "Chọn giờ",
     "loadingSlots": "Đang tải khung giờ...",
     "noSlots": "Không còn khung giờ trống trong ngày này.",
@@ -241,16 +243,16 @@
     "password": "Mật khẩu",
     "submitting": "Đang xử lý...",
     "welcome": "Xin chào",
-    "appointments": "Lịch hẹn của tôi",
-    "noAppointments": "Chưa có lịch hẹn nào.",
+    "appointments": "Lịch thưởng trà của tôi",
+    "noAppointments": "Chưa có lịch thưởng trà nào.",
     "orders": "Đơn hàng của tôi",
     "noOrders": "Chưa có đơn hàng nào.",
-    "generalBooking": "Đặt dịch vụ",
+    "generalBooking": "Đặt lịch thưởng trà",
     "cancel": "Hủy lịch",
-    "cancelled": "Đã hủy lịch hẹn.",
+    "cancelled": "Đã hủy lịch thưởng trà.",
     "loginError": "Đăng nhập thất bại.",
     "registerError": "Đăng ký thất bại.",
-    "cancelError": "Không thể hủy lịch hẹn.",
+    "cancelError": "Không thể hủy lịch thưởng trà.",
     "status": {
       "pending": "Chờ xác nhận",
       "confirmed": "Đã xác nhận",
@@ -265,6 +267,10 @@
   "corporate": {
     "title": "Quà tặng doanh nghiệp",
     "subtitle": "Giải pháp quà tặng trà cao cấp, tinh tế, khẳng định dấu ấn thương hiệu và tri ân đối tác.",
+    "heroAlt": "Quà tặng trà doanh nghiệp Thăng Long Chè Việt",
+    "featuredEyebrow": "Mẫu quà tặng",
+    "featuredTitle": "Sản phẩm tiêu biểu",
+    "giftBoxFallback": "Hộp quà",
     "values": {
       "eyebrow": "Vì sao chọn chúng tôi",
       "title": "Giải pháp quà tặng tối ưu",

@@ -42,8 +42,21 @@ Branch based on `dev/be_medusajs_merge`. Not pushed yet.
 30. **README** rewritten for Medusa + Nuxt + Docker
 31. New carts auto-linked when customer already logged in
 
+## Pass 4
+
+32. **Sitemap EN paths** match i18n (`/en/products`, `/en/about`, …); drop cart/account
+33. Cart **update/remove errors** shown on checkout page
+34. Cookies use **`cookieSecure` / COOKIE_SECURE** (not NODE_ENV alone)
+35. Account/booking copy → tea tasting visits (not salon appointments)
+36. Nav seed aligned with tea header (fresh installs)
+37. Compose default **STORE_CORS** → `:8800` / `:3000`
+38. Corporate gifts filter + i18n labels; `metadata.corporate_gift`
+39. Dropped legacy **`salon`** settings key + dead **`products.json`**
+
 ## Still open
 
 - Online payment gateway redirect
 - Inventory quantity from stock locations (needs inventory module query)
+- Re-seed navigation in existing DBs (seed skips when items exist)
+- Culture stub pages still “coming soon”
 - Push `fix/tlcv-quality-pass` when ready

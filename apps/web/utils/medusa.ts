@@ -114,6 +114,11 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     collectionName: p.collection?.title ?? '',
     inStock: variants.some(v => v.inStock),
     featured: p.metadata?.featured === true || p.metadata?.featured === 'true',
+    corporateGift:
+      p.metadata?.corporate_gift === true
+      || p.metadata?.corporate_gift === 'true'
+      || p.metadata?.gift === true
+      || p.metadata?.gift === 'true',
     variants,
     options,
     material: p.material ?? null,

@@ -6,12 +6,12 @@
  */
 export function useMedusaApi() {
   const config = useRuntimeConfig()
-  const isProd = process.env.NODE_ENV === 'production'
   const customerToken = useCookie<string | null>('customer_token', {
     maxAge: 60 * 60 * 24 * 30,
     sameSite: 'lax',
-    secure: isProd,
+    secure: Boolean(config.public.cookieSecure),
   })
+
 
   // SSR inside docker must call the backend via compose DNS, the browser via
   // the published port — see runtimeConfig.medusaBackendUrlServer.

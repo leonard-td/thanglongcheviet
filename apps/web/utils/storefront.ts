@@ -47,6 +47,8 @@ export interface Product {
   inStock: boolean
   /** Curated via Medusa product metadata.featured = true */
   featured?: boolean
+  /** Curated via Medusa metadata.corporate_gift / gift = true */
+  corporateGift?: boolean
   variants: ProductVariant[]
   options: ProductOption[]
   material: string | null

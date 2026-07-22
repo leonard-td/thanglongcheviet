@@ -1,3 +1,19 @@
+/** Mirrors nuxt.config i18n.pages (prefix_except_default: vi unprefixed, en under /en). */
+const STATIC_PAGES: Array<{ vi: string; en: string }> = [
+  { vi: '/', en: '/en' },
+  { vi: '/san-pham-list', en: '/en/products' },
+  { vi: '/tin-tuc', en: '/en/blog' },
+  { vi: '/lien-he', en: '/en/contact' },
+  { vi: '/lang-nghe', en: '/en/craft-village' },
+  { vi: '/doi-ngu', en: '/en/team' },
+  { vi: '/dich-vu', en: '/en/services' },
+  { vi: '/gallery', en: '/en/gallery' },
+  { vi: '/tra-cuu-don', en: '/en/order-tracking' },
+  { vi: '/gioi-thieu', en: '/en/about' },
+  { vi: '/qua-tang-doanh-nghiep', en: '/en/corporate-gifts' },
+  { vi: '/trai-nghiem', en: '/en/events' },
+]
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   const baseUrl = String(config.public.siteUrl || 'https://thanglongcheviet.vn').replace(/\/$/, '')
@@ -7,23 +23,6 @@ export default defineEventHandler(async (event) => {
     || 'http://127.0.0.1:9000',
   ).replace(/\/$/, '')
   const publishableKey = String(config.public.medusaPublishableKey || '')
-
-  const staticPaths = [
-    '/',
-    '/san-pham-list',
-    '/tin-tuc',
-    '/lien-he',
-    '/lang-nghe',
-    '/doi-ngu',
-    '/dich-vu',
-    '/gallery',
-    '/gio-hang',
-    '/tai-khoan',
-    '/tra-cuu-don',
-    '/gioi-thieu',
-    '/qua-tang-doanh-nghiep',
-    '/trai-nghiem',
-  ]
 
   let products: Array<{ slug: string; updated_at?: string }> = []
   let posts: Array<{ slug: string; updated_at?: string }> = []
@@ -64,12 +63,18 @@ export default defineEventHandler(async (event) => {
   }
 
   const urls = [
-    ...staticPaths.map(path => urlEntry(`${baseUrl}${path}`)),
-    ...staticPaths.filter(p => p !== '/').map(path => urlEntry(`${baseUrl}/en${path === '/' ? '' : path}`)),
-    ...products.map(p => urlEntry(`${baseUrl}/san-pham/${p.slug}`, p.updated_at)),
-    ...products.map(p => urlEntry(`${baseUrl}/en/products/${p.slug}`, p.updated_at)),
-    ...posts.map(p => urlEntry(`${baseUrl}/tin-tuc/${p.slug}`, p.updated_at)),
-    ...posts.map(p => urlEntry(`${baseUrl}/en/blog/${p.slug}`, p.updated_at)),
+    ...STATIC_PAGES.flatMap(p => [
+      urlEntry(`${baseUrl}${p.vi === '/' ? '' : p.vi}`),
+      urlEntry(`${baseUrl}${p.en}`),
+    ]),
+    ...products.flatMap(p => [
+      urlEntry(`${baseUrl}/san-pham/${p.slug}`, p.updated_at),
+      urlEntry(`${baseUrl}/en/products/${p.slug}`, p.updated_at),
+    ]),
+    ...posts.flatMap(p => [
+      urlEntry(`${baseUrl}/tin-tuc/${p.slug}`, p.updated_at),
+      urlEntry(`${baseUrl}/en/blog/${p.slug}`, p.updated_at),
+    ]),
   ]
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>`

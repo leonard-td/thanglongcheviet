@@ -101,7 +101,11 @@ export default defineNuxtConfig({
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://thanglongcheviet.vn',
       siteName: 'Thăng Long Chè Việt',
+      // Match backend COOKIE_SECURE — do not force Secure cookies on HTTP prod/local.
+      cookieSecure: process.env.NUXT_PUBLIC_COOKIE_SECURE === 'true'
+        || process.env.COOKIE_SECURE === 'true',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+
       // Medusa commerce backend (products + cart/checkout). Publishable key
       // and region id are auto-provisioned by
       // apps/admin-medusa/scripts/setup-web-integration.mjs — no manual

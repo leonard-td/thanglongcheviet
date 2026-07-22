@@ -67,6 +67,22 @@ const handleRemoveCoupon = async (code: string) => {
   await removePromoCode(code)
 }
 
+const handleUpdateQty = async (itemId: string, qty: number) => {
+  error.value = ''
+  if (qty <= 0) {
+    await handleRemoveItem(itemId)
+    return
+  }
+  const res = await updateCart(itemId, qty)
+  if (res && !res.success) error.value = res.message || t('cart.updateError')
+}
+
+const handleRemoveItem = async (itemId: string) => {
+  error.value = ''
+  const res = await removeFromCart(itemId)
+  if (res && !res.success) error.value = res.message || t('cart.removeError')
+}
+
 const handleCheckout = async () => {
   error.value = ''
   message.value = ''
@@ -157,13 +173,13 @@ useSeoMeta({
                     class="w-20 px-2 py-1 rounded bg-dark text-white border border-white/20 min-h-[44px]"
                     @change="(e) => {
                       const qty = Number((e.target as HTMLInputElement).value)
-                      qty > 0 ? updateCart(item.id, qty) : removeFromCart(item.id)
+                      handleUpdateQty(item.id, qty)
                     }"
                   >
                   <button
                     type="button"
                     class="text-sm text-red-400 hover:text-red-300 min-h-[44px] px-2"
-                    @click="removeFromCart(item.id)"
+                    @click="handleRemoveItem(item.id)"
                   >
                     {{ t('cart.remove') }}
                   </button>
