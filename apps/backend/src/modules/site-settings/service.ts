@@ -13,7 +13,8 @@ class SiteSettingsModuleService extends MedusaService({
     if (existing) {
       return existing
     }
-    return await this.createSiteSettings({})
+    // DB column is NOT NULL DEFAULT '[]' — omit/null fails Mikro create.
+    return await this.createSiteSettings({ hero_images: [] })
   }
 
   async updateSingleton(data: Record<string, unknown>) {

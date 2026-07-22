@@ -53,10 +53,15 @@ Branch based on `dev/be_medusajs_merge`. Not pushed yet.
 38. Corporate gifts filter + i18n labels; `metadata.corporate_gift`
 39. Dropped legacy **`salon`** settings key + dead **`products.json`**
 
+## Pass 5 (runtime 500 /en)
+
+40. **`error.vue` hardened** (no i18n/localePath) + cleared stale `.nuxt` volume
+41. **site-settings** create uses `hero_images: []` (NOT NULL column)
+42. **navigation_item** migration from old nested schema → flat `label/order/is_active`
+
 ## Still open
 
 - Online payment gateway redirect
 - Inventory quantity from stock locations (needs inventory module query)
-- Re-seed navigation in existing DBs (seed skips when items exist)
 - Culture stub pages still “coming soon”
 - Push `fix/tlcv-quality-pass` when ready

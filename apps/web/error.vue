@@ -1,21 +1,22 @@
 <script setup lang="ts">
-const error = useError()
-const localePath = useLocalePath()
-const { t } = useI18n()
+/**
+ * Keep this page dependency-light. useI18n / useLocalePath can fail while
+ * recovering from a load error and make Vite emit ERR_LOAD_URL cascades.
+ */
+const props = defineProps<{ error: { statusCode?: number; statusMessage?: string } }>()
 
-const statusCode = computed(() => error.value?.statusCode || 500)
+const statusCode = computed(() => props.error?.statusCode || 500)
+const is404 = computed(() => statusCode.value === 404)
 const title = computed(() =>
-  statusCode.value === 404
-    ? t('error.notFoundTitle')
-    : t('error.genericTitle'),
+  is404.value ? 'Không tìm thấy trang' : 'Đã xảy ra lỗi',
 )
 const message = computed(() =>
-  statusCode.value === 404
-    ? t('error.notFoundBody')
-    : (error.value?.statusMessage || t('error.genericBody')),
+  is404.value
+    ? 'Trang bạn tìm không tồn tại hoặc đã được di chuyển.'
+    : (props.error?.statusMessage || 'Vui lòng thử lại sau.'),
 )
 
-const clear = () => clearError({ redirect: localePath('/') })
+const clear = () => clearError({ redirect: '/' })
 </script>
 
 <template>
@@ -37,7 +38,7 @@ const clear = () => clearError({ redirect: localePath('/') })
                text-xs font-bold uppercase tracking-widest rounded-sm"
         @click="clear"
       >
-        {{ t('nav.home') }}
+        Trang chủ
       </button>
     </div>
   </div>
