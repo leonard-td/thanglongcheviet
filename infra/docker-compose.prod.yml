@@ -140,6 +140,8 @@ services:
              npx medusa exec ./src/scripts/seed-base.js &&
              (npx medusa exec ./src/scripts/seed-cards.js || true) &&
              (npx medusa exec ./src/scripts/seed-navigation.js || true) &&
+             (npx medusa exec ./src/scripts/remove-medusa-demo-catalog.js || true) &&
+             (npx medusa exec ./src/scripts/seed-product-inventory.js || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npm run start"
     healthcheck:
