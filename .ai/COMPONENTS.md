@@ -1,0 +1,3 @@
+# COMPONENTS.md
+
+**Canonical:** [`COMPONENT_GUIDE.md`](COMPONENT_GUIDE.md)

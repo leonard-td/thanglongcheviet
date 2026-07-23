@@ -1,0 +1,18 @@
+---
+description: As-built architecture — Nuxt + Medusa. Always read .ai first.
+alwaysApply: true
+---
+
+# Architecture (as-built)
+
+Read `.ai/AI_START_HERE.md` then `.ai/PROJECT_MEMORY.md` before coding.
+
+**Active branch:** `dev/be_medusajs_merge`.
+
+- Customer: `apps/web` Nuxt 3  
+- Commerce/CMS: `apps/backend` Medusa 2  
+- Nginx: `/` → Nuxt; `/app|/admin|/store|/auth|/static` → Medusa  
+
+Do **not** implement NestJS/`apps/api`, Next storefront, or Redis from old docs.
+
+Details: `.ai/ARCHITECTURE.md`, `.ai/DECISIONS.md`.

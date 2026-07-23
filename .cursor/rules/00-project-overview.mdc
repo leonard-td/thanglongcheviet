@@ -1,54 +1,16 @@
 ---
-description: Tổng quan dự án Thăng Long Chè Việt — stack, mục tiêu, kiến trúc, phân kỳ. Đọc trước khi làm bất kỳ tính năng nào.
+description: Project overview — Nuxt+Medusa on branch dev/be_medusajs_merge
 alwaysApply: true
 ---
 
-# Dự án: Thăng Long Chè Việt — Website Salon/Spa + CRM
+# Thăng Long Chè Việt — overview
 
-## Mục tiêu toàn dự án
-Xây dựng theo từng bước: **Landing Page → Marketing Site → CRM**
-- Phase 1–2 (FE only): Landing page + website marketing, không backend
-- Phase 3: Backend/CMS — NestJS + PostgreSQL, admin quản lý nội dung
-- Phase 4: Booking form thật + email notification
-- Phase 5 (CRM): Tài khoản khách hàng + quản lý lịch hẹn cho chủ salon
-- Phase 6: SEO hoàn chỉnh + production hardening
+**Canonical AI entry:** `.ai/AI_START_HERE.md` then `.ai/PROJECT_MEMORY.md`.
 
-## Tech Stack
+**Active branch:** `dev/be_medusajs_merge` (not `dev/tlcv-v01`).
 
-| Layer | Công nghệ |
-|-------|-----------|
-| Frontend | Nuxt 3, Vue 3, TypeScript, Tailwind CSS, @nuxtjs/i18n, @nuxt/image |
-| Backend (từ Phase 3) | NestJS, TypeScript, Prisma ORM, BullMQ |
-| Database (từ Phase 3) | PostgreSQL 16 (JSONB cho translations + config) |
-| Cache/Queue (từ Phase 3) | Redis 7 |
-| Infra | Docker Compose, Nginx, Let's Encrypt, Cloudflare CDN |
-| CI/CD | GitHub Actions → SSH deploy VPS |
+**As-built:** Nuxt 3 (`apps/web`) + Medusa 2 (`apps/backend`) + Postgres + Nginx.
 
-## Monorepo Structure
-```
-apps/web/        # Nuxt 3 — public site + /admin + customer portal
-apps/api/        # NestJS — REST API (thêm vào từ Phase 3)
-packages/shared/ # DTO, types, Zod schemas
-infra/           # Docker, Nginx, deploy scripts
-docs/            # Architecture, plan, decisions
-```
+**Still enforce:** mobile-first (01), vi/en i18n (02), no jQuery.
 
-## Kiến trúc Template Engine (2 lớp)
-- **Theme**: config JSON (colors, typography, header) → CSS variables
-- **Page Template**: Vue component registry (key → component, dynamic import)
-- Thêm template: tạo component + đăng ký key, không sửa DB schema
-
-## CRM Data Model (Phase 5)
-- `customers`: profile, phone unique, customer JWT auth
-- `appointments`: customer_id, status (PENDING→CONFIRMED→COMPLETED/CANCELLED), serviceIds[]
-- `appointment_status_history`: audit trail đầy đủ
-- Customer và Admin dùng JWT secret RIÊNG BIỆT (không dùng chung)
-
-## Quy tắc KHÔNG được vi phạm
-1. Mọi component PHẢI responsive mobile-first (xem rule 01)
-2. Mọi text nội dung public PHẢI hỗ trợ vi/en (xem rule 02)
-3. Mọi entity có text public PHẢI có cột `translations(JSONB)` trong DB
-4. API public PHẢI cache Redis (TTL 60–300s), invalidate khi admin publish
-5. Customer JWT và Admin JWT PHẢI dùng secret và strategy riêng biệt
-6. Lighthouse target: Performance ≥ 90, SEO ≥ 95
-7. Không dùng jQuery — chỉ Vue 3 + VueUse + thư viện Vue-native
+NestJS / salon CRM text in older docs is historical — do not implement. See `.ai/ROADMAP.md`.

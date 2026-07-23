@@ -1,0 +1,12 @@
+---
+description: Coding style and hard constraints for Thăng Long Chè Việt
+alwaysApply: true
+---
+
+# Coding style & constraints
+
+**Never** (unless asked): migrate framework; rename structure; change package manager (use npm); major dependency bumps; add Redis casually.
+
+**Always:** minimal diffs; reuse components; mobile-first; vi/en i18n; Medusa admin `CLAUDE.md` rules; `useMedusaApi` for commerce.
+
+See `.ai/CODE_STYLE.md`, `.ai/BUSINESS_RULES.md`.

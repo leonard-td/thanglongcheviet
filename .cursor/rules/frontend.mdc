@@ -1,0 +1,16 @@
+---
+description: Nuxt / Vue / Tailwind frontend conventions for apps/web
+globs: apps/web/**/*.{vue,ts,js,css}
+alwaysApply: false
+---
+
+# Frontend (apps/web)
+
+`pages/`, `layouts/`, `components/{layout,home,sections,widgets,product}/`, `composables/`, `locales/`, `content/`, `utils/`.
+
+- `useSeoMeta` + hreflang helpers  
+- Prefer `NuxtImg`  
+- `localePath` for links  
+- Home may use `layout: false`  
+
+Maps: `.ai/SMART_CONTEXT.md`, `.ai/COMPONENT_GUIDE.md`.

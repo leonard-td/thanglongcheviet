@@ -1,0 +1,15 @@
+---
+description: Task workflow — read .ai first; use templates; minimal changes
+alwaysApply: true
+---
+
+# Workflow
+
+```
+Receive → Locate (SMART_CONTEXT) → Analyze → Implement → Review → Test → Summarize
+```
+
+Templates: `.ai/templates/{FEATURE,BUGFIX,REVIEW,RESPONSIVE,SEO,PERFORMANCE,REFACTOR}.md`  
+Roles: root `AGENTS.md`  
+Entry: `.ai/AI_START_HERE.md`  
+Branch: `dev/be_medusajs_merge`
