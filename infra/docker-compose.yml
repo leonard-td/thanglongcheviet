@@ -139,7 +139,10 @@ services:
              (npx medusa exec ./src/scripts/remove-medusa-demo-catalog.ts || true) &&
              (npx medusa exec ./src/scripts/seed-gifts.ts || true) &&
              (npx medusa exec ./src/scripts/seed-more-gifts.ts || true) &&
+             (npx medusa exec ./src/scripts/fix-product-images.ts || true) &&
              (npx medusa exec ./src/scripts/seed-product-inventory.ts || true) &&
+             (npx medusa exec ./src/scripts/seed-campaign-topics.ts || true) &&
+             (npx medusa exec ./src/scripts/seed-campaign-posts.ts || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true)"
 
   backend:

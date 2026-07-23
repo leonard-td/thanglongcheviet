@@ -5,20 +5,33 @@ const props = withDefaults(defineProps<{ inline?: boolean }>(), {
   inline: false,
 })
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const localePath = useLocalePath()
 const { posts: rawPosts, latestPosts } = useBlog()
 
+/** Marquee needs ≥2 items; duplicate track for loop otherwise shows the same headline twice. */
+const sourcePosts = computed(() => {
+  const latest = latestPosts.value
+  const all = rawPosts.value
+  if (latest.length >= 2) return latest
+  if (all.length >= 2) return all.slice(0, 6)
+  return latest.length ? latest : all
+})
+
 const items = computed(() =>
-  (latestPosts.value.length ? latestPosts.value : rawPosts.value).map(post => ({
+  sourcePosts.value.map(post => ({
     id: post.slug,
     slug: post.slug,
     title: post.title,
-    category: 'Tin tức', // Fallback
+    category: post.topic?.name ?? t('nav.blog'),
   })),
 )
 
-const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
+const shouldLoop = computed(() => items.value.length >= 2)
+
+const duration = computed(() =>
+  shouldLoop.value ? `${Math.max(items.value.length * 8, 32)}s` : '0s',
+)
 </script>
 
 <template>
@@ -34,6 +47,7 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
     <div class="home-marquee-viewport">
       <div
         class="home-marquee-track"
+        :class="{ 'is-static': !shouldLoop }"
         :style="{ '--marquee-duration': duration }"
       >
         <ul class="home-marquee-list">
@@ -44,7 +58,7 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
             </NuxtLink>
           </li>
         </ul>
-        <ul class="home-marquee-list" aria-hidden="true">
+        <ul v-if="shouldLoop" class="home-marquee-list" aria-hidden="true">
           <li v-for="post in items" :key="`dup-${post.id}`" class="home-marquee-item">
             <NuxtLink
               :to="localePath(`/tin-tuc/${post.slug}`)"
@@ -117,6 +131,17 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
   display: flex;
   width: max-content;
   animation: marquee-rtl var(--marquee-duration, 40s) linear infinite;
+}
+
+.home-marquee-track.is-static {
+  animation: none;
+  width: 100%;
+}
+
+.home-marquee-track.is-static .home-marquee-list {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .home-marquee-list {

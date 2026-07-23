@@ -107,7 +107,13 @@ export function useBlog() {
 
   const posts = computed<BlogPost[]>(() => {
     const fromApi = (postsData.value ?? []).map(p => transformCampaignPost(p, resolveMediaUrl))
-    return fromApi.length ? fromApi : localFallback.value
+    if (fromApi.length >= 2) return fromApi
+    if (fromApi.length === 1) {
+      const seen = new Set(fromApi.map(p => p.slug))
+      const extras = localFallback.value.filter(p => !seen.has(p.slug))
+      return [...fromApi, ...extras]
+    }
+    return localFallback.value
   })
 
   const latestPosts = computed<BlogPost[]>(() => posts.value.slice(0, 4))

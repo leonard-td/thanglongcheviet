@@ -1,6 +1,6 @@
 # How to run the app (dev)
 
-**Branch:** `fix/tlcv-quality-pass`  
+**Branch:** `feat/tlcv-post-merge-quality-pass`  
 **Site:** http://localhost:8800  
 **Changes:** see [note.md](./note.md)
 
@@ -13,7 +13,7 @@
 
 ```powershell
 cd D:\project_Dung\thanglongcheviet
-git checkout fix/tlcv-quality-pass
+git checkout feat/tlcv-post-merge-quality-pass
 ```
 
 3. If `.env.dev` does not exist:
@@ -26,47 +26,17 @@ Do not edit `NUXT_PUBLIC_MEDUSA_*` in `.env.dev` by hand — the script below wr
 
 ---
 
-## Run the app (use this every time)
+## Chạy ứng dụng (dùng mỗi lần)
 
-Copy and paste this whole block in PowerShell from the repo root:
+Từ thư mục gốc repo:
 
 ```powershell
-cd D:\project_Dung\thanglongcheviet
-
-# Stop old containers (keeps your database)
-docker compose -f infra/docker-compose.prod.yml down --remove-orphans 2>$null
-docker compose -f infra/docker-compose.yml --env-file .env.dev down --remove-orphans
-
-# Start stack
-docker compose -f infra/docker-compose.yml --env-file .env.dev up -d
-
-# Wait until Medusa backend is healthy (first boot can take 2–3 minutes)
-Write-Host "Waiting for tlcv_backend to become healthy..."
-$deadline = (Get-Date).AddMinutes(5)
-do {
-  Start-Sleep -Seconds 5
-  $health = docker inspect -f "{{if .State.Health}}{{.State.Health.Status}}{{else}}starting{{end}}" tlcv_backend 2>$null
-  Write-Host "  backend: $health"
-} while ($health -ne "healthy" -and (Get-Date) -lt $deadline)
-
-if ($health -ne "healthy") {
-  Write-Host "ERROR: backend not healthy. Check: docker logs tlcv_backend --tail 80"
-  exit 1
-}
-
-# Sync publishable key + region + navigation into .env.dev, then restart Nuxt
-node scripts/setup-web-integration.mjs
-docker compose -f infra/docker-compose.yml --env-file .env.dev up -d web
-
-Write-Host ""
-Write-Host "Ready:"
-Write-Host "  Storefront  http://localhost:8800"
-Write-Host "  English     http://localhost:8800/en"
-Write-Host "  Products    http://localhost:8800/san-pham-list"
-Write-Host "  Admin       http://localhost:8800/app  (admin@medusa.local / supersecret123)"
+.\start.dev.ps1
 ```
 
-That is the only start flow you need on Windows.
+Hoặc copy-paste thủ công — xem nội dung trong **`start.dev.ps1`**.
+
+Script sẽ: dừng container cũ (giữ DB) → khởi động stack → đợi backend healthy → chạy `setup-web-integration.mjs` → restart web → in URL.
 
 ---
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatMoney } from '~/utils/storefront'
+import { formatMoney, FALLBACK_PRODUCT_IMAGE } from '~/utils/storefront'
 import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const { t, locale } = useI18n()
@@ -16,6 +16,7 @@ const slug = computed(() => String(route.params.slug))
 const added = ref(false)
 const quantity = ref(1)
 const selectedImage = ref<string | null>(null)
+const onImageError = (e: Event) => { (e.target as HTMLImageElement).src = FALLBACK_PRODUCT_IMAGE }
 // null = no manual pick yet; the computed below falls back to the first
 // variant's option combo. Kept separate from a "resolved" ref so the very
 // first render (SSR included) can derive the default purely from `product`
@@ -264,14 +265,14 @@ useProductStructuredData(product)
                   class="relative aspect-square w-16 flex-none overflow-hidden rounded-lg border-2 transition-colors"
                   :class="img === activeImage ? 'border-primary-500' : 'border-transparent opacity-60 hover:opacity-100'"
                   @click="selectedImage = img">
-                  <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover">
+                  <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover" @error="onImageError">
                 </button>
               </div>
 
               <div ref="zoomFrameEl"
                 class="relative flex-1 min-w-0 aspect-square overflow-hidden rounded-2xl bg-[#2a3326] shadow-2xl cursor-crosshair"
                 @mouseenter="onZoomEnter" @mouseleave="zoomActive = false" @mousemove="onZoomMove">
-                <img :src="activeImage" :alt="product.title" class="w-full h-full object-cover">
+                <img :src="activeImage" :alt="product.title" class="w-full h-full object-cover" @error="onImageError">
                 <div v-show="zoomActive" class="zoom-lens" :style="lensStyle" aria-hidden="true" />
               </div>
             </div>
@@ -444,7 +445,8 @@ useProductStructuredData(product)
             <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" :aria-label="p.title"
               class="relative block aspect-[346/197] overflow-hidden rounded-md bg-[#2a3326] shadow-lg">
               <img :src="p.image" :alt="p.title" loading="lazy"
-                class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+                class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                @error="onImageError">
               <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2 pt-6">
                 <h3
                   class="text-white text-xs uppercase tracking-[0.12em] font-semibold transition-colors group-hover:text-primary-300 line-clamp-1">
@@ -474,7 +476,8 @@ useProductStructuredData(product)
                bg-[#1f1f1f]/95 backdrop-blur shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
         <div class="container-page flex items-center justify-end gap-3 md:gap-5 py-2.5">
           <img :src="activeImage" :alt="product.title"
-            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10">
+            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10"
+            @error="onImageError">
           <div class="hidden sm:block min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-white">{{ product.title }}</p>
             <p class="text-sm font-semibold text-primary-400">{{ priceText }}</p>
@@ -504,7 +507,8 @@ useProductStructuredData(product)
                  border border-white/10 bg-[#1f1f1f] p-5 shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
           <div class="flex items-start gap-3 mb-5">
             <img :src="activeImage" :alt="product.title"
-              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10">
+              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10"
+              @error="onImageError">
             <div class="min-w-0 flex-1">
               <p class="text-sm font-semibold text-white leading-snug">{{ product.title }}</p>
               <p class="mt-1 text-base font-semibold text-primary-400">{{ priceText }}</p>
