@@ -1,6 +1,7 @@
 export default defineEventHandler((event) => {
-  const config = useRuntimeConfig(event)
-  const baseUrl = String(config.public.siteUrl || 'https://thanglongcheviet.vn').replace(/\/$/, '')
+  // Derived from the request's own Host/X-Forwarded-Proto so the sitemap
+  // link is correct for whichever domain crawled it.
+  const baseUrl = getRequestURL(event).origin
 
   const body = [
     'User-agent: *',

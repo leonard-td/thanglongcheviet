@@ -88,14 +88,19 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
-      # All public-facing origins derive from DOMAIN + HTTP_PORT (.env.prod) —
-      # localhost only ever appears as the fallback when DOMAIN is unset.
-      STORE_CORS: ${STORE_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
-      ADMIN_CORS: ${ADMIN_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
-      AUTH_CORS: ${AUTH_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Regex (Medusa's cors config treats a /.../-wrapped string as a
+      # RegExp) matching any http(s) origin — many domains can point at this
+      # same server without listing each one here.
+      STORE_CORS: ${STORE_CORS:-/.*/}
+      ADMIN_CORS: ${ADMIN_CORS:-/.*/}
+      AUTH_CORS: ${AUTH_CORS:-/.*/}
       # Public origin for uploaded-file URLs (file-local provider appends
-      # /static; nginx proxies /static/ back to this backend).
-      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # /static; nginx proxies /static/ back to this backend). Only matters
+      # for the transient absolute URL returned right after an upload — every
+      # URL we persist is normalized to a relative /static/... path (see
+      # api/utils/media-url.ts) and nginx proxies /static/ the same way
+      # regardless of which domain served the request.
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://localhost:${HTTP_PORT:-8800}}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
       # LOCAL/HTTP ONLY: let the admin session cookie work over plain http
@@ -146,10 +151,12 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: "3000"
-      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
-      # Browser-side Medusa URL — the public origin (nginx). The backend's
-      # :9000 is internal-only in prod.
-      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Browser-side Medusa URL — left empty so the browser calls the SAME
+      # origin the page was loaded from (nginx proxies /store, /auth, etc.
+      # there already), which works for any domain pointed at this server
+      # instead of one hardcoded host. The backend's :9000 is internal-only
+      # in prod anyway.
+      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-}
       # SSR-side override: compose DNS, no round-trip out through nginx.
       NUXT_MEDUSA_BACKEND_URL_SERVER: http://backend:9000
       # Store API credentials for the PROD database (.env.prod).

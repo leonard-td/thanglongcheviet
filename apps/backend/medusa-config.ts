@@ -82,14 +82,7 @@ module.exports = defineConfig({
   admin: {
     vite: () => ({
       server: {
-        // Dev-only (medusa develop): Vite blocks requests whose Host isn't
-        // localhost. When the stack is fronted by a real domain (DOMAIN env),
-        // allow it — otherwise /app answers 403 "Blocked request" through
-        // nginx. Prod (`medusa start`) serves prebuilt files, no host check.
-        allowedHosts:
-          process.env.DOMAIN && process.env.DOMAIN !== "localhost"
-            ? [process.env.DOMAIN]
-            : undefined,
+        allowedHosts: true,
         hmr: disableAdminHmr
           ? false
           : {

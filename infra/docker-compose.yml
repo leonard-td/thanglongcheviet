@@ -102,18 +102,20 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
-      STORE_CORS: ${STORE_CORS:-http://localhost:8000}
-      ADMIN_CORS: ${ADMIN_CORS:-http://localhost:9000,http://localhost:5173,http://localhost}
-      AUTH_CORS: ${AUTH_CORS:-http://localhost:9000,http://localhost:8800,http://localhost:5173,http://localhost}
+      # Regex (Medusa's cors config treats a /.../-wrapped string as a
+      # RegExp) matching any http(s) origin — many domains can point at this
+      # same server without listing each one here.
+      STORE_CORS: ${STORE_CORS:-/.*/}
+      ADMIN_CORS: ${ADMIN_CORS:-/.*/}
+      AUTH_CORS: ${AUTH_CORS:-/.*/}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
       # Public origin for uploaded-file URLs (file-local provider appends
-      # /static). Must be the nginx entrypoint — the backend's own :9000 is no
-      # longer published, so URLs built from it would be unreachable.
-      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
-      # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
-      # host check (only matters when DOMAIN != localhost).
-      DOMAIN: ${DOMAIN:-localhost}
+      # /static). Only matters for the transient absolute URL returned right
+      # after an upload — every URL we persist is normalized to a relative
+      # /static/... path (see api/utils/media-url.ts) and nginx proxies
+      # /static/ the same way regardless of which domain served the request.
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://localhost:${HTTP_PORT:-8800}}
       # Read by medusa-config.ts to pin the admin Vite dev-server's HMR
       # websocket to the port nginx actually publishes (see the `hmr` comment
       # there) — otherwise the browser tries to reach an unpublished random
@@ -162,10 +164,11 @@ services:
       NODE_ENV: development
       HOST: 0.0.0.0
       PORT: "3000"
-      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
-      # Browser-side Medusa URL — the nginx entrypoint (single origin), since
-      # the backend's :9000 is no longer published to the host.
-      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Browser-side Medusa URL — left empty so the browser calls the SAME
+      # origin the page was loaded from (nginx proxies /store, /auth, etc.
+      # there already), which works for any domain pointed at this server
+      # instead of one hardcoded host.
+      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-}
       # SSR-side override: reach Medusa via compose DNS, no round-trip out
       # through nginx.
       NUXT_MEDUSA_BACKEND_URL_SERVER: http://backend:9000

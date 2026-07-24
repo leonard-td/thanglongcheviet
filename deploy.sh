@@ -49,8 +49,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-DEPLOY_SERVER="${DEPLOY_SERVER:-d@192.168.1.22}"
-DEPLOY_DIR="${DEPLOY_DIR:-/tmp_DEV/www/htmls/thanglongcheviet}"
+DEPLOY_SERVER="${DEPLOY_SERVER:-d@192.168.1.108}"
+DEPLOY_DIR="${DEPLOY_DIR:-www/thanglongcheviet}"
 
 SERVER="${1:-$DEPLOY_SERVER}"
 REMOTE_DIR="${2:-$DEPLOY_DIR}"
@@ -95,10 +95,10 @@ echo "==> Preflight: checking the server..."
 "${SSH[@]}" "set -e
   command -v docker >/dev/null || { echo 'ERROR: docker is not installed on the server'; exit 1; }
   docker compose version >/dev/null 2>&1 || { echo 'ERROR: docker compose v2 plugin is missing on the server'; exit 1; }
-  mkdir -p '$REMOTE_DIR'"
+  mkdir -p $REMOTE_DIR"
 
 # --- .env.prod ----------------------------------------------------------------
-if [ "$PUSH_ENV" = "1" ] || ! "${SSH[@]}" "[ -f '$REMOTE_DIR/.env.prod' ]"; then
+if [ "$PUSH_ENV" = "1" ] || ! "${SSH[@]}" "[ -f $REMOTE_DIR/.env.prod ]"; then
   [ -f .env.prod ] || { echo "ERROR: local .env.prod missing (cp .env.example .env.prod first)." >&2; exit 1; }
   if grep -q '^REBUILD_ALL=true' .env.prod; then
     echo "!!  WARNING: .env.prod has REBUILD_ALL=true — on the server run-prod-stack.sh"
@@ -115,10 +115,10 @@ if [ "$PUSH_ENV" = "1" ] || ! "${SSH[@]}" "[ -f '$REMOTE_DIR/.env.prod' ]"; then
   # local .env.prod is kept as-is (never clobbered back to the IP).
   if [ -n "$DEPLOY_DOMAIN" ]; then
     echo "==> Setting DOMAIN=$DEPLOY_DOMAIN in the server's .env.prod..."
-    "${SSH[@]}" "sed -i 's/^DOMAIN=.*/DOMAIN=$DEPLOY_DOMAIN/' '$REMOTE_DIR/.env.prod'"
+    "${SSH[@]}" "sed -i 's/^DOMAIN=.*/DOMAIN=$DEPLOY_DOMAIN/' $REMOTE_DIR/.env.prod"
   elif grep -q '^DOMAIN=localhost[[:space:]]*$' .env.prod; then
     echo "==> Local DOMAIN=localhost — rewriting to server IP $HOST_IP (set DEPLOY_DOMAIN=<domain> to use a real domain)..."
-    "${SSH[@]}" "sed -i 's/^DOMAIN=.*/DOMAIN=$HOST_IP/' '$REMOTE_DIR/.env.prod'"
+    "${SSH[@]}" "sed -i 's/^DOMAIN=.*/DOMAIN=$HOST_IP/' $REMOTE_DIR/.env.prod"
   else
     echo "==> Keeping DOMAIN from the local .env.prod."
   fi
@@ -171,7 +171,7 @@ else
   # Without rsync --delete, stale build chunks (renamed bundles etc.) would
   # linger, so wipe the pure-artifact dirs first. .env.prod and the docker
   # named volumes (Postgres, backend node_modules, uploads) are untouched.
-  "${SSH[@]}" "cd '$REMOTE_DIR' &&
+  "${SSH[@]}" "cd $REMOTE_DIR &&
     rm -rf apps/backend/.medusa/server apps/web/.output infra scripts 2>/dev/null || true"
   # Pair each pattern with ./-anchored and */-prefixed variants so both GNU tar
   # (Git Bash/Linux) and bsdtar (macOS) match nested paths the same way.
@@ -181,19 +181,19 @@ else
   done
   # -h (--dereference): materialize nitro's absolute-path symlinks (see the
   # rsync -L comment above) — GNU tar and bsdtar both accept -h for this.
-  tar czhf - "${TAR_EX[@]}" "${PAYLOAD[@]}" | "${SSH[@]}" "tar xzf - -C '$REMOTE_DIR'"
+  tar czhf - "${TAR_EX[@]}" "${PAYLOAD[@]}" | "${SSH[@]}" "tar xzf - -C $REMOTE_DIR"
   echo "    Transfer done."
 fi
 
 # --- deploy ---------------------------------------------------------------------
 echo "==> Starting the stack on the server (prebuilt output — no build there)..."
-"${SSH[@]}" "cd '$REMOTE_DIR' &&
+"${SSH[@]}" "cd $REMOTE_DIR &&
   sed -i 's/\r\$//' *.sh 2>/dev/null || true
   chmod +x *.sh 2>/dev/null || true
   bash ./run-prod-stack.sh"
 
 # --- verify from this machine ------------------------------------------------------
-HTTP_PORT="$("${SSH[@]}" "grep '^HTTP_PORT=' '$REMOTE_DIR/.env.prod' | cut -d= -f2" )"
+HTTP_PORT="$("${SSH[@]}" "grep '^HTTP_PORT=' $REMOTE_DIR/.env.prod | cut -d= -f2" )"
 HTTP_PORT="${HTTP_PORT:-8800}"
 echo "==> Verifying http://$HOST_IP:$HTTP_PORT/health ..."
 for _ in $(seq 1 10); do

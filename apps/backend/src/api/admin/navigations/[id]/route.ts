@@ -1,13 +1,25 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { NAVIGATION_MODULE } from "../../../../modules/navigation"
 
+type UpdateNavigationItemInput = {
+  label?: string
+  url?: string
+  order?: number
+  openInNewTab?: boolean
+  parent_id?: string | null
+  is_active?: boolean
+}
+
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
   const item = await navigationModuleService.retrieveNavigationItem(req.params.id)
   res.json({ navigation: item })
 }
 
-export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
+export const PUT = async (
+  req: MedusaRequest<UpdateNavigationItemInput>,
+  res: MedusaResponse
+) => {
   const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
   const item = await navigationModuleService.updateNavigationItems({
     id: req.params.id,

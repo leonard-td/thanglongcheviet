@@ -1,6 +1,8 @@
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const baseUrl = String(config.public.siteUrl || 'https://thanglongcheviet.vn').replace(/\/$/, '')
+  // Derived from the request's own Host/X-Forwarded-Proto so the sitemap is
+  // correct for whichever domain crawled it, instead of one fixed domain.
+  const baseUrl = getRequestURL(event).origin
   const apiBase = String(config.apiProxyTarget || 'http://127.0.0.1:8000').replace(/\/$/, '')
 
   const staticPaths = ['/', '/san-pham-list', '/tin-tuc', '/lien-he', '/lang-nghe', '/doi-ngu', '/dich-vu', '/gallery', '/gio-hang', '/tai-khoan', '/tra-cuu-don']

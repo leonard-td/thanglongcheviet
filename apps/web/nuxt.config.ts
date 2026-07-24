@@ -3,10 +3,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
 
-  // Cho phép truy cập dev server qua domain/host ngoài (vd DDNS, LAN)
+  // Cho phép truy cập dev server qua bất kỳ domain/host nào trỏ vào server
+  // này (DDNS, LAN, domain thật...) thay vì phải liệt kê từng domain.
   vite: {
     server: {
-      allowedHosts: ['thanglongcheviet.ddnsfree.com'],
+      allowedHosts: true,
     },
   },
 
@@ -97,14 +98,17 @@ export default defineNuxtConfig({
     // NUXT_MEDUSA_BACKEND_URL_SERVER there. Empty = use the public URL.
     medusaBackendUrlServer: process.env.NUXT_MEDUSA_BACKEND_URL_SERVER || '',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://thanglongcheviet.vn',
       siteName: 'Thăng Long Chè Việt',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
       // Medusa commerce backend (products + cart/checkout). Publishable key
       // and region id are auto-provisioned by
       // apps/admin-medusa/scripts/setup-web-integration.mjs — no manual
       // dashboard setup needed.
-      medusaBackendUrl: process.env.NUXT_PUBLIC_MEDUSA_BACKEND_URL || 'http://localhost:9000',
+      // `??` (not `||`): an explicit empty string means "same origin as the
+      // page" (see useMedusaApi.ts) so the browser calls whatever domain it's
+      // currently on instead of one hardcoded backend host — that must NOT
+      // fall back to the localhost default just because it's falsy.
+      medusaBackendUrl: process.env.NUXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000',
       medusaPublishableKey: process.env.NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || '',
       medusaRegionId: process.env.NUXT_PUBLIC_MEDUSA_REGION_ID || '',
       medusaNavigationId: process.env.NUXT_PUBLIC_MEDUSA_NAVIGATION_ID || '',

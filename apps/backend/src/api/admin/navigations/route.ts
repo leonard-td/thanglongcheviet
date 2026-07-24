@@ -1,6 +1,15 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { NAVIGATION_MODULE } from "../../../modules/navigation"
 
+type CreateNavigationItemInput = {
+  label: string
+  url: string
+  order?: number
+  openInNewTab?: boolean
+  parent_id?: string | null
+  is_active?: boolean
+}
+
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
   const items = await navigationModuleService.listNavigationItems({}, {
@@ -10,7 +19,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   res.json({ navigations: items })
 }
 
-export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+export const POST = async (
+  req: MedusaRequest<CreateNavigationItemInput>,
+  res: MedusaResponse
+) => {
   const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
   const item = await navigationModuleService.createNavigationItems(req.body)
   res.json({ navigation: item })
