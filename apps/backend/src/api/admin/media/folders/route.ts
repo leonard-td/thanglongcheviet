@@ -22,7 +22,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(CreateFolderSchema, req.body)
 
   const folder = await cardModuleService.createMediaFolders({ name: body.name })
 

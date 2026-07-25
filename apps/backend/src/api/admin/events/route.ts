@@ -57,7 +57,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(CreateEventSchema, req.body)
   const slug = body.slug || slugify(body.title)
 
   const event = await eventModuleService.createEvents({

@@ -17,7 +17,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(UpdateMediaSchema, req.body)
 
   if (body.folder_id) {
     // 404s if the target folder doesn't exist, instead of silently filing

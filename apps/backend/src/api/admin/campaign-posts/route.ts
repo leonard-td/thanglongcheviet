@@ -56,7 +56,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(CreateCampaignPostSchema, req.body)
   const slug = body.slug || slugify(body.title)
 
   const post = await campaignModuleService.createCampaignPosts({

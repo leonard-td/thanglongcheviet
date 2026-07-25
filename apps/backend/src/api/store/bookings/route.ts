@@ -1,7 +1,10 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { MedusaError } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { INQUIRY_MODULE } from "../../../modules/inquiry"
 import type InquiryModuleService from "../../../modules/inquiry/service"
+import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
+import type CareChannelModuleService from "../../../modules/care-channel/service"
+import { formatBookingMessage } from "../../../modules/care-channel/utils/format"
 
 type BookingBody = {
   name?: string
@@ -72,6 +75,19 @@ export async function POST(
     preferred_time: preferred_time || null,
     status: "new",
   })
+
+  const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
+  const careService: CareChannelModuleService =
+    req.scope.resolve(CARE_CHANNEL_MODULE)
+  careService
+    .notifySupportChannels(formatBookingMessage(inquiry))
+    .catch((error) => {
+      logger.warn(
+        `care-channel: failed to forward booking ${inquiry.id}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+    })
 
   res.status(201).json({ success: true, inquiry_id: inquiry.id })
 }

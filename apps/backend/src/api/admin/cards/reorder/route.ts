@@ -18,7 +18,7 @@ const ReorderSchema = z.object({
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const { items } = await zodValidator(, req.body)
+  const { items } = await zodValidator(ReorderSchema, req.body)
 
   await cardModuleService.updateCards(
     items.map(({ id, rank }) => ({ id, rank })),

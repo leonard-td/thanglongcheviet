@@ -36,7 +36,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
 
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(UpdateEventRegistrationSchema, req.body)
 
   const [existing] = await eventModuleService.listEventRegistrations(
     { id },

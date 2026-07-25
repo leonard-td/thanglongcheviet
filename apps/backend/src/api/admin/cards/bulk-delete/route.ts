@@ -17,7 +17,7 @@ const BulkDeleteSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
-  const { ids } = await zodValidator(, req.body)
+  const { ids } = await zodValidator(BulkDeleteSchema, req.body)
 
   const cards = await cardModuleService.listCards({ id: ids })
   const byId = new Map(cards.map((c) => [c.id, c]))

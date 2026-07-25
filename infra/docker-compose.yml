@@ -111,6 +111,11 @@ services:
       # /static). Must be the nginx entrypoint — the backend's own :9000 is no
       # longer published, so URLs built from it would be unreachable.
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Optional Telegram care-channel seed (npm run seed:care-channel-telegram)
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
+      TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
       # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
       # host check (only matters when DOMAIN != localhost).
       DOMAIN: ${DOMAIN:-localhost}
@@ -139,6 +144,7 @@ services:
       sh -c "npx medusa db:migrate &&
              (npx medusa exec ./src/scripts/seed-base.ts || true) &&
              (npx medusa exec ./src/scripts/seed-cards.ts || true) &&
+             (npx medusa exec ./src/scripts/seed-care-channel-telegram.ts || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npx medusa develop"
     healthcheck:

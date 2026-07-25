@@ -31,7 +31,7 @@ const ImportSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
-  const { items } = await zodValidator(, req.body)
+  const { items } = await zodValidator(ImportSchema, req.body)
 
   const existingCards = await cardModuleService.listCards({})
   const byId = new Map(existingCards.map((c) => [c.id, c]))
