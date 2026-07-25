@@ -101,6 +101,10 @@ services:
       # api/utils/media-url.ts) and nginx proxies /static/ the same way
       # regardless of which domain served the request.
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://localhost:${HTTP_PORT:-8800}}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
+      TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
       # LOCAL/HTTP ONLY: let the admin session cookie work over plain http
@@ -126,6 +130,7 @@ services:
       sh -c "npx medusa db:migrate &&
              (npx medusa exec ./src/scripts/seed-base.js || true) &&
              (npx medusa exec ./src/scripts/seed-cards.js || true) &&
+             (npx medusa exec ./src/scripts/seed-care-channel-telegram.js || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npm run start"
     healthcheck:

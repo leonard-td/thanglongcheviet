@@ -27,7 +27,7 @@ export default async function orderPlacedHandler({
       "display_id",
       "email",
       "currency_code",
-      "total",
+      "summary.current_order_total",
       "items.title",
       "items.quantity",
       "shipping_address.first_name",
@@ -45,7 +45,10 @@ export default async function orderPlacedHandler({
 
   try {
     const results = await careService.notifyOrderChannels(
-      formatOrderMessage(order)
+      formatOrderMessage({
+        ...order,
+        total: order.summary?.current_order_total,
+      })
     )
     const failed = results.filter((message) => message.status === "failed")
 

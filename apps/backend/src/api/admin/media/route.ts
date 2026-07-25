@@ -43,7 +43,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(RecordMediaSchema, req.body)
   const url = toRelativeMediaUrl(body.url)!
 
   const existing = await cardModuleService.listCardMedias({ url }, { take: 1 })

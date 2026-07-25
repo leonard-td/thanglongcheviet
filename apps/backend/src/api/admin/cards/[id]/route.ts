@@ -36,7 +36,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
   const existing = await cardModuleService.retrieveCard(id)
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(UpdateCardSchema, req.body)
 
   // Mikro-ORM rejects explicit `undefined` values on a known property, so
   // only forward keys the caller actually sent — and for locked cards, drop

@@ -33,7 +33,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(CreateCardSchema, req.body)
 
   const [lastCard] = await cardModuleService.listCards(
     {},

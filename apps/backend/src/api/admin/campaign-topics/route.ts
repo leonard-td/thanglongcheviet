@@ -54,7 +54,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(CreateCampaignTopicSchema, req.body)
 
   const topic = await campaignModuleService.createCampaignTopics({
     name: body.name,

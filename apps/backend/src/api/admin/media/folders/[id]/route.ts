@@ -12,7 +12,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(RenameFolderSchema, req.body)
 
   const folder = await cardModuleService.updateMediaFolders({ id, name: body.name })
 

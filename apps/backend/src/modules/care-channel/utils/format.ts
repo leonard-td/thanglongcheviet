@@ -29,6 +29,18 @@ type InquiryLike = {
   service?: string | null
   message?: string | null
   source?: string | null
+  preferred_date?: string | null
+  preferred_time?: string | null
+}
+
+type EventRegistrationLike = {
+  name?: string | null
+  phone?: string | null
+  email?: string | null
+  quantity?: number | null
+  message?: string | null
+  source?: string | null
+  eventTitle?: string | null
 }
 
 function formatAmount(amount: unknown, currency?: string | null): string {
@@ -84,6 +96,44 @@ export function formatInquiryMessage(inquiry: InquiryLike): string {
     inquiry.service ? `Dịch vụ quan tâm: ${inquiry.service}` : null,
     inquiry.message ? `Lời nhắn: ${inquiry.message}` : null,
     inquiry.source ? `Nguồn: ${inquiry.source}` : null,
+  ]
+
+  return lines.filter((line) => line !== null).join("\n")
+}
+
+export function formatBookingMessage(inquiry: InquiryLike): string {
+  const schedule = [inquiry.preferred_date, inquiry.preferred_time]
+    .filter(Boolean)
+    .join(" ")
+
+  const lines = [
+    "📅 Đặt lịch mới",
+    inquiry.name ? `Tên: ${inquiry.name}` : null,
+    inquiry.phone ? `SĐT: ${inquiry.phone}` : null,
+    inquiry.email ? `Email: ${inquiry.email}` : null,
+    inquiry.service ? `Dịch vụ: ${inquiry.service}` : null,
+    schedule ? `Thời gian: ${schedule}` : null,
+    inquiry.message ? `Ghi chú: ${inquiry.message}` : null,
+    inquiry.source ? `Nguồn: ${inquiry.source}` : null,
+  ]
+
+  return lines.filter((line) => line !== null).join("\n")
+}
+
+export function formatEventRegistrationMessage(
+  registration: EventRegistrationLike
+): string {
+  const lines = [
+    "🎫 Đăng ký sự kiện mới",
+    registration.eventTitle ? `Sự kiện: ${registration.eventTitle}` : null,
+    registration.name ? `Tên: ${registration.name}` : null,
+    registration.phone ? `SĐT: ${registration.phone}` : null,
+    registration.email ? `Email: ${registration.email}` : null,
+    registration.quantity != null
+      ? `Số chỗ: ${registration.quantity}`
+      : null,
+    registration.message ? `Lời nhắn: ${registration.message}` : null,
+    registration.source ? `Nguồn: ${registration.source}` : null,
   ]
 
   return lines.filter((line) => line !== null).join("\n")

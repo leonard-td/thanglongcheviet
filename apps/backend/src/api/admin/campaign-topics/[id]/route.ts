@@ -31,7 +31,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const body = await zodValidator(, req.body)
+  const body = await zodValidator(UpdateCampaignTopicSchema, req.body)
 
   const topic = await campaignModuleService.updateCampaignTopics({
     id,

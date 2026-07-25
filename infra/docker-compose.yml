@@ -116,6 +116,14 @@ services:
       # /static/... path (see api/utils/media-url.ts) and nginx proxies
       # /static/ the same way regardless of which domain served the request.
       MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://localhost:${HTTP_PORT:-8800}}
+      # Optional Telegram care-channel seed (npm run seed:care-channel-telegram)
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
+      TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
+      # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
+      # host check (only matters when DOMAIN != localhost).
+      DOMAIN: ${DOMAIN:-localhost}
       # Read by medusa-config.ts to pin the admin Vite dev-server's HMR
       # websocket to the port nginx actually publishes (see the `hmr` comment
       # there) — otherwise the browser tries to reach an unpublished random
@@ -141,6 +149,7 @@ services:
       sh -c "npx medusa db:migrate &&
              (npx medusa exec ./src/scripts/seed-base.ts || true) &&
              (npx medusa exec ./src/scripts/seed-cards.ts || true) &&
+             (npx medusa exec ./src/scripts/seed-care-channel-telegram.ts || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npx medusa develop"
     healthcheck:
