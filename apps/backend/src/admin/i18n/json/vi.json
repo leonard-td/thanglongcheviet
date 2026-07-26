@@ -441,6 +441,16 @@
       "failed": "Nhân bản sản phẩm thất bại"
     }
   },
+  "productDescription": {
+    "title": "Mô tả sản phẩm",
+    "hint": "Soạn mô tả hiển thị trên trang chi tiết sản phẩm — hỗ trợ định dạng, ảnh, bảng và liên kết.",
+    "save": "Lưu mô tả",
+    "placeholder": "Nhập mô tả sản phẩm...",
+    "messages": {
+      "saved": "Đã lưu mô tả sản phẩm",
+      "failed": "Lưu mô tả sản phẩm thất bại"
+    }
+  },
   "campaign-topics": {
     "title": "Chủ đề bài viết",
     "create": "Thêm chủ đề",

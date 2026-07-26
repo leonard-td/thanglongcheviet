@@ -56,6 +56,25 @@ function renderMarks(text: string, marks: TiptapNode['marks'] = []): string {
       case 'highlight':
         html = `<mark>${html}</mark>`
         break
+      case 'subscript':
+        html = `<sub>${html}</sub>`
+        break
+      case 'superscript':
+        html = `<sup>${html}</sup>`
+        break
+      case 'textStyle': {
+        const styles: string[] = []
+        const color = mark.attrs?.color
+        const fontFamily = mark.attrs?.fontFamily
+        const fontSize = mark.attrs?.fontSize
+        if (typeof color === 'string' && color) styles.push(`color: ${color}`)
+        if (typeof fontFamily === 'string' && fontFamily) styles.push(`font-family: ${fontFamily}`)
+        if (typeof fontSize === 'string' && fontSize) styles.push(`font-size: ${fontSize}`)
+        if (styles.length) {
+          html = `<span style="${styles.join('; ')}">${html}</span>`
+        }
+        break
+      }
       case 'link': {
         const href = mark.attrs?.href
         if (isSafeUrl(href)) {

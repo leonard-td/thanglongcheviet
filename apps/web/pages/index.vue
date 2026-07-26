@@ -64,15 +64,8 @@ onMounted(() => {
 
     <div class="home-main">
       <HomeMobileTopBanner :base-blur="0" :left-blur="0" />
-      <div class="container text-center home-pillars-wrap">
-        <div class="row">
-          <div class="col-sm-2 col-sm-offset-2">
-          
-          </div>
-          <div class="col-sm-8 col-sm-offset-0">
-            <HomePillarList />
-          </div>
-        </div>
+      <div class="container home-pillars-wrap">
+        <HomePillarList />
       </div>
     </div>
     <WidgetsConnectWidget />
@@ -147,24 +140,17 @@ onMounted(() => {
 .home-pillars-wrap {
   position: relative;
   z-index: 1;
+  width: min(1320px, 96vw);
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 @media (max-width: 1023px) {
   .home-pillars-wrap.container {
     max-width: none;
-    padding-left: 0;
-    padding-right: 0;
-    .row {
-      margin-left: 0;
-      margin-right: 0;
-    }
-  }
-
-  .home-pillars-wrap :deep(.col-md-8),
-  .home-pillars-wrap :deep([class*="col-md-offset"]) {
-    width: 100%;
-    float: none;
-    margin-left: 0;
     padding-left: 0;
     padding-right: 0;
   }

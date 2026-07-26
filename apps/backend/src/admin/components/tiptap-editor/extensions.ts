@@ -10,13 +10,21 @@ import TaskItem from "@tiptap/extension-task-item"
 import TaskList from "@tiptap/extension-task-list"
 import TextAlign from "@tiptap/extension-text-align"
 import { TextStyle } from "@tiptap/extension-text-style"
+import FontFamily from "@tiptap/extension-text-style/font-family"
+import FontSize from "@tiptap/extension-text-style/font-size"
 import Underline from "@tiptap/extension-underline"
 import Youtube from "@tiptap/extension-youtube"
 import StarterKit from "@tiptap/starter-kit"
 import type { Extensions } from "@tiptap/core"
 
 
-export const getCampaignEditorExtensions = (): Extensions => [
+export type CampaignEditorOptions = {
+  placeholder?: string
+}
+
+export const getCampaignEditorExtensions = (
+  options: CampaignEditorOptions = {},
+): Extensions => [
   StarterKit.configure({
     heading: {
       levels: [1, 2, 3, 4],
@@ -28,6 +36,8 @@ export const getCampaignEditorExtensions = (): Extensions => [
   Subscript,
   Superscript,
   TextStyle,
+  FontFamily,
+  FontSize,
   Color,
   Highlight.configure({
     multicolor: true,
@@ -58,7 +68,7 @@ export const getCampaignEditorExtensions = (): Extensions => [
     },
   }),
   Placeholder.configure({
-    placeholder: "Write your article here...",
+    placeholder: options.placeholder ?? "Write your article here...",
   }),
   Youtube.configure({
     inline: false,

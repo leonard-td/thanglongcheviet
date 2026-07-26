@@ -441,6 +441,16 @@
       "failed": "Failed to duplicate product"
     }
   },
+  "productDescription": {
+    "title": "Product description",
+    "hint": "Rich description shown on the product detail page — supports formatting, images, tables and links.",
+    "save": "Save description",
+    "placeholder": "Write the product description...",
+    "messages": {
+      "saved": "Product description saved",
+      "failed": "Failed to save product description"
+    }
+  },
   "campaign-topics": {
     "title": "Post Topics",
     "create": "Add topic",

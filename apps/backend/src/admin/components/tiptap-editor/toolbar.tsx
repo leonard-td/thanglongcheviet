@@ -1,5 +1,6 @@
 import { Button } from "@medusajs/ui"
 import type { Editor } from "@tiptap/react"
+import { useEditorState } from "@tiptap/react"
 import { useRef, useState } from "react"
 import MediaPickerModal from "../media-picker-modal"
 import {
@@ -73,6 +74,49 @@ const ToolbarButton = ({
   </Button>
 )
 
+const ToolbarSelect = ({
+  title,
+  value,
+  onChange,
+  children,
+}: {
+  title: string
+  value: string
+  onChange: (value: string) => void
+  children: React.ReactNode
+}) => (
+  <select
+    title={title}
+    aria-label={title}
+    value={value}
+    onChange={(event) => onChange(event.target.value)}
+    className="h-7 min-w-[7.5rem] max-w-[10rem] rounded-md border border-ui-border-base bg-ui-bg-base px-2 text-ui-fg-base text-xs"
+  >
+    {children}
+  </select>
+)
+
+const FONT_FAMILIES = [
+  { label: "Default", value: "" },
+  { label: "Sans-serif", value: "Inter, system-ui, sans-serif" },
+  { label: "Serif", value: "Georgia, 'Times New Roman', serif" },
+  { label: "Arial", value: "Arial, Helvetica, sans-serif" },
+  { label: "Verdana", value: "Verdana, Geneva, sans-serif" },
+  { label: "Monospace", value: "'Courier New', Courier, monospace" },
+] as const
+
+const FONT_SIZES = [
+  { label: "Default", value: "" },
+  { label: "12 px", value: "12px" },
+  { label: "14 px", value: "14px" },
+  { label: "16 px", value: "16px" },
+  { label: "18 px", value: "18px" },
+  { label: "20 px", value: "20px" },
+  { label: "24 px", value: "24px" },
+  { label: "28 px", value: "28px" },
+  { label: "32 px", value: "32px" },
+] as const
+
 const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
   const colorInputRef = useRef<HTMLInputElement>(null)
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
@@ -108,6 +152,14 @@ const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
   const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     editor.chain().focus().setColor(event.target.value).run()
   }
+
+  const { fontFamily: currentFontFamily, fontSize: currentFontSize } = useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => ({
+      fontFamily: (currentEditor.getAttributes("textStyle").fontFamily as string | undefined) ?? "",
+      fontSize: (currentEditor.getAttributes("textStyle").fontSize as string | undefined) ?? "",
+    }),
+  })
 
   return (
     <div className="flex flex-col gap-2 rounded-t-lg border border-b-0 border-ui-border-base bg-ui-bg-subtle px-2 py-2">
@@ -207,6 +259,44 @@ const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
         >
           <Eraser size={16} />
         </ToolbarButton>
+
+        <ToolbarDivider />
+
+        <ToolbarSelect
+          title="Font family"
+          value={currentFontFamily}
+          onChange={(value) => {
+            if (!value) {
+              editor.chain().focus().unsetFontFamily().run()
+              return
+            }
+            editor.chain().focus().setFontFamily(value).run()
+          }}
+        >
+          {FONT_FAMILIES.map((option) => (
+            <option key={option.label} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </ToolbarSelect>
+
+        <ToolbarSelect
+          title="Font size"
+          value={currentFontSize}
+          onChange={(value) => {
+            if (!value) {
+              editor.chain().focus().unsetFontSize().run()
+              return
+            }
+            editor.chain().focus().setFontSize(value).run()
+          }}
+        >
+          {FONT_SIZES.map((option) => (
+            <option key={option.label} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </ToolbarSelect>
       </div>
 
       <div className="flex flex-wrap items-center gap-1">

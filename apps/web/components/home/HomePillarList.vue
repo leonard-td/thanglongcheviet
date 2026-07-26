@@ -46,9 +46,17 @@ const directionsUrl = computed(() => {
 
 <template>
   <div class="home-pillars">
-    <div class="row">
-      <template v-for="(card, i) in cards" :key="card.id">
-        <div class="col-md-6 mb30 col-sm-12 col-sm-offset-0">
+    <div class="home-pillars-columns">
+      <div class="home-pillars-col home-pillars-col--news">
+        <p class="home-pillars-col-label">{{ t('home.pillars.newsColumn') }}</p>
+        <HomeNewsSquares />
+      </div>
+
+      <div class="home-pillars-col home-pillars-col--sections">
+        <p class="home-pillars-col-label">{{ t('home.pillars.sectionsColumn') }}</p>
+        <div class="home-section-squares">
+          <template v-for="card in cards" :key="card.id">
+            <div class="home-section-item mb30">
           <!-- Card liên kết thường — quản lý trong Admin > Cards -->
           <NuxtLink v-if="card.type === 'link'" :to="localePath(card.path || '/')" class="preview-link">
             <span class="preview-media">
@@ -111,9 +119,10 @@ const directionsUrl = computed(() => {
               <span class="map-cta">{{ t('contact.directions') }} ›</span>
             </a>
           </div>
+          </div>
+          </template>
         </div>
-        <div v-if="i % 2 === 1" class="clearfix" />
-      </template>
+      </div>
     </div>
   </div>
 </template>
@@ -125,7 +134,66 @@ const directionsUrl = computed(() => {
   --pillar-red-glow: rgba(161, 12, 37, .72);
   --pillar-green: #4d7c3a;
   --pillar-green-glow: rgba(77, 124, 58, .55);
+  --home-columns-gap: 32px;
   margin-top: 4px;
+}
+
+.home-pillars-columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--home-columns-gap);
+}
+
+.home-pillars-col-label {
+  margin: 0 0 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(231, 216, 180, 0.85);
+  text-align: center;
+}
+
+.home-section-squares {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.home-section-item {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .home-pillars-columns {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 72px;
+    width: 100%;
+  }
+
+  .home-pillars-col {
+    flex: 0 0 auto;
+    width: min(100%, 360px);
+    min-width: 0;
+  }
+
+  .home-pillars-col--news {
+    margin-right: auto;
+  }
+
+  .home-pillars-col--sections {
+    margin-left: auto;
+  }
+
+  .home-pillars-col-label {
+    text-align: left;
+  }
+
+  .home-pillars-col--sections .home-pillars-col-label {
+    text-align: right;
+  }
 }
 
 @media (max-width: 1023px) {
@@ -143,18 +211,12 @@ const directionsUrl = computed(() => {
   }
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .home-pillars {
-    --pillar-gutter: 24px;
-  }
-}
-
 /* ── Pillar thông tin (Giờ mở cửa + Liên hệ & Đặt lịch) ── */
 /* Khớp hình học với .preview-link để xếp cùng lưới pillar */
 .info-card {
   position: relative;
   display: block;
-  width: calc(100% - var(--pillar-gutter, 0px) * 2);
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   max-width: none;
@@ -177,7 +239,7 @@ const directionsUrl = computed(() => {
 .map-card {
   position: relative;
   display: block;
-  width: calc(100% - var(--pillar-gutter, 0px) * 2);
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   max-width: none;
@@ -381,7 +443,7 @@ a.info-val:hover {
   }
 }
 
-.pillar-title {
+.home-pillars :deep(.pillar-title) {
   position: absolute;
   left: 0;
   right: 0;
@@ -411,14 +473,14 @@ a.info-val:hover {
 }
 
 @media (min-width: 768px) {
-  .pillar-title {
+  .home-pillars :deep(.pillar-title) {
     padding: 24px 14px 11px;
     font-size: 12px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pillar-title {
+  .home-pillars :deep(.pillar-title) {
     background: linear-gradient(
       to top,
       rgba(12, 20, 14, .95) 0%,
@@ -428,10 +490,10 @@ a.info-val:hover {
   }
 }
 
-.preview-link {
+.home-pillars :deep(.preview-link) {
   position: relative;
   display: block;
-  width: calc(100% - var(--pillar-gutter) * 2);
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   max-width: none;
@@ -448,19 +510,19 @@ a.info-val:hover {
   box-shadow: 1px 1px 6px 1px #666666;
 }
 
-.preview-link:not(:hover) {
+.home-pillars :deep(.preview-link:not(:hover)) {
   overflow: hidden;
 }
 
 @media (min-width: 1024px) {
-  .preview-link {
+  .home-pillars :deep(.preview-link) {
     max-width: 346px;
     margin-left: auto;
     margin-right: auto;
   }
 }
 
-.preview-media {
+.home-pillars :deep(.preview-media) {
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -468,7 +530,7 @@ a.info-val:hover {
   border-radius: 6px;
 }
 
-.preview-link img.img-responsive {
+.home-pillars :deep(.preview-link img.img-responsive) {
   width: 100%;
   height: 100%;
   max-width: 100%;
@@ -485,7 +547,7 @@ a.info-val:hover {
 }
 
 /* Ghi đè style.css global (.col-md-6 img:hover { width:90%; padding:5% }) */
-.preview-link:hover img.img-responsive {
+.home-pillars :deep(.preview-link:hover img.img-responsive) {
   width: 100%;
   height: 100%;
   padding: 0;
@@ -493,7 +555,7 @@ a.info-val:hover {
   background: transparent;
 }
 
-.preview-link::after {
+.home-pillars :deep(.preview-link::after) {
   content: "";
   position: absolute;
   inset: 0;
@@ -510,7 +572,7 @@ a.info-val:hover {
   pointer-events: none;
 }
 
-.preview-link::before {
+.home-pillars :deep(.preview-link::before) {
   content: "";
   position: absolute;
   inset: -2px;
@@ -523,7 +585,7 @@ a.info-val:hover {
   pointer-events: none;
 }
 
-.preview-link:hover {
+.home-pillars :deep(.preview-link:hover) {
   overflow: visible;
   transform: translateY(-4px);
   box-shadow:
@@ -535,18 +597,18 @@ a.info-val:hover {
     inset 0 56px 64px -20px var(--pillar-green-glow);
 }
 
-.preview-link:hover .preview-media img.img-responsive {
+.home-pillars :deep(.preview-link:hover .preview-media img.img-responsive) {
   transform: scale(1.06);
   filter: saturate(1.12) brightness(1.06) contrast(1.04);
 }
 
-.preview-link:hover::after { opacity: 1; }
+.home-pillars :deep(.preview-link:hover::after) { opacity: 1; }
 
-.preview-link:hover::before {
+.home-pillars :deep(.preview-link:hover::before) {
   animation: pillar-edge-glow 2.2s ease-in-out infinite;
 }
 
-.preview-link:hover .pillar-title {
+.home-pillars :deep(.preview-link:hover .pillar-title) {
   background: linear-gradient(
     to top,
     rgba(161, 12, 37, .94) 0%,
@@ -573,26 +635,26 @@ a.info-val:hover {
 }
 
 @supports not (aspect-ratio: 1) {
-  .preview-link {
+  .home-pillars :deep(.preview-link) {
     max-height: none;
   }
 
   @media (min-width: 1024px) {
-    .preview-link {
+    .home-pillars :deep(.preview-link) {
       max-height: 197px;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .preview-link,
-  .preview-link .preview-media img.img-responsive,
-  .preview-link::after,
-  .preview-link::before {
+  .home-pillars :deep(.preview-link),
+  .home-pillars :deep(.preview-link .preview-media img.img-responsive),
+  .home-pillars :deep(.preview-link::after),
+  .home-pillars :deep(.preview-link::before) {
     transition-duration: .01ms;
   }
 
-  .preview-link:hover {
+  .home-pillars :deep(.preview-link:hover) {
     transform: none;
     box-shadow:
       0 0 0 2px var(--pillar-red),
@@ -602,9 +664,9 @@ a.info-val:hover {
       inset 0 48px 56px -20px var(--pillar-green-glow);
   }
 
-  .preview-link:hover .preview-media img.img-responsive { transform: none; }
+  .home-pillars :deep(.preview-link:hover .preview-media img.img-responsive) { transform: none; }
 
-  .preview-link:hover::before {
+  .home-pillars :deep(.preview-link:hover::before) {
     animation: none;
     box-shadow:
       0 0 0 2px var(--pillar-red-bright),
