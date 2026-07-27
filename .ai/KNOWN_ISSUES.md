@@ -2,7 +2,7 @@
 
 ## Doc drift
 
-Root README (Next/DTC), `docs/ARCHITECTURE|PLAN` (Nest salon), `srs.md` (Next+Strapi), old Cursor Nest rules — vs live **Nuxt+Medusa**.
+Root README (Next/DTC), `docs/ARCHITECTURE|PLAN` (Nest salon), old Cursor Nest rules — vs live **Nuxt+Medusa**.
 
 ## Config
 
@@ -15,7 +15,6 @@ Root README (Next/DTC), `docs/ARCHITECTURE|PLAN` (Nest salon), `srs.md` (Next+St
 - Dual clients: `useMedusaApi` vs legacy `useApi` `/api/storefront`  
 - Sitemap → `/api/storefront/sitemap` (soft-fail to static)  
 - Featured products placeholder `slice(0, 6)`  
-- Strapi unwired in main compose  
 - Empty `design-copilot` / `ui-reference-tool` dirs  
 - Medusa core product form still shows a plain Description textarea beside the TipTap widget (`product.details.after`) — cannot hide core fields via widgets  
 

@@ -19,7 +19,6 @@ Short prompt → files. Start with `AI_START_HERE.md` + `PROJECT_MEMORY.md`.
 | Booking/contact | `useBooking`, `useContact`, `modules/inquiry` |
 | Admin | `CLAUDE.md`, `src/admin/routes/**`, `/app` |
 | Deploy | `build-local.sh`, `deploy.sh`, `.github/workflows/deploy.yml` |
-| Strapi | `strapi/`, SRS docs (proposals) |
 | NestJS/theme editor | Docs only — do **not** implement |
 
 Branch context: `dev/be_medusajs_merge`.
