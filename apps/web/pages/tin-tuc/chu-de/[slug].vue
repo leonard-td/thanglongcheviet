@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// Banner tự render marquee inline ngay dưới nó — layout không chèn ở đầu main
-definePageMeta({ bannerMarquee: true })
-
 const { t, locale } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
@@ -81,9 +78,6 @@ useSeoMeta({
           </p>
         </div>
       </div>
-
-      <!-- Marquee tin tức ghim ngay dưới banner -->
-      <HomeNewsMarquee inline />
     </section>
 
     <!-- ── Posts grid + topics menu ─────────────────── -->

@@ -14,7 +14,6 @@ useHead({
 
 // Tablet/mobile: banner + marquee là cụm cố định ở đỉnh. Khi cuộn tới footer,
 // đẩy cả cụm lên để đáy cụm luôn nằm TRÊN đỉnh footer (không đè vào footer).
-// Fixed element không tự biết vị trí footer nên cần theo dõi scroll bằng JS.
 onMounted(() => {
   const mq = window.matchMedia('(max-width: 1023px)')
   const sel = (s: string) => document.querySelector<HTMLElement>(s)
@@ -26,14 +25,15 @@ onMounted(() => {
     banner ||= sel('.home-mobile-banner')
     marquee ||= sel('.home-marquee')
     footer ||= sel('.home-footer-wrap')
-    if (!banner || !marquee || !footer) return
+    if (!banner || !marquee) return
 
-    // Desktop: banner ẩn, không cần dịch chuyển.
     if (!mq.matches) {
       banner.style.transform = ''
       marquee.style.transform = ''
       return
     }
+
+    if (!footer) return
 
     const clusterBottom = banner.offsetHeight + marquee.offsetHeight
     const footerTop = footer.getBoundingClientRect().top
@@ -66,14 +66,15 @@ onMounted(() => {
       <HomeMobileTopBanner :base-blur="0" :left-blur="0" />
       <div class="container text-center home-pillars-wrap">
         <div class="row">
-          <div class="col-sm-2 col-sm-offset-2">
-          
-          </div>
+          <div class="col-sm-2 col-sm-offset-2" />
           <div class="col-sm-8 col-sm-offset-0">
             <HomePillarList />
           </div>
         </div>
       </div>
+
+      <!-- Right-column upward news ticker (reuses blog data; CSS seamless loop) -->
+      <HomeNewsTicker />
     </div>
     <WidgetsConnectWidget />
     <!-- <div class="home-footer-wrap">
@@ -85,20 +86,14 @@ onMounted(() => {
 <style scoped>
 .home-page {
   --site-marquee-h: 0px;
-  /* Chiều cao marquee (khớp --marquee-h trong HomeNewsMarquee) */
   --home-marquee-h: 34px;
-  /* Chiều cao banner mobile/tablet (desktop banner ẩn nên = 0) */
   --home-banner-h: 0px;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: transparent;
-  padding-top: 0;
-}
-
-.home-page :deep(.site-header) {
-  top: var(--site-marquee-h);
+  padding-top: var(--home-marquee-h);
 }
 
 .home-main {
@@ -106,41 +101,33 @@ onMounted(() => {
   z-index: 1;
   flex: 1 0 auto;
   display: flow-root;
-  padding-top: calc(var(--site-marquee-h) + 24px);
+  padding-top: 24px;
   padding-bottom: 24px;
 }
 
 @media (max-width: 1023px) {
   .home-page {
-    /* Khớp chiều cao thực của HomeMobileTopBanner: prop 7vh + min 126 / max 210 */
     --home-banner-h: clamp(126px, 7vh, 210px);
   }
 
-  /* Tablet & mobile: banner lên sát đỉnh, marquee nằm DƯỚI chân banner */
   .home-page :deep(.home-mobile-banner) {
-    top: 0;
-  }
-
-  .home-page :deep(.home-marquee) {
-    top: var(--home-banner-h);
+    top: var(--home-marquee-h);
   }
 
   .home-main {
-    /* Chừa chỗ cho banner + marquee fixed (mobile & tablet) */
-    padding-top: calc(var(--home-banner-h) + var(--home-marquee-h) + 16px);
+    padding-top: calc(var(--home-banner-h) + 16px);
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .home-page {
-    /* Tablet: khớp chiều cao thực HomeMobileTopBanner (prop 7vh + min 140 / max 224) */
     --home-banner-h: clamp(140px, 7vh, 224px);
   }
 }
 
-@media (min-width: 1024px) {
-  .home-main {
-    padding-top: calc(var(--site-marquee-h) + 32px);
+@media (max-width: 639px) {
+  .home-page {
+    --home-marquee-h: 32px;
   }
 }
 
@@ -154,10 +141,11 @@ onMounted(() => {
     max-width: none;
     padding-left: 0;
     padding-right: 0;
-    .row {
-      margin-left: 0;
-      margin-right: 0;
-    }
+  }
+
+  .home-pillars-wrap.container :deep(.row) {
+    margin-left: 0;
+    margin-right: 0;
   }
 
   .home-pillars-wrap :deep(.col-md-8),
@@ -176,13 +164,5 @@ onMounted(() => {
   flex-shrink: 0;
   clear: both;
   margin-top: auto;
-}
-
-@media (max-width: 639px) {
-  .home-page {
-    --site-marquee-h: 31px;
-    /* Khớp --marquee-h của HomeNewsMarquee ở breakpoint này */
-    --home-marquee-h: 32px;
-  }
 }
 </style>

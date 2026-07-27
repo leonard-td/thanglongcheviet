@@ -154,6 +154,7 @@
     "featuresTitle": "Highlights",
     "related": "Related products",
     "notFound": "Product not found",
+    "loadError": "Failed to load product",
     "viewDetail": "View details",
     "filterAll": "All",
     "empty": "No products in this category yet.",

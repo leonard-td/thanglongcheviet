@@ -1,6 +1,7 @@
 import type { BlogPost, BlogTopic } from '~/utils/storefront'
 import { FALLBACK_POST_IMAGE } from '~/utils/storefront'
 import { tiptapFirstImage, tiptapToHtml, tiptapToText } from '~/utils/tiptap'
+import { isNotFoundError } from '~/utils/fetch-status'
 import fallbackPosts from '~/content/blog.json'
 
 export type { BlogPost, BlogTopic } from '~/utils/storefront'
@@ -119,6 +120,9 @@ export function useBlog() {
       )
       if (res.campaign_post) return transformCampaignPost(res.campaign_post, resolveMediaUrl)
     } catch (e) {
+      // True 404 → try list / JSON fallback. Transport/SSR failures rethrow
+      // so the page can show an error instead of a false "not found".
+      if (!isNotFoundError(e)) throw e
       console.error(e)
     }
     // Fallback: the already-listed posts (covers the local JSON fallback too)

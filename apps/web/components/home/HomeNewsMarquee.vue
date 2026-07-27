@@ -76,6 +76,8 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
   top: 0;
   left: 0;
   right: 0;
+  width: 100%;
+  max-width: 100vw;
   z-index: 960;
   height: var(--marquee-h);
   display: flex;
@@ -83,6 +85,7 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
   border-bottom: 2px solid var(--marquee-red);
   overflow: hidden;
   background: linear-gradient(90deg, var(--marquee-gray) 0%, var(--marquee-gray-dark) 100%);
+  box-sizing: border-box;
 }
 
 .home-marquee-brand {
@@ -208,7 +211,11 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
 }
 
 @media (prefers-reduced-motion: reduce) {
-   .home-marquee-list[aria-hidden="true"] {
+  .home-marquee-track {
+    animation: none;
+  }
+
+  .home-marquee-list[aria-hidden="true"] {
     display: none;
   }
 }

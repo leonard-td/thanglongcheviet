@@ -38,91 +38,91 @@ const scrollDuration = computed(() => `${Math.max(tickerPosts.value.length * 5, 
 
 <template>
   <section class="home-news" aria-labelledby="home-news-heading">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8 col-md-offset-4">
-          <div class="home-news-head">
-            <h4>{{ t('blog.eyebrow') }}</h4>
-          </div>
+    <div class="container home-news-container">
+      <div class="home-news-head">
+        <h4>{{ t('blog.eyebrow') }}</h4>
+      </div>
 
-          <div v-if="featuredPost" class="home-news-grid">
-            <!-- Cột trái ~61.8% — tin ghim -->
-            <article class="featured-col">
-              <NuxtLink
-                :to="localePath(`/tin-tuc/${featuredPost.slug}`)"
-                class="featured-card"
-              >
-                <div class="featured-media">
-                  <img :src="featuredPost.thumbnail" :alt="featuredPost.title" loading="lazy">
-                  <span class="featured-badge">{{ t('blog.featured') }}</span>
-                  <div class="featured-date">
-                    <span class="day">{{ featuredPost.day }}</span>
-                    <span class="month">{{ featuredPost.month }}</span>
-                  </div>
-                </div>
-                <div class="featured-body">
-                  <span class="featured-cat">{{ featuredPost.category }}</span>
-                  <h2 id="home-news-heading" class="featured-title">{{ featuredPost.title }}</h2>
-                  <p class="featured-excerpt">{{ featuredPost.excerpt }}</p>
-                </div>
-              </NuxtLink>
-            </article>
-
-            <!-- Cột phải ~38.2% — ticker -->
-            <div class="ticker-col">
-              <div class="ticker-viewport">
-                <div
-                  class="ticker-track"
-                  :style="{ '--ticker-duration': scrollDuration }"
-                >
-                  <ul class="ticker-list">
-                    <li v-for="post in tickerPosts" :key="post.id" class="ticker-item">
-                      <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)" class="ticker-link">
-                        <div class="ticker-thumb">
-                          <img :src="post.thumbnail" :alt="post.title" loading="lazy">
-                          <div class="ticker-date">
-                            <span class="day">{{ post.day }}</span>
-                            <span class="month">{{ post.month }}</span>
-                          </div>
-                        </div>
-                        <div class="ticker-body">
-                          <span class="ticker-cat">{{ post.category }}</span>
-                          <h3 class="ticker-item-title">{{ post.title }}</h3>
-                        </div>
-                      </NuxtLink>
-                    </li>
-                  </ul>
-                  <ul class="ticker-list" aria-hidden="true">
-                    <li v-for="post in tickerPosts" :key="`dup-${post.id}`" class="ticker-item">
-                      <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)" class="ticker-link" tabindex="-1">
-                        <div class="ticker-thumb">
-                          <img :src="post.thumbnail" alt="" loading="lazy">
-                          <div class="ticker-date">
-                            <span class="day">{{ post.day }}</span>
-                            <span class="month">{{ post.month }}</span>
-                          </div>
-                        </div>
-                        <div class="ticker-body">
-                          <span class="ticker-cat">{{ post.category }}</span>
-                          <h3 class="ticker-item-title">{{ post.title }}</h3>
-                        </div>
-                      </NuxtLink>
-                    </li>
-                  </ul>
-                </div>
+      <div v-if="featuredPost" class="home-news-grid">
+        <!-- Cột trái ~61.8% — tin ghim -->
+        <article class="featured-col">
+          <NuxtLink
+            :to="localePath(`/tin-tuc/${featuredPost.slug}`)"
+            class="featured-card"
+          >
+            <div class="featured-media">
+              <img :src="featuredPost.thumbnail" :alt="featuredPost.title" loading="lazy">
+              <span class="featured-badge">{{ t('blog.featured') }}</span>
+              <div class="featured-date">
+                <span class="day">{{ featuredPost.day }}</span>
+                <span class="month">{{ featuredPost.month }}</span>
               </div>
             </div>
-          </div>
+            <div class="featured-body">
+              <span class="featured-cat">{{ featuredPost.category }}</span>
+              <h2 id="home-news-heading" class="featured-title">{{ featuredPost.title }}</h2>
+              <p class="featured-excerpt">{{ featuredPost.excerpt }}</p>
+            </div>
+          </NuxtLink>
+        </article>
 
-          <div class="home-news-more">
-            <NuxtLink :to="localePath('/tin-tuc')" class="see-more">
-              <span>{{ t('blog.viewAll') }}</span>
-              <svg class="see-more-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </NuxtLink>
+        <!-- Cột phải ~38.2% — auto-scroll upward -->
+        <div class="ticker-col">
+          <div class="ticker-viewport">
+            <div
+              class="ticker-track"
+              :style="{ '--ticker-duration': scrollDuration }"
+            >
+              <ul class="ticker-list">
+                <li v-for="post in tickerPosts" :key="post.id" class="ticker-item">
+                  <NuxtLink :to="localePath(`/tin-tuc/${post.slug}`)" class="ticker-link">
+                    <div class="ticker-thumb">
+                      <img :src="post.thumbnail" :alt="post.title" loading="lazy">
+                      <div class="ticker-date">
+                        <span class="day">{{ post.day }}</span>
+                        <span class="month">{{ post.month }}</span>
+                      </div>
+                    </div>
+                    <div class="ticker-body">
+                      <span class="ticker-cat">{{ post.category }}</span>
+                      <h3 class="ticker-item-title">{{ post.title }}</h3>
+                    </div>
+                  </NuxtLink>
+                </li>
+              </ul>
+              <ul class="ticker-list" aria-hidden="true">
+                <li v-for="post in tickerPosts" :key="`dup-${post.id}`" class="ticker-item">
+                  <NuxtLink
+                    :to="localePath(`/tin-tuc/${post.slug}`)"
+                    class="ticker-link"
+                    tabindex="-1"
+                  >
+                    <div class="ticker-thumb">
+                      <img :src="post.thumbnail" alt="" loading="lazy">
+                      <div class="ticker-date">
+                        <span class="day">{{ post.day }}</span>
+                        <span class="month">{{ post.month }}</span>
+                      </div>
+                    </div>
+                    <div class="ticker-body">
+                      <span class="ticker-cat">{{ post.category }}</span>
+                      <h3 class="ticker-item-title">{{ post.title }}</h3>
+                    </div>
+                  </NuxtLink>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div class="home-news-more">
+        <NuxtLink :to="localePath('/tin-tuc')" class="see-more">
+          <span>{{ t('blog.viewAll') }}</span>
+          <svg class="see-more-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </NuxtLink>
       </div>
     </div>
   </section>
@@ -137,6 +137,11 @@ const scrollDuration = computed(() => `${Math.max(tickerPosts.value.length * 5, 
   margin-top: 48px;
   margin-bottom: 0;
   padding-bottom: 8px;
+}
+
+.home-news-container {
+  width: 100%;
+  max-width: 100%;
 }
 
 .home-news-head {

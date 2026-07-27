@@ -11,8 +11,11 @@ import TiptapToolbar from "./toolbar"
 import "./editor.css"
 
 type TiptapEditorProps = {
-  value?: JSONContent | null
-  onChange?: (content: JSONContent) => void
+  /** TipTap JSON doc (campaign/events) or HTML string (product description). */
+  value?: JSONContent | string | null
+  onChange?: (content: JSONContent | string) => void
+  /** Default `json` preserves campaign/event callers. Use `html` for product.description. */
+  output?: "json" | "html"
   editorKey?: string
   readOnly?: boolean
 }
@@ -20,12 +23,17 @@ type TiptapEditorProps = {
 const TiptapEditor = ({
   value,
   onChange,
+  output = "json",
   editorKey = "new",
   readOnly = false,
 }: TiptapEditorProps) => {
   const extensions = useMemo(() => getCampaignEditorExtensions(), [])
 
   const initialContent = useMemo(() => {
+    if (typeof value === "string") {
+      const trimmed = value.trim()
+      return trimmed.length ? trimmed : EMPTY_TIPTAP_DOC
+    }
     if (value?.type === "doc" && value.content?.length) {
       return value
     }
@@ -44,10 +52,14 @@ const TiptapEditor = ({
         },
       },
       onUpdate: ({ editor: currentEditor }) => {
-        onChange?.(currentEditor.getJSON())
+        if (output === "html") {
+          onChange?.(currentEditor.getHTML())
+        } else {
+          onChange?.(currentEditor.getJSON())
+        }
       },
     },
-    [editorKey, readOnly]
+    [editorKey, readOnly, output]
   )
 
   if (!editor) {

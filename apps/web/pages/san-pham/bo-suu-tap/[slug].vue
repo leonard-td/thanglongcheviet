@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// Banner của ProductGroupShowcase tự render marquee inline ngay dưới nó
-definePageMeta({ bannerMarquee: true })
-
 const { t } = useI18n()
 const route = useRoute()
 const { site } = useSettings()
