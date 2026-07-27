@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { stripHtml } from '~/utils/storefront'
-
-// Banner tự render marquee inline ngay dưới nó — layout không chèn ở đầu main
-definePageMeta({ bannerMarquee: true })
+import { getFetchStatus } from '~/utils/fetch-status'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -13,14 +11,35 @@ useScrollAnimation()
 
 const slug = computed(() => String(route.params.slug))
 
-const { data: post, pending } = useAsyncData(
+const { data: post, pending, error: postError } = await useAsyncData(
   () => `post-${slug.value}`,
   () => getBySlug(slug.value),
   { watch: [slug] },
 )
 
+if (postError.value) {
+  const status = getFetchStatus(postError.value) ?? 502
+  throw createError({
+    statusCode: status === 404 ? 404 : status,
+    statusMessage: status === 404 ? 'Post not found' : 'Failed to load article',
+    fatal: true,
+  })
+}
+if (!pending.value && !post.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Post not found', fatal: true })
+}
+
 watchEffect(() => {
-  if (!pending.value && !post.value) {
+  if (pending.value) return
+  if (postError.value) {
+    const status = getFetchStatus(postError.value) ?? 502
+    throw createError({
+      statusCode: status === 404 ? 404 : status,
+      statusMessage: status === 404 ? 'Post not found' : 'Failed to load article',
+      fatal: true,
+    })
+  }
+  if (!post.value) {
     throw createError({ statusCode: 404, statusMessage: 'Post not found', fatal: true })
   }
 })
@@ -176,9 +195,6 @@ useArticleStructuredData(post)
             </div>
           </div>
         </div>
-
-        <!-- Marquee tin tức ghim ngay dưới banner -->
-        <HomeNewsMarquee inline />
       </section>
 
       <!-- ── Article body + sidebar ─────────────────── -->

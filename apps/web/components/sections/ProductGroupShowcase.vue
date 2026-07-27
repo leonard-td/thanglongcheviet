@@ -52,7 +52,7 @@ useBannerHeader(bannerEl)
     <!-- ── Group banner ─────────────────────────────── -->
     <!-- -mt-[72px] kéo banner lên dưới header fixed (main có pt-[72px]).
          sticky top-0: banner ghim lại cùng menu khi scroll, nội dung trượt
-         phía sau; marquee inline ghim ngay dưới banner. -->
+         phía sau. -->
     <section ref="bannerEl" class="sticky top-0 z-40 -mt-[72px] bg-dark">
       <div class="relative h-[90px] sm:h-[112px] md:h-[140px] overflow-hidden">
         <img v-if="bannerImage" :src="bannerImage" :alt="heading" class="absolute inset-0 h-full w-full object-cover">
@@ -70,9 +70,6 @@ useBannerHeader(bannerEl)
           </p>
         </div>
       </div>
-
-      <!-- Marquee tin tức ghim ngay dưới banner -->
-      <HomeNewsMarquee inline />
     </section>
 
     <!-- ── Group switcher ───────────────────────────── -->

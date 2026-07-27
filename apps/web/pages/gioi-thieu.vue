@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { formatMoney } from '~/utils/storefront'
 
-// Banner tự render marquee inline ngay dưới nó — layout không chèn ở đầu main
-definePageMeta({ bannerMarquee: true })
-
 const { t } = useI18n()
 const localePath = useLocalePath()
 const {
@@ -69,9 +66,6 @@ useSeoMeta({
           </h1>
         </div>
       </div>
-
-      <!-- Marquee tin tức ghim ngay dưới banner -->
-      <HomeNewsMarquee inline />
     </section>
 
     <!-- ── Article body + sidebar ─────────────────── -->

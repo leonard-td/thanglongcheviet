@@ -441,6 +441,15 @@
       "failed": "Nhân bản sản phẩm thất bại"
     }
   },
+  "productDescription": {
+    "title": "Mô tả chi tiết",
+    "hint": "Mô tả định dạng hiển thị trên website. Nên dùng editor này thay vì ô Description thuần phía trên.",
+    "save": "Lưu mô tả",
+    "messages": {
+      "success": "Đã lưu mô tả",
+      "failed": "Lưu mô tả thất bại"
+    }
+  },
   "campaign-topics": {
     "title": "Chủ đề bài viết",
     "create": "Thêm chủ đề",

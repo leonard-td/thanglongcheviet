@@ -2,6 +2,7 @@ import type { MedusaCategory, MedusaCollection, MedusaProduct } from '~/utils/me
 import type { Product } from '~/utils/storefront'
 import { transformMedusaCategory, transformMedusaProduct } from '~/utils/medusa'
 import { categoryLabel } from '~/utils/storefront'
+import { isNotFoundError } from '~/utils/fetch-status'
 
 export type { Product } from '~/utils/storefront'
 
@@ -76,16 +77,22 @@ export function useProducts() {
       const raw = res.products?.[0]
       if (raw) {
         const product = transformMedusaProduct(raw)
-        // related() reads the full catalog fetched in parallel — wait for it
-        // so a direct hit on a product URL still gets related items.
-        await Promise.resolve(productsAsync).catch(() => null)
-        return { product, relatedFromApi: related(product) }
+        // Do not block SSR on the parallel catalog fetch (can hang nginx → 504).
+        // Related items populate when the catalog is already ready.
+        const relatedFromApi = productsAsync.pending.value
+          ? ([] as Product[])
+          : related(product)
+        return { product, relatedFromApi }
       }
+      return { product: null, relatedFromApi: [] as Product[] }
     } catch (e) {
-      console.error(e)
+      // Empty handle result is not found (null). Network/SSR failures rethrow
+      // so reload does not become a false fatal 404.
+      if (isNotFoundError(e)) {
+        return { product: null, relatedFromApi: [] as Product[] }
+      }
+      throw e
     }
-
-    return { product: null, relatedFromApi: [] as Product[] }
   }
 
   /**

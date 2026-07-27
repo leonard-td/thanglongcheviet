@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatMoney } from '~/utils/storefront'
+import { getFetchStatus } from '~/utils/fetch-status'
 
 const { t, locale } = useI18n()
 const { getBySlug, categories } = useProducts()
@@ -23,9 +24,10 @@ const selectedImage = ref<string | null>(null)
 // which previously caused hydration mismatches on both the image and here).
 const manualOptions = ref<Record<string, string> | null>(null)
 
-const { data: productData, pending } = useAsyncData(
+const { data: productData, pending, error: productError } = await useAsyncData(
   () => `product-${slug.value}`,
   () => getBySlug(slug.value),
+  { watch: [slug] },
 )
 
 const product = computed(() => productData.value?.product ?? null)
@@ -34,14 +36,32 @@ const category = computed(() =>
   categories.value.find(c => c.id === product.value?.categoryId) ?? null,
 )
 
+if (productError.value) {
+  const status = getFetchStatus(productError.value) ?? 502
+  throw createError({
+    statusCode: status === 404 ? 404 : status,
+    statusMessage: status === 404 ? t('products.notFound') : t('products.loadError'),
+    fatal: true,
+  })
+}
+if (!pending.value && !product.value) {
+  throw createError({ statusCode: 404, statusMessage: t('products.notFound'), fatal: true })
+}
+
 watchEffect(() => {
-  if (!pending.value && !product.value) {
+  if (pending.value) return
+  if (productError.value) {
+    const status = getFetchStatus(productError.value) ?? 502
+    throw createError({
+      statusCode: status === 404 ? 404 : status,
+      statusMessage: status === 404 ? t('products.notFound') : t('products.loadError'),
+      fatal: true,
+    })
+  }
+  if (!product.value) {
     throw createError({ statusCode: 404, statusMessage: t('products.notFound'), fatal: true })
   }
 })
-
-// Tab "Mô tả" / "Đặc điểm nổi bật" ở khối thông tin cuối trang
-const activeTab = ref<'desc' | 'specs'>('desc')
 
 // Nuxt reuses this component instance across client-side slug navigation —
 // reset local UI state when the product actually changes.
@@ -51,7 +71,6 @@ watch(() => product.value?.id, () => {
   selectedImage.value = null
   manualOptions.value = null
   quickBuyOpen.value = false
-  activeTab.value = 'desc'
 })
 
 const activeImage = computed(() =>
@@ -276,8 +295,11 @@ useProductStructuredData(product)
             </div>
           </div>
 
-          <!-- Info -->
-          <div class="animate-on-scroll">
+          <!-- Info: bên trái là nội dung mua hàng (gọn trong 1fr), bên phải
+               (từ xl) là khối "Đặc điểm nổi bật" cố định — không còn ẩn
+               trong tab để tận dụng khoảng trống cạnh khối mua hàng. -->
+          <div class="animate-on-scroll" :class="specs.length ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_260px] xl:gap-10' : ''">
+            <div class="min-w-0">
             <p class="modis-eyebrow mb-3">
               <NuxtLink v-if="category" :to="localePath(`/san-pham/danh-muc/${category.slug}`)"
                 class="hover:text-primary-300 transition-colors">
@@ -365,7 +387,7 @@ useProductStructuredData(product)
             </div>
 
             <!-- Trust badges -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 border-t border-white/10 pt-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3 gap-3 mb-8 border-t border-white/10 pt-6">
               <div class="flex items-center gap-2.5 text-xs text-white/65 max-w-[fit-content]">
                 <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -395,38 +417,32 @@ useProductStructuredData(product)
                 <span>{{ t('products.trustReturn') }}</span>
               </div>
             </div>
+            </div>
 
+            <!-- Đặc điểm nổi bật: cạnh khối mua hàng (từ xl trở lên), xếp
+                 xuống dưới trên màn hình hẹp hơn -->
+            <aside v-if="specs.length"
+              class="mt-8 xl:mt-0 pt-6 xl:pt-0 border-t border-white/10 xl:border-t-0 xl:border-l xl:border-white/10 xl:pl-8">
+              <h2 class="text-xs uppercase tracking-widest text-white/50 mb-4 font-semibold">
+                {{ t('products.featuresTitle') }}
+              </h2>
+              <dl class="space-y-2">
+                <div v-for="row in specs" :key="row.label"
+                  class="flex justify-between text-sm py-1.5 border-b border-white/5">
+                  <dt class="text-white/50">{{ row.label }}</dt>
+                  <dd class="text-white/85 text-right">{{ row.value }}</dd>
+                </div>
+              </dl>
+            </aside>
           </div>
         </div>
 
-        <!-- Mô tả + Đặc điểm nổi bật: 2 tab ngang hàng trong cùng khối -->
+        <!-- Mô tả sản phẩm -->
         <div class="mt-16 max-w-3xl animate-on-scroll">
-          <div class="flex gap-1 border-b border-white/10" role="tablist">
-            <button type="button" role="tab" :aria-selected="activeTab === 'desc'"
-              class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
-              :class="activeTab === 'desc'
-                ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-white/50 hover:text-white/80'" @click="activeTab = 'desc'">
-              {{ t('products.descTitle') }}
-            </button>
-            <button v-if="specs.length" type="button" role="tab" :aria-selected="activeTab === 'specs'"
-              class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
-              :class="activeTab === 'specs'
-                ? 'border-primary-500 text-primary-400'
-                : 'border-transparent text-white/50 hover:text-white/80'" @click="activeTab = 'specs'">
-              {{ t('products.featuresTitle') }}
-            </button>
-          </div>
-
-          <div v-show="activeTab === 'desc'" role="tabpanel"
-            class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5" v-html="product.description" />
-          <dl v-if="specs.length" v-show="activeTab === 'specs'" role="tabpanel" class="space-y-2 mt-5">
-            <div v-for="row in specs" :key="row.label"
-              class="flex justify-between text-sm py-1.5 border-b border-white/5">
-              <dt class="text-white/50">{{ row.label }}</dt>
-              <dd class="text-white/85 text-right">{{ row.value }}</dd>
-            </div>
-          </dl>
+          <h2 class="pb-3 mb-5 border-b border-white/10 text-sm font-semibold uppercase tracking-[0.12em] text-primary-400">
+            {{ t('products.descTitle') }}
+          </h2>
+          <div class="prose prose-invert max-w-none text-white/70 leading-relaxed" v-html="product.description" />
         </div>
       </div>
     </section>

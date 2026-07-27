@@ -441,6 +441,15 @@
       "failed": "Failed to duplicate product"
     }
   },
+  "productDescription": {
+    "title": "Rich description",
+    "hint": "Formatted product description shown on the storefront. Prefer this editor over the plain Description field above.",
+    "save": "Save description",
+    "messages": {
+      "success": "Description saved",
+      "failed": "Failed to save description"
+    }
+  },
   "campaign-topics": {
     "title": "Post Topics",
     "create": "Add topic",

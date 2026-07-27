@@ -154,6 +154,7 @@
     "featuresTitle": "Đặc điểm nổi bật",
     "related": "Sản phẩm liên quan",
     "notFound": "Không tìm thấy sản phẩm",
+    "loadError": "Không tải được sản phẩm",
     "viewDetail": "Xem chi tiết",
     "filterAll": "Tất cả",
     "empty": "Chưa có sản phẩm trong danh mục này.",
