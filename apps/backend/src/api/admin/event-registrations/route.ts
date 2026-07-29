@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { EVENT_MODULE } from "../../../modules/event"
 import type EventModuleService from "../../../modules/event/service"
+import { parsePagination } from "../../utils/pagination"
 
 /**
  * GET /admin/event-registrations?event_id=&status=new&limit=&offset=
@@ -11,8 +12,10 @@ import type EventModuleService from "../../../modules/event/service"
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const limit = Math.min(Number(req.query.limit) || 50, 200)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 50,
+    max: 200,
+  })
 
   const filters: Record<string, unknown> = {}
   if (req.query.event_id) filters.event_id = String(req.query.event_id)

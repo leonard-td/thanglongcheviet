@@ -9,6 +9,7 @@ import { sendTelegramMessage } from "../modules/care-channel/providers/telegram"
  *   TELEGRAM_BOT_TOKEN  — bắt buộc
  *   TELEGRAM_CHAT_ID    — bắt buộc
  *   TELEGRAM_CHANNEL_NAME — tùy chọn (mặc định "Telegram CSKH")
+ *   TELEGRAM_SEED_FORCE_UPDATE=1 — ghi đè credential kênh đã tồn tại
  *   TELEGRAM_SEED_SEND_TEST=1 — gửi tin thử sau khi seed
  *
  * Run: npm run seed:care-channel-telegram -w @dtc/backend
@@ -19,6 +20,7 @@ export default async function seedCareChannelTelegram({
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim()
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim()
   const channelName = process.env.TELEGRAM_CHANNEL_NAME?.trim() || "Telegram CSKH"
+  const forceUpdate = process.env.TELEGRAM_SEED_FORCE_UPDATE === "1"
 
   if (!botToken || !chatId) {
     console.error(
@@ -45,23 +47,49 @@ export default async function seedCareChannelTelegram({
       return config.chat_id === chatId || channel.name === channelName
     }) ?? null
 
-  const config = { bot_token: botToken, chat_id: chatId }
-
   let channelId: string
+  let effectiveBotToken = botToken
+  let effectiveChatId = chatId
+
   if (match) {
-    await service.updateCareChannels({
-      id: match.id,
-      name: channelName,
-      provider: "telegram",
-      notify_orders: true,
-      receive_messages: true,
-      is_active: true,
-      config,
-      webhook_secret: match.webhook_secret || randomBytes(24).toString("hex"),
-    })
+    const existingConfig = (match.config ?? {}) as {
+      bot_token?: string
+      chat_id?: string
+    }
+    const missingCredentials =
+      !existingConfig.bot_token || !existingConfig.chat_id
+
+    if (forceUpdate || missingCredentials || !match.webhook_secret) {
+      const config =
+        forceUpdate || missingCredentials
+          ? {
+              ...existingConfig,
+              bot_token: botToken,
+              chat_id: chatId,
+            }
+          : existingConfig
+
+      await service.updateCareChannels({
+        id: match.id,
+        config,
+        webhook_secret: match.webhook_secret || randomBytes(24).toString("hex"),
+      })
+      effectiveBotToken = config.bot_token || botToken
+      effectiveChatId = config.chat_id || chatId
+    } else {
+      // Admin-managed DB credentials win over stale deployment env values.
+      effectiveBotToken = existingConfig.bot_token || botToken
+      effectiveChatId = existingConfig.chat_id || chatId
+    }
+
     channelId = match.id
-    console.log(`Updated Telegram care channel (id: ${channelId}).`)
+    console.log(
+      forceUpdate
+        ? `Updated Telegram care channel from env (id: ${channelId}).`
+        : `Telegram care channel already exists; preserving DB config (id: ${channelId}).`
+    )
   } else {
+    const config = { bot_token: botToken, chat_id: chatId }
     const created = await service.createCareChannels({
       name: channelName,
       provider: "telegram",
@@ -78,11 +106,15 @@ export default async function seedCareChannelTelegram({
   if (process.env.TELEGRAM_SEED_SEND_TEST === "1") {
     const text =
       "🔔 Tin nhắn thử từ seed care-channel — kênh Telegram đã kết nối thành công."
-    const { messageId } = await sendTelegramMessage(botToken, chatId, text)
+    const { messageId } = await sendTelegramMessage(
+      effectiveBotToken,
+      effectiveChatId,
+      text
+    )
     console.log(`Test message sent (telegram message_id: ${messageId}).`)
   }
 
   console.log(
-    `Channel ready: name="${channelName}", id=${channelId}, chat_id=${chatId}, notify_orders=true, receive_messages=true`
+    `Channel ready: name="${channelName}", id=${channelId}, chat_id=${effectiveChatId}`
   )
 }

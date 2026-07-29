@@ -6,6 +6,7 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { INQUIRY_MODULE } from "../../../modules/inquiry"
 import type InquiryModuleService from "../../../modules/inquiry/service"
 import { normalizePhone } from "../../utils/phone"
+import { parsePagination } from "../../utils/pagination"
 
 /**
  * GET /store/my-bookings
@@ -32,17 +33,29 @@ export async function GET(
     return
   }
 
-  const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
-  const all = await inquiryService.listInquiries(
-    { type: "booking" },
-    { order: { created_at: "DESC" }, take: 200 }
-  )
-
   const customerPhone = normalizePhone(customer.phone ?? "")
-  const bookings = all.filter((b) => {
-    if (customerPhone && normalizePhone(b.phone) === customerPhone) return true
-    return Boolean(customer.email && b.email === customer.email)
+  const customerEmail = customer.email?.trim().toLowerCase() ?? ""
+  if (!customerPhone && !customerEmail) {
+    res.json({ bookings: [], count: 0, limit: 20, offset: 0 })
+    return
+  }
+
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 20,
+    max: 100,
   })
+  const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
+  const ownershipFilters = [
+    ...(customerPhone ? [{ normalized_phone: customerPhone }] : []),
+    ...(customerEmail ? [{ normalized_email: customerEmail }] : []),
+  ]
+  const [bookings, count] = await inquiryService.listAndCountInquiries(
+    {
+      type: "booking",
+      $or: ownershipFilters,
+    } as never,
+    { order: { created_at: "DESC" }, take: limit, skip: offset }
+  )
 
   res.json({
     bookings: bookings.map((b) => ({
@@ -54,5 +67,8 @@ export async function GET(
       note: b.message,
       created_at: b.created_at,
     })),
+    count,
+    limit,
+    offset,
   })
 }

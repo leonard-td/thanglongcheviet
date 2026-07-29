@@ -387,7 +387,6 @@ const MediaPage = () => {
               className="group flex flex-col overflow-hidden rounded-lg border border-ui-border-base bg-ui-bg-base"
             >
               <div className="aspect-square overflow-hidden bg-ui-bg-subtle flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   key={m.url}
                   src={m.url}

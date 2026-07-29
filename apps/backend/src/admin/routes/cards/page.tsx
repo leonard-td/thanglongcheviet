@@ -91,7 +91,6 @@ const CardRow = ({ card, onNavigate, onToggleActive, togglingId, selected, onTog
           // key={card.image} forces a fresh <img> mount whenever the URL
           // changes, so a stale load-error's inline `display: none` never
           // carries over onto a newly-picked (valid) image.
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={card.image}
             src={card.image}

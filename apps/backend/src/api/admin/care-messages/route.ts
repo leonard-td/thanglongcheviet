@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
+import { parsePagination } from "../../utils/pagination"
 
 const ReplySchema = z.object({
   channel_id: z.string().min(1),
@@ -14,8 +15,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const limit = Math.min(Number(req.query.limit) || 20, 200)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 20,
+    max: 200,
+  })
 
   const filters: Record<string, unknown> = {}
   for (const key of [

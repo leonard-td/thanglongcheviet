@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CAMPAIGN_MODULE } from "../../../modules/campaign"
 import type CampaignModuleService from "../../../modules/campaign/service"
+import { parsePagination } from "../../utils/pagination"
 
 /**
  * GET /store/campaign-posts
@@ -18,8 +19,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const limit = Math.min(Number(req.query.limit) || 20, 100)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 20,
+    max: 100,
+  })
 
   const filters: { topic_id?: string } = {}
 

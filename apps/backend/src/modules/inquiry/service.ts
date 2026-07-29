@@ -1,5 +1,6 @@
 import { MedusaService } from "@medusajs/framework/utils"
 import Inquiry from "./models/inquiry"
+import { connectDb } from "../../lib/backup/db"
 
 export type BookingSlot = {
   time: string
@@ -7,7 +8,7 @@ export type BookingSlot = {
 }
 
 /** Bookable time slots per day (lunch break excluded). */
-const DAILY_SLOTS = [
+export const DAILY_SLOTS = [
   "09:00",
   "10:00",
   "11:00",
@@ -18,7 +19,10 @@ const DAILY_SLOTS = [
 ]
 
 /** How many bookings a single slot can take before it closes. */
-const SLOT_CAPACITY = Number(process.env.BOOKING_SLOT_CAPACITY || 3)
+export function getSlotCapacity(): number {
+  const configured = Number(process.env.BOOKING_SLOT_CAPACITY || 3)
+  return Number.isInteger(configured) && configured > 0 ? configured : 3
+}
 
 class InquiryModuleService extends MedusaService({
   Inquiry,
@@ -28,24 +32,32 @@ class InquiryModuleService extends MedusaService({
    * whether it still has capacity (cancelled bookings don't count).
    */
   async getAvailability(date: string): Promise<BookingSlot[]> {
-    const bookings = await this.listInquiries(
-      {
-        type: "booking",
-        preferred_date: date,
-        status: ["new", "confirmed"],
-      },
-      { select: ["id", "preferred_time"], take: 1000 }
-    )
-
+    const client = await connectDb()
     const counts = new Map<string, number>()
-    for (const b of bookings) {
-      if (!b.preferred_time) continue
-      counts.set(b.preferred_time, (counts.get(b.preferred_time) ?? 0) + 1)
+    try {
+      const result = await client.query(
+        `SELECT preferred_time, count(*)::int AS count
+         FROM inquiry
+         WHERE deleted_at IS NULL
+           AND type = 'booking'
+           AND preferred_date = $1
+           AND status IN ('new', 'confirmed')
+         GROUP BY preferred_time`,
+        [date]
+      )
+      for (const row of result.rows) {
+        if (row.preferred_time) {
+          counts.set(String(row.preferred_time), Number(row.count))
+        }
+      }
+    } finally {
+      await client.end()
     }
 
+    const capacity = getSlotCapacity()
     return DAILY_SLOTS.map((time) => ({
       time,
-      available: (counts.get(time) ?? 0) < SLOT_CAPACITY,
+      available: (counts.get(time) ?? 0) < capacity,
     }))
   }
 }

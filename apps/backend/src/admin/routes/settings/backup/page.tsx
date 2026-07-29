@@ -106,14 +106,10 @@ const BackupSettingsPage = () => {
     mutationFn: async (file: File) => {
       const fd = new FormData()
       fd.append("file", file)
-      const res = await fetch("/admin/backup/restore", {
+      await sdk.client.fetch("/admin/backup/restore", {
         method: "POST",
-        credentials: "include",
         body: fd,
       })
-      if (!res.ok) {
-        throw Object.assign(new Error("upload failed"), { status: res.status })
-      }
     },
     onSuccess: () => {
       toast.success(t("backup.toasts.restoreStarted"))

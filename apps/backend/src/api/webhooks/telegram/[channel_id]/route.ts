@@ -44,7 +44,12 @@ export async function POST(
   }
 
   const secretHeader = req.headers["x-telegram-bot-api-secret-token"]
-  if (channel.webhook_secret && secretHeader !== channel.webhook_secret) {
+  // Legacy/misconfigured channels without a secret must never accept inbound
+  // updates. New channels always receive a secret at creation time.
+  if (
+    !channel.webhook_secret ||
+    secretHeader !== channel.webhook_secret
+  ) {
     res.status(401).json({ ok: false })
     return
   }

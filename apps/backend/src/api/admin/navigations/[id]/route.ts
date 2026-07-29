@@ -1,35 +1,39 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { NAVIGATION_MODULE } from "../../../../modules/navigation"
-
-type UpdateNavigationItemInput = {
-  label?: string
-  url?: string
-  order?: number
-  openInNewTab?: boolean
-  parent_id?: string | null
-  is_active?: boolean
-}
+import type NavigationModuleService from "../../../../modules/navigation/service"
+import {
+  UpdateNavigationItemSchema,
+  validateNavigationInput,
+  validateParent,
+} from "../validation"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
+  const navigationModuleService: NavigationModuleService =
+    req.scope.resolve(NAVIGATION_MODULE)
   const item = await navigationModuleService.retrieveNavigationItem(req.params.id)
   res.json({ navigation: item })
 }
 
 export const PUT = async (
-  req: MedusaRequest<UpdateNavigationItemInput>,
+  req: MedusaRequest,
   res: MedusaResponse
 ) => {
-  const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
+  const navigationModuleService: NavigationModuleService =
+    req.scope.resolve(NAVIGATION_MODULE)
+  const body = validateNavigationInput(UpdateNavigationItemSchema, req.body)
+
+  await validateParent(navigationModuleService, body.parent_id, req.params.id)
+
   const item = await navigationModuleService.updateNavigationItems({
+    ...body,
     id: req.params.id,
-    ...req.body,
   })
   res.json({ navigation: item })
 }
 
 export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
-  const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
+  const navigationModuleService: NavigationModuleService =
+    req.scope.resolve(NAVIGATION_MODULE)
   await navigationModuleService.deleteNavigationItems(req.params.id)
   res.json({ id: req.params.id, deleted: true })
 }

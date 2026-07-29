@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 npx medusa db:migrate
 npx medusa user -e "${ADMIN_EMAIL:-admin@medusa.local}" -p "${ADMIN_PASSWORD:-supersecret123}" 2>/dev/null || true
-npx medusa exec ./src/scripts/seed-navigation.ts 2>/dev/null || true
+npx medusa exec ./src/scripts/seed-navigation.ts
 
 use_vite_admin=false
 if [ "${ENABLE_ADMIN_HMR}" = "true" ] && [ "${DISABLE_ADMIN_HMR}" != "true" ]; then
@@ -23,7 +23,6 @@ fi
 
 echo "[backend] Building admin dashboard (production bundle, DISABLE_ADMIN_HMR=${DISABLE_ADMIN_HMR:-true}, ADMIN_AUTH_TYPE=${ADMIN_AUTH_TYPE:-jwt})"
 export ADMIN_AUTH_TYPE="${ADMIN_AUTH_TYPE:-jwt}"
-node scripts/patch-navigation-plugin.mjs
 admin_index=".medusa/server/public/admin/index.html"
 if [ ! -f "$admin_index" ] || [ "${ADMIN_FORCE_REBUILD}" = "true" ]; then
   npx medusa build

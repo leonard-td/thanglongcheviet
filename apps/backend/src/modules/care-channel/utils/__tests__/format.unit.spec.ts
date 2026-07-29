@@ -32,6 +32,17 @@ describe("care-channel message formatters", () => {
     expect(text).toContain("Tổng tiền:")
   })
 
+  it("formats a Medusa BigNumber-like order total", () => {
+    const text = formatOrderMessage({
+      display_id: 43,
+      currency_code: "vnd",
+      total: { numeric: 370000 },
+    })
+
+    expect(text).toContain("370.000")
+    expect(text).not.toContain("[object Object]")
+  })
+
   it("formats a contact inquiry", () => {
     const text = formatInquiryMessage({
       name: "Lan",

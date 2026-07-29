@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto"
 import { z } from "zod"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
+import { parsePagination } from "../../utils/pagination"
 
 export const ChannelConfigSchema = z.object({
   // telegram
@@ -45,8 +46,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const limit = Math.min(Number(req.query.limit) || 20, 100)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 20,
+    max: 100,
+  })
   const provider =
     typeof req.query.provider === "string" ? req.query.provider : undefined
 

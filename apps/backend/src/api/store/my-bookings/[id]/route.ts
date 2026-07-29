@@ -31,13 +31,18 @@ export async function DELETE(
   const customer = customers[0]
 
   const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
-  const [booking] = await inquiryService.listInquiries({ id }, { take: 1 })
+  const [booking] = await inquiryService.listInquiries(
+    { id, type: "booking" },
+    { take: 1 }
+  )
 
   const ownsBooking =
     booking &&
     customer &&
     (phonesMatch(booking.phone, customer.phone) ||
-      (customer.email && booking.email === customer.email))
+      (customer.email &&
+        booking.email?.trim().toLowerCase() ===
+          customer.email.trim().toLowerCase()))
 
   if (!ownsBooking) {
     throw new MedusaError(MedusaError.Types.NOT_FOUND, "Booking not found")

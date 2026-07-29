@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
-import { Container, Heading, Button, Table, Input, Select, Checkbox } from "@medusajs/ui"
-import { PlusMini, Trash, PencilSquare, ListBullet } from "@medusajs/icons"
+import { Container, Heading, Button, Table, Input } from "@medusajs/ui"
+import { Trash, PencilSquare, ListBullet } from "@medusajs/icons"
 import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { sdk } from "../../lib/sdk"
 
 type NavItem = {
   id: string
@@ -13,7 +14,7 @@ type NavItem = {
   is_active: boolean
 }
 
-export default function NavigationPage() {
+const NavigationPage = () => {
   const [items, setItems] = useState<NavItem[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -30,10 +31,9 @@ export default function NavigationPage() {
   const fetchItems = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/admin/navigations", {
-        headers: { "Content-Type": "application/json" },
-      })
-      const data = await res.json()
+      const data = await sdk.client.fetch<{ navigations: NavItem[] }>(
+        "/admin/navigations"
+      )
       setItems(data.navigations || [])
     } catch (e) {
       console.error(e)
@@ -55,15 +55,18 @@ export default function NavigationPage() {
       parent_id: form.parent_id === "null" ? null : form.parent_id
     }
 
-    await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    try {
+      await sdk.client.fetch(url, {
+        method,
+        body: payload,
+      })
 
-    setEditingId(null)
-    setForm({ label: "", url: "/", order: 0, parent_id: "null", openInNewTab: false, is_active: true })
-    fetchItems()
+      setEditingId(null)
+      setForm({ label: "", url: "/", order: 0, parent_id: "null", openInNewTab: false, is_active: true })
+      fetchItems()
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleEdit = (item: NavItem) => {
@@ -76,8 +79,12 @@ export default function NavigationPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this item?")) return
-    await fetch(`/admin/navigations/${id}`, { method: "DELETE" })
-    fetchItems()
+    try {
+      await sdk.client.fetch(`/admin/navigations/${id}`, { method: "DELETE" })
+      fetchItems()
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (
@@ -160,6 +167,8 @@ export default function NavigationPage() {
     </Container>
   )
 }
+
+export default NavigationPage
 
 export const config = defineRouteConfig({
   label: "Navigation",

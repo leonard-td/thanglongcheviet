@@ -136,7 +136,6 @@ const MediaPickerModal = ({ open, onOpenChange, onSelect }: MediaPickerModalProp
                     onOpenChange(false)
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={m.url} alt={m.filename ?? ""} className="h-full w-full object-cover" />
                 </button>
               ))}

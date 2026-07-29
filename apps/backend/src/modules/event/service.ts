@@ -6,6 +6,7 @@ import {
 import type { Context } from "@medusajs/framework/types"
 import Event from "./models/event"
 import EventRegistration from "./models/event-registration"
+import { connectDb } from "../../lib/backup/db"
 
 type EventFilters = {
   id?: string | string[]
@@ -58,18 +59,22 @@ class EventModuleService extends MedusaService({
       return seatsByEvent
     }
 
-    const registrations = await this.listEventRegistrations(
-      { event_id: eventIds, status: { $ne: "cancelled" } },
-      { select: ["event_id", "quantity"] },
-      sharedContext
-    )
-
-    for (const registration of registrations) {
-      seatsByEvent.set(
-        registration.event_id,
-        (seatsByEvent.get(registration.event_id) ?? 0) +
-          (registration.quantity ?? 1)
+    const client = await connectDb()
+    try {
+      const result = await client.query(
+        `SELECT event_id, coalesce(sum(quantity), 0)::int AS seats
+         FROM event_registration
+         WHERE deleted_at IS NULL
+           AND status <> 'cancelled'
+           AND event_id = ANY($1::text[])
+         GROUP BY event_id`,
+        [eventIds]
       )
+      for (const row of result.rows) {
+        seatsByEvent.set(String(row.event_id), Number(row.seats))
+      }
+    } finally {
+      await client.end()
     }
 
     return seatsByEvent

@@ -44,10 +44,29 @@ type EventRegistrationLike = {
 }
 
 function formatAmount(amount: unknown, currency?: string | null): string {
-  const value = Number(amount)
+  let candidate = amount
+
+  // Medusa totals can be returned as BigNumber-like objects by query.graph.
+  // Prefer their public numeric representation before coercion.
+  if (amount && typeof amount === "object") {
+    const bigNumber = amount as {
+      numeric?: unknown
+      value?: unknown
+      toNumber?: () => number
+    }
+    if (typeof bigNumber.toNumber === "function") {
+      candidate = bigNumber.toNumber()
+    } else if (bigNumber.numeric !== undefined) {
+      candidate = bigNumber.numeric
+    } else if (bigNumber.value !== undefined) {
+      candidate = bigNumber.value
+    }
+  }
+
+  const value = Number(candidate)
 
   if (!Number.isFinite(value)) {
-    return String(amount ?? "")
+    return String(candidate ?? "")
   }
 
   try {

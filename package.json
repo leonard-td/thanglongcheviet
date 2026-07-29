@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@medusajs/eslint-plugin": "2.16.0",
+    "@next/eslint-plugin-next": "15.5.18",
     "eslint": "^9.39.4",
     "prettier": "^3.2.5",
     "turbo": "^2.0.14"
@@ -33,7 +34,12 @@
     "!apps/backend/.medusa/**"
   ],
   "overrides": {
-    "ajv": "^8.0.0",
+    "@eslint/eslintrc": {
+      "ajv": "6.12.6"
+    },
+    "eslint": {
+      "ajv": "6.12.6"
+    },
     "react-router-dom": "6.30.4",
     "@hookform/resolvers": "^5.4.0"
   }

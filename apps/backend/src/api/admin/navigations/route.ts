@@ -1,17 +1,15 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { NAVIGATION_MODULE } from "../../../modules/navigation"
-
-type CreateNavigationItemInput = {
-  label: string
-  url: string
-  order?: number
-  openInNewTab?: boolean
-  parent_id?: string | null
-  is_active?: boolean
-}
+import type NavigationModuleService from "../../../modules/navigation/service"
+import {
+  CreateNavigationItemSchema,
+  validateNavigationInput,
+  validateParent,
+} from "./validation"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
+  const navigationModuleService: NavigationModuleService =
+    req.scope.resolve(NAVIGATION_MODULE)
   const items = await navigationModuleService.listNavigationItems({}, {
     take: 1000,
     order: { order: "ASC" },
@@ -20,10 +18,15 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 }
 
 export const POST = async (
-  req: MedusaRequest<CreateNavigationItemInput>,
+  req: MedusaRequest,
   res: MedusaResponse
 ) => {
-  const navigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
-  const item = await navigationModuleService.createNavigationItems(req.body)
+  const navigationModuleService: NavigationModuleService =
+    req.scope.resolve(NAVIGATION_MODULE)
+  const body = validateNavigationInput(CreateNavigationItemSchema, req.body)
+
+  await validateParent(navigationModuleService, body.parent_id)
+
+  const item = await navigationModuleService.createNavigationItems(body)
   res.json({ navigation: item })
 }
