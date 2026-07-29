@@ -155,6 +155,7 @@
     "related": "Sản phẩm liên quan",
     "notFound": "Không tìm thấy sản phẩm",
     "loadError": "Không tải được sản phẩm",
+    "configError": "Không kết nối được cửa hàng (thiếu hoặc sai publishable API key). Chạy setup-web-integration rồi khởi động lại web.",
     "viewDetail": "Xem chi tiết",
     "filterAll": "Tất cả",
     "empty": "Chưa có sản phẩm trong danh mục này.",

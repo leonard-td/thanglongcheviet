@@ -1,9 +1,9 @@
-import type { ApiEnvelope } from '~/utils/storefront'
 import fallbackSettings from '~/content/settings.json'
 import fallbackTeam from '~/content/team.json'
 import fallbackServices from '~/content/services.json'
 import fallbackGallery from '~/content/gallery.json'
 import fallbackTestimonials from '~/content/testimonials.json'
+import { getFetchMessage, isPublishableKeyError } from '~/utils/fetch-status'
 
 export interface SiteBundle {
   settings: typeof fallbackSettings
@@ -21,20 +21,25 @@ const localFallback: SiteBundle = {
   testimonials: fallbackTestimonials,
 }
 
+/** Avoid spamming the same Store 400 across header/footer/plugin mounts. */
+let siteSettingsWarnOnce = false
+
 export function useSiteBundle() {
   const { data, status, refresh } = useAsyncData('site-settings', async () => {
     try {
       const config = useRuntimeConfig()
-      const medusaUrl = import.meta.client ? config.public.medusaBackendUrl : (config.medusaBackendUrlServer || config.public.medusaBackendUrl)
+      const medusaUrl = import.meta.client
+        ? config.public.medusaBackendUrl
+        : ((config as { medusaBackendUrlServer?: string }).medusaBackendUrlServer || config.public.medusaBackendUrl)
       const res = await $fetch<{ site_settings: any }>(`${medusaUrl}/store/site-settings`, {
         headers: {
-          'x-publishable-api-key': config.public.medusaPublishableKey
-        }
+          'x-publishable-api-key': config.public.medusaPublishableKey,
+        },
       })
-      
+
       const remoteSettings = res?.site_settings || {}
 
-      // Merge remote settings with local fallback. 
+      // Merge remote settings with local fallback.
       // Remote settings take precedence.
       return {
         ...localFallback,
@@ -42,7 +47,9 @@ export function useSiteBundle() {
           ...localFallback.settings,
           contact: {
             ...localFallback.settings.contact,
-            address: remoteSettings.address ? { vi: remoteSettings.address, en: remoteSettings.address } : localFallback.settings.contact.address,
+            address: remoteSettings.address
+              ? { vi: remoteSettings.address, en: remoteSettings.address }
+              : localFallback.settings.contact.address,
             phone: remoteSettings.phone || localFallback.settings.contact.phone,
             phoneDisplay: remoteSettings.phone || localFallback.settings.contact.phoneDisplay,
             mobile: remoteSettings.phone || localFallback.settings.contact.mobile,
@@ -54,15 +61,22 @@ export function useSiteBundle() {
             facebook: remoteSettings.facebook_url || localFallback.settings.social.facebook,
             zalo: remoteSettings.zalo_url || localFallback.settings.social.zalo,
             instagram: remoteSettings.instagram_url || localFallback.settings.social.instagram,
-          }
-        }
+          },
+        },
       } as SiteBundle
-    } catch (err) {
-      console.error("Failed to fetch site settings", err)
+    }
+    catch (err) {
+      if (import.meta.dev && !siteSettingsWarnOnce) {
+        siteSettingsWarnOnce = true
+        const hint = isPublishableKeyError(err)
+          ? 'Publishable API key missing/invalid — using local settings fallback. Run setup-web-integration.mjs.'
+          : getFetchMessage(err) || err
+        console.warn('[site-settings]', hint)
+      }
       return localFallback
     }
   }, {
-    default: () => localFallback
+    default: () => localFallback,
   })
 
   return {

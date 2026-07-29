@@ -266,9 +266,12 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 }
 
 .site-header.is-solid {
-  /* background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%); */
-  /* border-bottom-color: rgba(201, 108, 108, 0.35); */
-  /* box-shadow: 0 4px 20px rgba(0, 0, 0, .22); */
+  /* Match layout bg (#1a1a1a) so nav stays readable over light product cards. */
+  background: rgba(26, 26, 26, 0.96);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .site-header-inner {

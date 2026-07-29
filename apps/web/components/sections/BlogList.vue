@@ -33,7 +33,6 @@ const posts = computed(() =>
   <section class="section-py bg-dark-800 text-white" aria-labelledby="blog-list-heading">
     <div class="container-page">
       <div v-if="props.title" class="text-center mb-10 md:mb-14 animate-on-scroll">
-        <p v-if="props.eyebrow" class="modis-eyebrow mb-3">{{ props.eyebrow }}</p>
         <h2 id="blog-list-heading" class="section-heading text-white mb-4">{{ props.title }}</h2>
         <div class="divider-gold" />
         <p v-if="props.subtitle" class="section-subheading mt-4 max-w-2xl mx-auto">{{ props.subtitle }}</p>

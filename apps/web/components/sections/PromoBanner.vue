@@ -65,10 +65,6 @@ const promos = computed(() => [
                 {{ item.discount }}
               </div>
             </div>
-            <!-- Regular badge (1st card) -->
-            <p v-else class="modis-eyebrow mb-5">
-              {{ item.badge }}
-            </p>
 
             <h2
               :id="item.id === 'special' ? 'promo-heading' : undefined"

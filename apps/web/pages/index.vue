@@ -73,8 +73,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Right-column upward news ticker (reuses blog data; CSS seamless loop) -->
-      <HomeNewsTicker />
+    
     </div>
     <WidgetsConnectWidget />
     <!-- <div class="home-footer-wrap">

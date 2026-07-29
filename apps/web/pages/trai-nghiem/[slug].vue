@@ -194,7 +194,6 @@ useSeoMeta({
         <div class="container-page py-12 md:py-16">
           <div class="max-w-2xl mx-auto">
             <div class="text-center mb-8">
-              <p class="modis-eyebrow mb-3 justify-center">{{ t('events.register.eyebrow') }}</p>
               <h2 id="event-register-heading" class="font-heading text-2xl md:text-3xl font-semibold text-white">
                 {{ t('events.register.title') }}
               </h2>

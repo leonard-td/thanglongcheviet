@@ -27,9 +27,6 @@ const posts = computed(() =>
       <!-- Header row -->
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 md:mb-14 animate-on-scroll">
         <div>
-          <p class="modis-eyebrow mb-2">
-            {{ t('blog.eyebrow') }}
-          </p>
           <h2 id="blog-heading" class="section-heading text-white">
             {{ t('blog.title') }}
           </h2>

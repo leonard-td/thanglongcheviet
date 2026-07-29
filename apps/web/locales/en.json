@@ -155,6 +155,7 @@
     "related": "Related products",
     "notFound": "Product not found",
     "loadError": "Failed to load product",
+    "configError": "Store unavailable (missing or invalid publishable API key). Re-run setup-web-integration and restart web.",
     "viewDetail": "View details",
     "filterAll": "All",
     "empty": "No products in this category yet.",

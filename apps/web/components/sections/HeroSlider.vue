@@ -54,9 +54,6 @@ const modules = [Autoplay, EffectFade, Navigation, Pagination]
               <p class="text-white/60 text-sm md:text-base mb-4 leading-relaxed max-w-md mx-auto lg:mx-0">
                 {{ heroMeta.commitment }}
               </p>
-              <p class="modis-eyebrow mb-3 justify-center lg:justify-start">
-                {{ heroMeta.eyebrow }}
-              </p>
               <h1
                 class="font-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold
                        leading-tight mb-6 whitespace-pre-line"

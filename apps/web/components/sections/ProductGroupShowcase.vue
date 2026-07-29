@@ -59,7 +59,6 @@ useBannerHeader(bannerEl)
         <div v-else class="absolute inset-0 bg-gradient-to-br from-primary-800 via-dark-700 to-dark" />
         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/25" />
         <div class="relative h-full container-page flex flex-col justify-end pb-0 md:pb-0">
-          <!-- <p class="modis-eyebrow mb-2">{{ groupLabel }}</p> -->
           <h1 class="font-heading text-xl sm:text-2xl md:text-3xl font-bold max-w-3xl line-clamp-1">
             {{ heading }}
           </h1>
