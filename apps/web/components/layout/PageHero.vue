@@ -9,9 +9,6 @@ defineProps<{
 <template>
   <section class="bg-dark text-white pt-8 pb-14 md:pt-12 md:pb-20">
     <div class="container-page text-center">
-      <p v-if="label" class="modis-eyebrow mb-4 justify-center">
-        {{ label }}
-      </p>
       <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
         {{ title }}
       </h1>

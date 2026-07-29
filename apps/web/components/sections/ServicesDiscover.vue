@@ -8,7 +8,6 @@ const { discoverServices } = useSettings()
   <section class="section-py bg-[#1a1a1a] text-white" aria-labelledby="discover-heading">
     <div class="container-page">
       <div class="text-center mb-10 md:mb-14 animate-on-scroll">
-        <p class="modis-eyebrow">{{ t('discover.eyebrow') }}</p>
         <h2 id="discover-heading" class="section-heading text-white mb-4">
           {{ t('discover.title') }}
         </h2>

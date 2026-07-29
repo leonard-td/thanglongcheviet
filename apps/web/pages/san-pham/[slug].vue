@@ -326,16 +326,9 @@ useProductStructuredData(product)
             </aside>
 
             <div class="min-w-0">
-            <p class="modis-eyebrow mb-3">
-              <NuxtLink v-if="category" :to="localePath(`/san-pham/danh-muc/${category.slug}`)"
-                class="hover:text-primary-300 transition-colors">
-                {{ category.label }}
-              </NuxtLink>
-              <template v-else>{{ product.categoryName || t('products.label') }}</template>
-            </p>
-            <h1 class="font-heading text-3xl md:text-4xl font-bold mb-3 leading-tight">{{ product.title }}</h1>
-            <p class="text-2xl font-semibold text-primary-400 mb-5">{{ priceText }}</p>
-            <!-- <p class="text-white/70 leading-relaxed mb-6">{{ product.shortDesc }}</p> -->
+              <h1 class="font-heading text-3xl md:text-4xl font-bold mb-3 leading-tight">{{ product.title }}</h1>
+              <p class="text-2xl font-semibold text-primary-400 mb-5">{{ priceText }}</p>
+              <!-- <p class="text-white/70 leading-relaxed mb-6">{{ product.shortDesc }}</p> -->
 
             <!-- Variant / option selectors -->
             <div v-if="product.options.length" class="space-y-5 mb-6">

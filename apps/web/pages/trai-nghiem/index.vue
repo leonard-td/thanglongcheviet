@@ -29,7 +29,6 @@ useSeoMeta({
     <!-- ── Page header ──────────────────────────────── -->
     <section class="relative bg-dark text-white">
       <div class="container-page pt-14 md:pt-20 pb-10 text-center">
-        <p class="modis-eyebrow mb-3 justify-center">{{ t('events.eyebrow') }}</p>
         <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-bold">
           {{ t('events.title') }}
         </h1>
