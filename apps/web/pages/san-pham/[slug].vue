@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { Product } from '~/utils/storefront'
 import { formatMoney } from '~/utils/storefront'
-import { getFetchStatus } from '~/utils/fetch-status'
+import { resolveStoreLoadError } from '~/utils/fetch-status'
 
 const { t, locale } = useI18n()
 const { getBySlug, categories } = useProducts()
@@ -11,7 +12,22 @@ const route = useRoute()
 useScrollAnimation()
 
 const listUrl = computed(() => localePath('/san-pham-list'))
-const slug = computed(() => String(route.params.slug))
+const slug = computed(() => {
+  const raw = route.params.slug
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' ? value.trim() : ''
+})
+
+const loadMessages = () => ({
+  notFound: t('products.notFound'),
+  loadError: t('products.loadError'),
+  configError: t('products.configError'),
+})
+
+const throwProductError = (error: unknown) => {
+  const resolved = resolveStoreLoadError(error, loadMessages())
+  throw createError({ ...resolved, fatal: true })
+}
 
 const added = ref(false)
 const quantity = ref(1)
@@ -24,9 +40,14 @@ const selectedImage = ref<string | null>(null)
 // which previously caused hydration mismatches on both the image and here).
 const manualOptions = ref<Record<string, string> | null>(null)
 
-const { data: productData, pending, error: productError } = await useAsyncData(
-  () => `product-${slug.value}`,
-  () => getBySlug(slug.value),
+const { data: productData, pending, error: productError, status } = await useAsyncData(
+  () => `product-${slug.value || 'missing'}`,
+  async () => {
+    if (!slug.value) {
+      return { product: null, relatedFromApi: [] as Product[] }
+    }
+    return getBySlug(slug.value)
+  },
   { watch: [slug] },
 )
 
@@ -37,28 +58,19 @@ const category = computed(() =>
 )
 
 if (productError.value) {
-  const status = getFetchStatus(productError.value) ?? 502
-  throw createError({
-    statusCode: status === 404 ? 404 : status,
-    statusMessage: status === 404 ? t('products.notFound') : t('products.loadError'),
-    fatal: true,
-  })
+  throwProductError(productError.value)
 }
-if (!pending.value && !product.value) {
+if (status.value === 'success' && !product.value) {
   throw createError({ statusCode: 404, statusMessage: t('products.notFound'), fatal: true })
 }
 
 watchEffect(() => {
-  if (pending.value) return
+  // Avoid false 404/500 while client navigation refetches the same page component.
+  if (status.value === 'pending' || status.value === 'idle') return
   if (productError.value) {
-    const status = getFetchStatus(productError.value) ?? 502
-    throw createError({
-      statusCode: status === 404 ? 404 : status,
-      statusMessage: status === 404 ? t('products.notFound') : t('products.loadError'),
-      fatal: true,
-    })
+    throwProductError(productError.value)
   }
-  if (!product.value) {
+  if (status.value === 'success' && !product.value) {
     throw createError({ statusCode: 404, statusMessage: t('products.notFound'), fatal: true })
   }
 })

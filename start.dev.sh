@@ -13,7 +13,8 @@ docker compose -f infra/docker-compose.prod.yml down --remove-orphans || true
 COMPOSE="docker compose -f infra/docker-compose.yml --env-file .env.dev"
 
 $COMPOSE down
-# # docker remove all images
+
+# #docker remove all images
 # $COMPOSE down --rmi all
 # # remove all volumes
 # $COMPOSE down -v
