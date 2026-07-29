@@ -19,30 +19,30 @@ This document explains **what was wrong**, **what we fixed**, and **how to verif
 
 ## Quick summary
 
-We reviewed three recent commits by **cuongpm**, then audited the backend and fixed:
+We reviewed recent commits on `dev/be_medusajs_merge`, then audited the backend and hardened the areas below:
 
 | Area | Result |
 |------|--------|
-| Broken admin saves (`zodValidator`) | Fixed — admin create/update works again |
-| Telegram / Zalo care-channel bugs | Fixed — safer webhooks, seeds, order totals |
+| Admin saves (`zodValidator`) | Fixed — admin create/update works again |
+| Telegram / Zalo care-channel | Fixed — safer webhooks, seeds, order totals |
 | Capacity races (events & bookings) | Fixed — locks prevent overselling |
 | Store API validation | Fixed — bad dates/pagination return 400 |
 | My Bookings missing records | Fixed — DB ownership filter + pagination |
 | Security / ops gaps | Fixed — rate limits, FKs, backup size, ESLint |
 
-**Bottom line:** The backend was not production-safe after the Telegram merge. These changes make it deployable and much safer. Capacity races and validation are the biggest behavioral improvements for end users.
+**Bottom line:** After the Telegram care-channel merge, a follow-up hardening pass was needed before production. This branch makes those paths deployable and safer. Capacity races and validation are the biggest behavioral improvements for end users.
 
 ---
 
-## About Cuong’s commits
+## Related commits on the base branch
 
-| Commit | What it did | Verdict |
-|--------|-------------|---------|
-| `bb66f792` | Remove unused npm packages | Fine — no fix needed |
-| `8317ec92` | Remove unused Strapi CMS + old SRS docs | Fine — no fix needed |
-| `27d0d7de` | Merge Telegram care-channel notifications | Useful feature, but shipped with **critical bugs** |
+| Commit | What it did | Notes |
+|--------|-------------|-------|
+| `bb66f792` | Remove unused npm packages | No further change needed |
+| `8317ec92` | Remove unused Strapi CMS + old SRS docs | No further change needed |
+| `27d0d7de` | Merge Telegram care-channel notifications | Valuable feature; this branch adds follow-up hardening |
 
-### What went wrong in the Telegram merge
+### Follow-ups addressed for the care-channel work
 
 1. Admin routes imported `zodValidator` from Medusa, but **Medusa 2.17 does not export it** → build failed and admin writes returned **500**.
 2. Zalo webhooks could accept **unsigned** requests.
@@ -51,7 +51,7 @@ We reviewed three recent commits by **cuongpm**, then audited the backend and fi
 5. Startup seed could **overwrite** Telegram credentials edited in Admin.
 6. Navigation seed called an **old API** that no longer exists (errors were hidden).
 
-Those issues are fixed in this branch.
+Those follow-ups are covered in this branch.
 
 ---
 
