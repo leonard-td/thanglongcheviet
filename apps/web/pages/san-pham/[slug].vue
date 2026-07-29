@@ -295,10 +295,24 @@ useProductStructuredData(product)
             </div>
           </div>
 
-          <!-- Info: bên trái là nội dung mua hàng (gọn trong 1fr), bên phải
-               (từ xl) là khối "Đặc điểm nổi bật" cố định — không còn ẩn
-               trong tab để tận dụng khoảng trống cạnh khối mua hàng. -->
-          <div class="animate-on-scroll" :class="specs.length ? 'xl:grid xl:grid-cols-[minmax(0,1fr)_260px] xl:gap-10' : ''">
+          <!-- Info: Highlights bên trái (260px), khối mua hàng bên phải (từ xl).
+               Mobile: Highlights trước, rồi tới nội dung mua hàng. -->
+          <div class="animate-on-scroll" :class="specs.length ? 'xl:grid xl:grid-cols-[260px_minmax(0,1fr)] xl:gap-10' : ''">
+            <!-- Đặc điểm nổi bật -->
+            <aside v-if="specs.length"
+              class="mb-8 xl:mb-0 pb-6 xl:pb-0 border-b border-white/10 xl:border-b-0 xl:border-r xl:border-white/10 xl:pr-8">
+              <h2 class="text-xs uppercase tracking-widest text-white/50 mb-4 font-semibold">
+                {{ t('products.featuresTitle') }}
+              </h2>
+              <dl class="space-y-2">
+                <div v-for="row in specs" :key="row.label"
+                  class="flex justify-between text-sm py-1.5 border-b border-white/5">
+                  <dt class="text-white/50">{{ row.label }}</dt>
+                  <dd class="text-white/85 text-right">{{ row.value }}</dd>
+                </div>
+              </dl>
+            </aside>
+
             <div class="min-w-0">
             <p class="modis-eyebrow mb-3">
               <NuxtLink v-if="category" :to="localePath(`/san-pham/danh-muc/${category.slug}`)"
@@ -418,22 +432,6 @@ useProductStructuredData(product)
               </div>
             </div>
             </div>
-
-            <!-- Đặc điểm nổi bật: cạnh khối mua hàng (từ xl trở lên), xếp
-                 xuống dưới trên màn hình hẹp hơn -->
-            <aside v-if="specs.length"
-              class="mt-8 xl:mt-0 pt-6 xl:pt-0 border-t border-white/10 xl:border-t-0 xl:border-l xl:border-white/10 xl:pl-8">
-              <h2 class="text-xs uppercase tracking-widest text-white/50 mb-4 font-semibold">
-                {{ t('products.featuresTitle') }}
-              </h2>
-              <dl class="space-y-2">
-                <div v-for="row in specs" :key="row.label"
-                  class="flex justify-between text-sm py-1.5 border-b border-white/5">
-                  <dt class="text-white/50">{{ row.label }}</dt>
-                  <dd class="text-white/85 text-right">{{ row.value }}</dd>
-                </div>
-              </dl>
-            </aside>
           </div>
         </div>
 
