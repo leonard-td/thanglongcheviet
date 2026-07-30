@@ -263,7 +263,6 @@ useArticleStructuredData(post)
       >
         <div class="container-page py-12 md:py-16">
           <div class="text-center mb-10">
-            <p class="modis-eyebrow mb-3 justify-center">{{ t('blog.eyebrow') }}</p>
             <h2 id="related-posts-heading" class="font-heading text-2xl md:text-3xl font-semibold text-white">
               {{ t('blog.related') }}
             </h2>

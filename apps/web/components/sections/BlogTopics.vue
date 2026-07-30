@@ -12,7 +12,6 @@ const { topics, pending } = useBlogTopics()
   >
     <div class="container-page">
       <div class="text-center mb-10 md:mb-14 animate-on-scroll">
-        <p class="modis-eyebrow mb-3 justify-center">{{ t('blog.topics.eyebrow') }}</p>
         <h2 id="blog-topics-heading" class="section-heading text-white mb-4">
           {{ t('blog.topics.title') }}
         </h2>

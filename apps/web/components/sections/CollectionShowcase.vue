@@ -15,7 +15,6 @@ const tiles = computed(() =>
   <section v-if="tiles.length" class="section-py bg-dark-800" aria-labelledby="collections-heading">
     <div class="container-page">
       <div class="text-center mb-10 animate-on-scroll">
-        <p class="modis-eyebrow mb-3 justify-center">{{ t('products.collectionsEyebrow') }}</p>
         <h2 id="collections-heading" class="section-heading text-white mb-4">
           {{ t('products.collectionsTitle') }}
         </h2>

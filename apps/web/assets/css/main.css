@@ -102,11 +102,6 @@ html.lenis body {
     @apply w-16 h-[3px] bg-primary-500 mx-auto my-4;
   }
 
-  /* Modis eyebrow label */
-  .modis-eyebrow {
-    @apply font-condensed text-primary-400 text-xs uppercase tracking-[0.25em];
-  }
-
   /* Nav link */
   .modis-nav-link {
     @apply font-condensed text-white/80 hover:text-primary-400

@@ -31,9 +31,6 @@ useSeoMeta({
       
       <!-- Content -->
       <div class="container-page relative z-10 text-center animate-on-scroll">
-        <p class="modis-eyebrow mb-4 justify-center text-primary-400">
-          {{ t('nav.productsMenu.corporateGifts') }}
-        </p>
         <h1 class="font-heading text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-md">
           {{ t('corporate.title') }}
         </h1>
