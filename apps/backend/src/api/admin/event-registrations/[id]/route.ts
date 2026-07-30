@@ -1,7 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import { z } from "zod"
-import { zodValidator } from "@medusajs/framework/zod"
+import { zodValidator } from "@medusajs/framework"
 import { EVENT_MODULE } from "../../../../modules/event"
 import type EventModuleService from "../../../../modules/event/service"
 

@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import type { IFileModuleService } from "@medusajs/framework/types"
 import { z } from "zod"
-import { zodValidator } from "@medusajs/framework/zod"
+import { zodValidator } from "@medusajs/framework"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
 

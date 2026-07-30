@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
-import { zodValidator } from "@medusajs/framework/zod"
+import { zodValidator } from "@medusajs/framework"
 import { CARD_MODULE } from "../../../modules/card"
 import type CardModuleService from "../../../modules/card/service"
 import { toRelativeMediaUrl } from "../../utils/media-url"
