@@ -1,8 +1,18 @@
 <script setup lang="ts">
 // inline: nằm trong luồng trang (dưới banner / đầu main) thay vì fixed top —
 // dùng trên mọi trang ngoài trang chủ; trang chủ giữ biến thể fixed.
-const props = withDefaults(defineProps<{ inline?: boolean }>(), {
+// Nút chuyển ngôn ngữ trước đây nằm trong thanh này; trang chủ đã chuyển nó
+// xuống cột giữa (`HomeV3PillarList`), các trang khác render qua layout.
+const props = withDefaults(defineProps<{
+  inline?: boolean
+  /** Hiện nút tạm dừng chuyển động (dùng ở trang chủ v3). */
+  motionToggle?: boolean
+  /** Chạy chậm hơn cho dễ đọc (dùng ở trang chủ v3). */
+  slow?: boolean
+}>(), {
   inline: false,
+  motionToggle: false,
+  slow: false,
 })
 
 const { t, locale } = useI18n()
@@ -18,7 +28,11 @@ const items = computed(() =>
   })),
 )
 
-const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
+const duration = computed(() => {
+  const perItem = props.slow ? 11 : 8
+  const floor = props.slow ? 44 : 32
+  return `${Math.max(items.value.length * perItem, floor)}s`
+})
 </script>
 
 <template>
@@ -58,7 +72,7 @@ const duration = computed(() => `${Math.max(items.value.length * 8, 32)}s`)
         </ul>
       </div>
     </div>
-    <WidgetsLangSwitch v-if="!props.inline" />
+    <WidgetsMotionToggle v-if="props.motionToggle" />
   </div>
 </template>
 

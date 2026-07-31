@@ -1,4 +1,11 @@
 <script setup lang="ts">
+const props = withDefaults(defineProps<{
+  /** Thời lượng một vòng cuộn. Trang chủ v3 dùng 42s cho dễ đọc. */
+  duration?: string
+}>(), {
+  duration: '25s',
+})
+
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { featuredProducts } = useProducts()
@@ -26,7 +33,7 @@ const formatPrice = (price: number) =>
       <div v-if="!promotions.length" class="promo-empty">
         {{ t('common.loading') }}
       </div>
-      <div v-else class="promo-track">
+      <div v-else class="promo-track" :style="{ '--promo-duration': props.duration }">
         <!-- inert trên bản nhân đôi để nút thêm giỏ/mua ngay không nhận tab/click trùng -->
         <div v-for="n in 2" :key="n" class="promo-set" :aria-hidden="n === 2 ? 'true' : undefined" :inert="n === 2">
           <NuxtLink
@@ -143,7 +150,7 @@ const formatPrice = (price: number) =>
 .promo-track {
   display: flex;
   flex-direction: column;
-  animation: promo-scroll 25s linear infinite;
+  animation: promo-scroll var(--promo-duration, 25s) linear infinite;
   will-change: transform;
 }
 
