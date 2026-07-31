@@ -41,7 +41,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-medusa}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-medusa}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -134,7 +138,13 @@ services:
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npm run start"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -188,8 +198,47 @@ services:
       # The exact same routing as dev — one port, same proxy rules.
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
 
+  # --- Restic DB backup (scheduled PostgreSQL backup) -------------------------
+  # Runs pg_dump on a cron schedule, pushes to a Restic repository (local volume
+  # by default; switch RESTIC_REPOSITORY to s3: or sftp: for remote storage).
+  # Manual restore: docker compose exec backup /scripts/restore.sh [snapshot-id]
+  # List snapshots: docker compose exec backup /scripts/restore.sh --list
+  backup:
+    build:
+      context: ./backup
+      dockerfile: Dockerfile
+    container_name: tlcv_backup_prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Postgres connection (same creds as backend)
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-medusa}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      # Restic configuration
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-/backups}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-change-me-restic-password}
+      # S3 backend (optional — only needed if RESTIC_REPOSITORY starts with s3:)
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      # Schedule: default 2:00 AM daily (Asia/Ho_Chi_Minh timezone)
+      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      # Retention policy
+      BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
+      BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
+      BACKUP_KEEP_MONTHLY: ${BACKUP_KEEP_MONTHLY:-6}
+    volumes:
+      # Local backup storage (default). Mount a host directory or use a named
+      # volume. Switch to S3/SFTP by changing RESTIC_REPOSITORY.
+      - restic_repo:/backups
+
 volumes:
   postgres_data:
   backend_server_node_modules:
   backend_static:
   backend_backups:
+  restic_repo:
