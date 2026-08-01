@@ -6,6 +6,7 @@ import {
   validateAndTransformQuery,
   wrapWithPoliciesCheck,
 } from "@medusajs/framework/http"
+import { toSnakeCase } from "@medusajs/framework/utils"
 import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import multer from "multer"
 import os from "node:os"
@@ -14,8 +15,15 @@ import path from "node:path"
 export const GetCampaignPostsSchema = createFindParams()
 export const GetEventsSchema = createFindParams()
 
+// definePolicies() stores every resource/operation snake_cased, while
+// hasPermission() compares the guard's strings against those stored values
+// verbatim. Normalizing here keeps "campaign-post" and "campaign_post" from
+// silently drifting into a permanent 403.
 const guard = (resource: string, operation: string) =>
-  wrapWithPoliciesCheck((req, res, next) => next(), { resource, operation })
+  wrapWithPoliciesCheck((req, res, next) => next(), {
+    resource: toSnakeCase(resource),
+    operation: toSnakeCase(operation),
+  })
 
 // File zip backup có thể rất lớn — nhận qua multer diskStorage (stream thẳng
 // xuống đĩa tạm, không qua bodyParser/RAM). Request JSON (restore từ file có
