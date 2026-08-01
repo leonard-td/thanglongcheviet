@@ -26,6 +26,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     "channel_id",
     "direction",
     "kind",
+    "status",
     "external_user_id",
   ] as const) {
     if (typeof req.query[key] === "string" && req.query[key]) {

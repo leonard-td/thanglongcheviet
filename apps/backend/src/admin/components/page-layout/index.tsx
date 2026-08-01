@@ -1,6 +1,7 @@
 import { Container, clx } from "@medusajs/ui"
 import type { ReactNode } from "react"
 import LanguageSwitcher from "../language-switcher"
+import SidebarBadges from "../sidebar-badges"
 
 /**
  * Layout chung cho mọi trang CUSTOM ROUTE của admin (cards, campaign-posts,
@@ -21,6 +22,7 @@ type PageLayoutProps = {
 const PageLayout = ({ children, className }: PageLayoutProps) => (
   <Container className={clx("divide-y p-0", className)}>
     <LanguageSwitcher />
+    <SidebarBadges />
     {children}
   </Container>
 )
