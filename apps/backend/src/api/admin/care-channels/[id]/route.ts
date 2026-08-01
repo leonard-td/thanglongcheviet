@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../../utils/zod-validator"
 import { CARE_CHANNEL_MODULE } from "../../../../modules/care-channel"
 import type CareChannelModuleService from "../../../../modules/care-channel/service"
 import { ChannelConfigSchema, cleanChannelConfig } from "../route"
@@ -31,7 +32,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const body = UpdateCareChannelSchema.parse(req.body)
+  const body = await zodValidator(UpdateCareChannelSchema, req.body)
 
   const existing = await service.retrieveCareChannel(id)
 

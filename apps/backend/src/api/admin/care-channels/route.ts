@@ -1,9 +1,11 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { randomBytes } from "node:crypto"
 import { z } from "zod"
+import { zodValidator } from "../../utils/zod-validator"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
 import { parsePagination } from "../../utils/pagination"
+import { redactCareChannel } from "./redact"
 
 export const ChannelConfigSchema = z.object({
   // telegram
@@ -58,7 +60,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     { take: limit, skip: offset, order: { created_at: "DESC" } }
   )
 
-  res.json({ care_channels, count, limit, offset })
+  res.json({
+    care_channels: care_channels.map(redactCareChannel),
+    count,
+    limit,
+    offset,
+  })
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
@@ -66,7 +73,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const body = CreateCareChannelSchema.parse(req.body)
+  const body = await zodValidator(CreateCareChannelSchema, req.body)
 
   const care_channel = await service.createCareChannels({
     ...body,
