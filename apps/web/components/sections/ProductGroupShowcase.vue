@@ -35,7 +35,7 @@ const sidebarItems = computed(() =>
     title: p.title,
     description: p.shortDesc,
     subtitle: formatMoney(p.price, p.currencyCode, priceLocale.value),
-    product: { variantId: p.variantId, slug: p.slug, inStock: p.inStock },
+    product: { variantId: p.variantId, slug: p.slug, inStock: p.quickAddInStock },
   })),
 )
 
@@ -140,7 +140,7 @@ useBannerHeader(bannerEl)
                 <!-- <p v-if="p.shortDesc" class="mt-0 text-start text-white/50 text-xs leading-relaxed line-clamp-1">
                   {{ p.shortDesc }}
                 </p> -->
-                <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock"
+                <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.quickAddInStock"
                   class="mt-auto pt-2.5" />
               </article>
             </div>

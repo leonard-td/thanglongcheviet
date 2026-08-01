@@ -19,8 +19,23 @@ export interface MedusaVariantOptionValue {
 export interface MedusaVariant {
   id: string
   title: string
+  manage_inventory?: boolean
+  allow_backorder?: boolean
+  inventory_quantity?: number | null
   calculated_price?: { calculated_amount: number | null, currency_code: string } | null
   options?: MedusaVariantOptionValue[]
+}
+
+/** True when a variant can be ordered per Medusa inventory rules. */
+export function isVariantInStock(variant: Pick<
+  MedusaVariant,
+  'manage_inventory' | 'allow_backorder' | 'inventory_quantity'
+>): boolean {
+  if (variant.manage_inventory === false) return true
+  if (variant.allow_backorder === true) return true
+  // When the store API omits inventory_quantity, do not block checkout UI.
+  if (variant.inventory_quantity == null) return true
+  return variant.inventory_quantity > 0
 }
 
 export interface MedusaCategory {
@@ -72,9 +87,7 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
         .filter(o => o.option?.title)
         .map(o => [o.option!.title, o.value]),
     ),
-    // Medusa v2 stock levels require a separate inventory-location query —
-    // out of scope here, so every listed variant is treated as orderable.
-    inStock: true,
+    inStock: isVariantInStock(v),
   }))
   const firstVariant = variants[0]
 
@@ -100,7 +113,8 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     categoryIds: (p.categories ?? []).map(c => c.id),
     collectionId: p.collection?.id ?? null,
     collectionName: p.collection?.title ?? '',
-    inStock: true,
+    inStock: variants.some(v => v.inStock),
+    quickAddInStock: firstVariant?.inStock ?? false,
     variants,
     options,
     material: p.material ?? null,

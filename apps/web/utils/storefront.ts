@@ -44,7 +44,10 @@ export interface Product {
   categoryIds: string[]
   collectionId: string | null
   collectionName: string
+  /** True when at least one variant can be ordered. */
   inStock: boolean
+  /** True when the default (first) variant can be quick-added from list cards. */
+  quickAddInStock: boolean
   variants: ProductVariant[]
   options: ProductOption[]
   material: string | null
