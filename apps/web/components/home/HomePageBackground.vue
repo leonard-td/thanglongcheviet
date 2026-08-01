@@ -47,20 +47,19 @@ const mediaStyle = (image: string, blur: number) => ({
       <div class="home-page-background__base-overlay" />
     </div>
 
-    <!-- Cột trái ~1/(1+φ) ≈ 38% (tỉ lệ vàng), khung ảnh riêng -->
-    <div class="home-page-background__aside">
-      <div class="home-page-background__media" :class="{ 'is-blurred': leftBlur > 0 }"
-        :style="mediaStyle(resolvedLeftImage, leftBlur)" />
-      <div class="home-page-background__aside-overlay" />
+    <!-- Khung ảnh riêng, canh đúng cột giữa của `.home-pillars-grid` -->
+    <div class="home-page-background__grid">
+      <div class="home-page-background__aside">
+        <div class="home-page-background__media" :class="{ 'is-blurred': leftBlur > 0 }"
+          :style="mediaStyle(resolvedLeftImage, leftBlur)" />
+        <div class="home-page-background__aside-overlay" />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .home-page-background {
-  --home-bg-ratio-left: 1;
-  --home-bg-ratio-right: 1.618;
-  --home-bg-left-w: calc(100% * var(--home-bg-ratio-left) / (var(--home-bg-ratio-left) + var(--home-bg-ratio-right)));
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -85,13 +84,35 @@ const mediaStyle = (image: string, blur: number) => ({
   backdrop-filter: blur(15px);
 }
 
-/* Khung cột trái */
-.home-page-background__aside {
+/* Lưới soi bóng `.home-pillars-grid` (cộng padding 16px của `.home-pillars-wrap`)
+   để khung ảnh nằm trùng khít cột giữa mà không phải tính toạ độ bằng JS.
+   Sửa lưới ở `HomeV3PillarList.vue` thì phải sửa cả ở đây. */
+.home-page-background__grid {
+  --pillar-right-w: calc(346px * 2 + 16px);
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: var(--home-bg-left-w);
+  inset: 0;
+  display: grid;
+  /* <1440px lưới bên kia không có cột giữa (xem `.home-pillars-col--center`) nên
+     dùng một dải canh giữa rộng xấp xỉ cột giữa tại 1440px. */
+  grid-template-columns: 1fr clamp(160px, 22%, 280px) 1fr;
+  gap: 24px;
+  padding: 0 16px;
+}
+
+@media (min-width: 1440px) {
+  .home-page-background__grid {
+    grid-template-columns:
+      minmax(0, 1.4fr)
+      minmax(120px, 0.85fr)
+      minmax(0, var(--pillar-right-w));
+  }
+}
+
+/* Khung cột giữa */
+.home-page-background__aside {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
   overflow: hidden;
   /* border-right: 1px solid rgba(255, 255, 255, .1);
   box-shadow: 4px 0 24px rgba(0, 0, 0, .25); */
@@ -131,7 +152,7 @@ const mediaStyle = (image: string, blur: number) => ({
 }
 
 @media (max-width: 767px) {
-  .home-page-background__aside {
+  .home-page-background__grid {
     display: none;
   }
 

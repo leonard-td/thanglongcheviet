@@ -48,7 +48,8 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-
+# main server: 192.168.1.108
+# test server:  192.168.1.207
 DEPLOY_SERVER="${DEPLOY_SERVER:-d@192.168.1.108}"
 DEPLOY_DIR="${DEPLOY_DIR:-www/thanglongcheviet}"
 
