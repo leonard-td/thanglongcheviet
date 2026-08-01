@@ -2,7 +2,7 @@
 
 **Branch:** `dev/be_medusajs_merge_review0729`  
 **Date:** 2026-08-01  
-**Commits:** 9 (`00715693` … `5b0aa88b`)  
+**Commits:** 13 (`00715693` … `381e4311`)  
 **Languages:** English + Tiếng Việt
 
 Each item uses:
@@ -27,8 +27,12 @@ Each item uses:
 8. [Commit 7 — Storefront inventory stock](#commit-7--storefront-inventory-stock)
 9. [Commit 8 — Storefront cart promotions](#commit-8--storefront-cart-promotions)
 10. [Commit 9 — ts-node dependency](#commit-9--tsnode-dependency)
-11. [Files not committed](#files-not-committed)
-12. [Known remaining issues](#known-remaining-issues)
+11. [Commit 10 — Blog fallback images & article SEO fix](#commit-10--blog-fallback-images--article-seo-fix)
+12. [Commit 11 — Admin sidebar notification badges](#commit-11--admin-sidebar-notification-badges)
+13. [Commit 12 — Cart promo handling & solid header](#commit-12--cart-promo-handling--solid-header)
+14. [Commit 13 — This changelog document](#commit-13--this-changelog-document)
+15. [Files not committed](#files-not-committed)
+16. [Known remaining issues](#known-remaining-issues)
 
 ---
 
@@ -45,6 +49,10 @@ Each item uses:
 | 7 | `4e8d40b5` | feat(storefront): reflect Medusa inventory on product pages |
 | 8 | `e3629ea8` | fix(storefront): apply cart promotions via Medusa v2 promotions API |
 | 9 | `5b0aa88b` | chore(deps): add ts-node dev dependency |
+| 10 | `2dcef990` | fix(storefront): fix blog fallback images and article SEO composable |
+| 11 | `101797de` | feat(admin): add sidebar notification badges on extension menu |
+| 12 | `e07e49fb` | fix(storefront): improve cart promo handling and solid header on cart page |
+| 13 | `381e4311` | docs: add bilingual changelog for admin and storefront session |
 
 ---
 
@@ -747,9 +755,179 @@ Each item uses:
 
 ---
 
+## Commit 10 — Blog fallback images & article SEO fix
+
+**Commit:** `2dcef990`  
+**Files:** `apps/web/composables/useBlog.ts`, `apps/web/composables/useSeoStructuredData.ts`, `apps/web/utils/storefront.ts`
+
+### 10.1 Broken related-article images (blog.json fallback)
+
+**English**
+
+| **Before** | Store API returned 0 campaign posts, so the site used `content/blog.json`. Fallback code ignored each post's `thumbnail` field and always used `FALLBACK_POST_IMAGE` — an Unsplash URL that returns **404**. Related articles and blog cards showed broken images. |
+| **Changed** | `resolveBlogJsonImage()` maps known thumbnails to `/static/…` paths and rotates through local `/images/hero/*` and `/images/gallery/*` files. `FALLBACK_POST_IMAGE` changed to `/images/og-image.jpg`. |
+| **After** | Blog list and “Bài viết liên quan” show real images when API has no posts. Missing API inventory data still defaults to in-stock (see [issue #2](#known-remaining-issues)). |
+
+**Tiếng Việt**
+
+| **Trước** | API không có bài viết → dùng `blog.json`. Code fallback luôn gán URL Unsplash (404), bỏ qua `thumbnail` trong JSON → ảnh “Bài viết liên quan” bị vỡ. |
+| **Đã sửa** | `resolveBlogJsonImage()` trỏ tới `/static/…` hoặc ảnh local; `FALLBACK_POST_IMAGE` = `/images/og-image.jpg`. |
+| **Sau** | Danh sách tin và bài liên quan có ảnh khi chưa có post trên CMS. |
+
+---
+
+### 10.2 `/tin-tuc/[slug]` 500 crash (SEO composable)
+
+**English**
+
+| **Before** | `useArticleStructuredData()` called `useRequestURL()` **inside** a `computed()` callback in `useHead`. Nuxt composables must run during setup → article pages returned **500** and hung on skeleton UI. |
+| **Changed** | Call `useRequestURL()` once at composable top level; use `requestURL.origin` inside `computed`. Same fix applied to `useProductStructuredData()`. |
+| **After** | Article detail pages load normally; structured-data JSON-LD still includes correct page URL. |
+
+**Tiếng Việt**
+
+| **Trước** | Gọi `useRequestURL()` bên trong `computed()` → lỗi Nuxt → trang `/tin-tuc/...` **500**, treo skeleton. |
+| **Đã sửa** | Gọi `useRequestURL()` một lần lúc setup; dùng biến trong `computed`. |
+| **Sau** | Trang chi tiết bài viết load bình thường. |
+
+---
+
+## Commit 11 — Admin sidebar notification badges
+
+**Commit:** `101797de`  
+**Files:** `admin/lib/sidebar-badges.ts`, `admin/components/sidebar-badges/index.tsx`, `admin/widgets/sidebar-badges.tsx`, `admin/components/page-layout/index.tsx`, `api/admin/care-messages/route.ts`
+
+### 11.1 Unread count badges on Extensions menu
+
+**English**
+
+| **Before** | No visual indicator when new inquiries, event registrations, or failed care messages needed admin attention. Admin had to open each section manually. |
+| **Changed** | Polls counts every 30s and paints a small red number on the top-right of matching sidebar links. Tracks “last seen” count in `localStorage` per section; badge clears when admin opens that section. Re-shows when count rises above last seen. |
+| **After** | **Customer Inquiries** shows count of `status=new`. **Event Registrations** shows `status=new`. **Care Messages** shows `status=failed`. Badge disappears while on that page; returns if new items arrive later. |
+
+**Tiếng Việt**
+
+| **Trước** | Menu Extensions không báo có inquiry/đăng ký/tin nhắn mới — admin phải mở từng mục. |
+| **Đã sửa** | Số đỏ góc phải menu; lưu “đã xem” trong `localStorage`; vào mục thì ẩn; có thêm mới thì hiện lại. |
+| **Sau** | Inquiries / Event Registrations / Care Messages (failed) có badge số lượng chưa xử lý. |
+
+**Sections counted:**
+
+| Menu item | API filter |
+|-----------|------------|
+| Customer Inquiries | `GET /admin/inquiries?status=new&limit=1` → `count` |
+| Event Registrations | `GET /admin/event-registrations?status=new&limit=1` → `count` |
+| Care Messages | `GET /admin/care-messages?status=failed&limit=1` → `count` |
+
+---
+
+### 11.2 MutationObserver hang fix (first implementation bug)
+
+**English**
+
+| **Before** | Initial badge implementation used a `MutationObserver` on the whole sidebar. Painting badges modified the DOM → observer fired again → **infinite loop** → browser froze; **Customer Inquiries** page stuck on loading skeleton. |
+| **Changed** | Skip DOM writes when badge text unchanged; ignore mutations from `.tlcv-sidebar-badge` nodes; debounce paint with `requestAnimationFrame`; single shared observer with ref-count. |
+| **After** | Admin Extensions pages load normally; badges update without freezing the UI. |
+
+**Tiếng Việt**
+
+| **Trước** | Observer + sửa DOM badge → vòng lặp vô hạn → treo trình duyệt; trang Inquiries không load. |
+| **Đã sửa** | Chỉ sửa DOM khi số đổi; bỏ qua mutation của badge; debounce rAF; một observer dùng chung. |
+| **Sau** | Admin mượt; badge hoạt động không treo. |
+
+---
+
+### 11.3 Care messages `status` query filter
+
+**English**
+
+| **Before** | `GET /admin/care-messages` could not filter by `status` in query string. |
+| **Changed** | Added `status` to allowed filter keys on list route. |
+| **After** | Sidebar badge and admin list can filter failed messages efficiently. |
+
+**Tiếng Việt**
+
+| **Trước** | API care-messages không lọc theo `status`. |
+| **Đã sửa** | Thêm `status` vào filter list. |
+| **Sau** | Badge và list lọc tin failed được. |
+
+---
+
+## Commit 12 — Cart promo handling & solid header
+
+**Commit:** `e07e49fb`  
+**Files:** `apps/web/composables/useCart.ts`, `apps/web/pages/gio-hang.vue`, `apps/web/locales/en.json`, `apps/web/locales/vi.json`
+
+### 12.1 Automatic promotion `ssss` vs manual code entry
+
+**English**
+
+| **Before** | Promotion `ssss` is **automatic** (200,000 VND off eligible products). It applied correctly when cart had Sweatpants/Shorts, but manual entry of `SSSS` failed because codes were forced to **uppercase** and automatic promos cannot be applied via `/promotions` POST. UI showed red **“invalid”** while discount was already applied — confusing. |
+| **Changed** | Removed `uppercase` CSS on coupon input. `applyPromoCode()` preserves casing and retries lowercase on failure. If discount already applied, shows `cart.couponAlreadyApplied` instead of error. |
+| **After** | Automatic promo still discounts cart silently. Manual codes like `TEST10` work when promotion is **Active** (use exact/lowercase code). Re-clicking Apply with discount already on cart shows friendly message, not error. |
+
+**Tiếng Việt**
+
+| **Trước** | Khuyến mãi `ssss` tự động đã giảm giá, nhưng nhập `SSSS` báo **invalid** (uppercase + promo automatic). |
+| **Đã sửa** | Bỏ uppercase; thử lowercase; thông báo “đã áp dụng khuyến mãi” nếu giảm giá sẵn có. |
+| **Sau** | Automatic vẫn hoạt động; mã thủ công cần đúng chữ (vd. `TEST10` khi Active). |
+
+---
+
+### 12.2 Cart content overlapping navigation
+
+**English**
+
+| **Before** | On `/gio-hang`, header stayed transparent until ~50px scroll. Scrolling down made cart line items slide **under** the fixed nav — looked like product card overlapped menu. |
+| **Changed** | Cart page sets `useHeaderSolidThreshold()` to `-1` on mount so header is solid immediately; resets on leave. |
+| **After** | Cart rows no longer visually overlap navigation while scrolling. |
+
+**Tiếng Việt**
+
+| **Trước** | Header trong suốt → cuộn trang giỏ hàng → sản phẩm trượt dưới menu. |
+| **Đã sửa** | Trang giỏ ép header solid ngay (`threshold = -1`). |
+| **Sau** | Không còn chồng lên menu khi cuộn. |
+
+---
+
+### 12.3 i18n: `cart.couponAlreadyApplied`
+
+**English**
+
+| **Before** | No string for “promotion already on cart”. |
+| **Changed** | Added EN: “A promotion is already applied to this cart.” / VI: “Giỏ hàng đã được áp dụng khuyến mãi.” |
+| **After** | Clear UX when automatic promo already discounted the cart. |
+
+**Tiếng Việt**
+
+| **Trước** | Không có chuỗi “đã có khuyến mãi”. |
+| **Đã sửa** | Thêm key `cart.couponAlreadyApplied` EN/VI. |
+| **Sau** | Thông báo rõ khi giảm giá đã có sẵn. |
+
+---
+
+## Commit 13 — This changelog document
+
+**Commit:** `381e4311`  
+**Files:** `docs/CHANGELOG-ADMIN-STOREFRONT-2026-08-01.md`
+
+**English**
+
+| **Before** | No single bilingual document describing all session changes with before/change/after detail. |
+| **Changed** | Added this markdown file (EN + VI) covering commits 1–13, verification results, and known open issues. |
+| **After** | Team can review full scope of the `dev/be_medusajs_merge_review0729` work from one document. |
+
+**Tiếng Việt**
+
+| **Trước** | Không có tài liệu song ngữ tổng hợp mọi thay đổi phiên làm việc. |
+| **Đã sửa** | Thêm file markdown này (EN + VI) cho 13 commit + issue còn lại. |
+| **Sau** | Xem một file là nắm toàn bộ thay đổi trên nhánh review0729. |
+
+---
+
 ## Files not committed
 
-These were intentionally left out of the 9 commits:
+These were intentionally left out of all **13 commits**:
 
 | File / folder | Reason |
 |---------------|--------|
@@ -767,18 +945,21 @@ These were intentionally left out of the 9 commits:
 
 ## Known remaining issues
 
-Issues discussed during review but **not fixed** in these 9 commits:
+Issues discussed during review but **not fixed** in these 13 commits:
 
 | # | Issue | EN | VI |
 |---|-------|----|----|
 | 1 | Care channel detail API | `GET/PATCH /admin/care-channels/:id` still returns full secrets | API chi tiết vẫn trả credential đầy đủ |
-| 2 | Strict OOS when API omits qty | Current default treats missing `inventory_quantity` as in stock (may allow oversell if API never sends the field) | Thiếu field API vẫn coi còn hàng (có thể bán quá nếu API không gửi số) |
-| 3 | Category related collection widget | Stale UI after save (query key fixed; loader revalidation not added here) | Widget collection liên quan có thể cũ sau lưu |
+| 2 | Strict OOS when API omits qty | Default treats missing `inventory_quantity` as in stock (may allow oversell if API never sends the field) | Thiếu field API vẫn coi còn hàng (có thể bán quá nếu API không gửi số) |
+| 3 | Category related collection widget | Stale UI after save (query key fixed; loader revalidation not added) | Widget collection liên quan có thể cũ sau lưu |
 | 4 | Storefront product cap | Catalog may cap at 100 products in some views | Một số view giới hạn 100 sản phẩm |
 | 5 | Dual description editors | Products admin may have conflicting description UIs | Admin sản phẩm có thể trùng editor mô tả |
-| 6 | Promotion TEST10 | Draft promotion will not apply until set Active | Mã TEST10 draft chưa hoạt động |
-| 7 | Prod env defaults | Some weak default secrets/CORS settings flagged in security audit | Một số default prod/CORS còn yếu |
-| 8 | Backup job lock | In-memory lock is per-process; multi-replica prod may run concurrent backups | Lock backup theo process; multi-replica có thể chạy song song |
+| 6 | Promotion TEST10 | Draft promotion will not apply until set Active in admin | Mã TEST10 draft chưa hoạt động |
+| 7 | Automatic promo `ssss` | Applies only to configured products (e.g. Sweatpants/Shorts); cannot be entered manually as a code | `ssss` automatic — không nhập mã thủ công |
+| 8 | Navigation label encoding | One DB row had `Gi?i thi?u` — fixed live via admin API, not in git | Một menu “Giới thiệu” lỗi encoding — đã sửa trên DB, không trong commit |
+| 9 | Prod env defaults | Some weak default secrets/CORS settings flagged in security audit | Một số default prod/CORS còn yếu |
+| 10 | Backup job lock | In-memory lock is per-process; multi-replica prod may run concurrent backups | Lock backup theo process; multi-replica có thể chạy song song |
+| 11 | No campaign posts in CMS | Storefront still uses `blog.json` fallback until posts are created in Admin → Campaign Posts | Chưa có bài Campaign Posts → storefront dùng fallback JSON |
 
 ---
 
@@ -792,7 +973,24 @@ Issues discussed during review but **not fixed** in these 9 commits:
 | `GET /static/branding-favicon.png` (public) | 200 |
 | `GET /static/private-*-order-exports.csv` (no auth) | 401 |
 | Same export URL (admin session) | 200 |
+| `GET /tin-tuc/5-loai-tra-tot-cho-suc-khoe` after SEO fix | 200 |
+| `GET /admin/inquiries?status=new` count | 11+ (live DB) |
+| Cart automatic promo `ssss` on Sweatpants | −200,000 VND when eligible |
 
 ---
 
-*Generated from commits `00715693` through `5b0aa88b` on branch `dev/be_medusajs_merge_review0729`.*
+## Post-session fixes (included in commits 10–12)
+
+These issues were found during manual testing after the first 9 commits and are documented above:
+
+| Issue | Fixed in |
+|-------|----------|
+| Blog related-article broken images | Commit 10 |
+| `/tin-tuc/[slug]` 500 error | Commit 10 |
+| Admin Inquiries page hang (badge observer loop) | Commit 11 |
+| Cart nav overlap on scroll | Commit 12 |
+| Promo `SSSS` invalid while discount shown | Commit 12 |
+
+---
+
+*Generated from commits `00715693` through `381e4311` on branch `dev/be_medusajs_merge_review0729`. Last updated: 2026-08-01.*
