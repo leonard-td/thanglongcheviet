@@ -52,7 +52,7 @@ const mediaStyle = (image: string, blur: number) => ({
       <div class="home-mobile-banner__base-overlay" />
     </div>
 
-    <!-- Cột trái ~1/(1+φ) ≈ 38% (tỉ lệ vàng) -->
+    <!-- Khung ảnh canh giữa, rộng ~1/(1+φ) ≈ 38% (tỉ lệ vàng) -->
     <div class="home-mobile-banner__aside">
       <div
         class="home-mobile-banner__media"
@@ -110,11 +110,14 @@ const mediaStyle = (image: string, blur: number) => ({
     backdrop-filter: blur(8px);
   }
 
+  /* Khung ảnh canh giữa banner cho khớp `HomePageBackground` (khung đã dời từ
+     cột trái sang cột giữa); banner không có lưới cột nên chỉ canh giữa. */
   .home-mobile-banner__aside {
     position: absolute;
     top: 0;
-    left: 0;
+    left: 50%;
     bottom: 0;
+    transform: translateX(-50%);
     width: var(--home-bg-left-w);
     overflow: hidden;
   }
