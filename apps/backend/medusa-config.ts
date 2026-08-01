@@ -141,6 +141,7 @@ module.exports = defineConfig({
             id: "local",
             options: {
               upload_dir: "static",
+              private_upload_dir: ".private-exports",
               // LocalFileService serves uploads from the "static" dir under a
               // "/static" URL path (its own default is
               // "http://localhost:9000/static") — this was missing the

@@ -9,6 +9,9 @@ import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import multer from "multer"
 import os from "node:os"
 import path from "node:path"
+import { migratePrivateExportsFromStaticSync } from "../lib/private-exports/migrate"
+
+migratePrivateExportsFromStaticSync()
 
 export const GetCampaignPostsSchema = createFindParams()
 export const GetEventsSchema = createFindParams()
@@ -71,6 +74,11 @@ function rateLimit(name: string, max: number, windowMs: number) {
 
 export default defineMiddlewares({
   routes: [
+    {
+      matcher: "/static/private-*",
+      method: "GET",
+      middlewares: [authenticate("user", ["session", "bearer"])],
+    },
     {
       matcher: "/admin/events",
       method: "GET",

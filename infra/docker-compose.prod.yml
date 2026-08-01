@@ -124,6 +124,7 @@ services:
       # working dir) — named volume so uploads outlive redeploys, which wipe
       # and re-extract the surrounding .medusa/server artifact dir.
       - backend_static:/workspace/apps/backend/.medusa/server/static
+      - backend_private_exports:/workspace/apps/backend/.medusa/server/.private-exports
       # Backup zips (admin Settings > Backup writes to ./.backups under the
       # working dir) — named volume for the same redeploy-survival reason.
       - backend_backups:/workspace/apps/backend/.medusa/server/.backups
@@ -197,4 +198,5 @@ volumes:
   postgres_data:
   backend_server_node_modules:
   backend_static:
+  backend_private_exports:
   backend_backups:
