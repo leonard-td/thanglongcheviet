@@ -54,6 +54,34 @@ html.lenis body {
   pointer-events: none;
 }
 
+/* ── Trang chủ v3 ────────────────────────────────────────
+   Phạm vi bó trong wrapper .home-page-v3 (trang chủ "/"). */
+
+/* Rule trên chặn iframe SUỐT vòng đời Lenis (class `lenis-smooth` luôn có mặt),
+   khiến bản đồ Google Maps và video YouTube không bấm/kéo/zoom được. Ở v3 chỉ
+   chặn đúng lúc đang cuộn để iframe không nuốt sự kiện scroll. */
+.lenis.lenis-smooth .home-page-v3 iframe {
+  pointer-events: auto;
+}
+.lenis.lenis-scrolling .home-page-v3 iframe {
+  pointer-events: none;
+}
+
+/* Nhịp FAB 0.9s là khối chuyển động thứ 3 trong khung nhìn — giãn ra cho v3 để
+   chỉ còn marquee + card khuyến mãi thực sự thu hút mắt. */
+.home-page-v3 .fab {
+  animation-duration: 2.4s;
+}
+
+/* Nút "tạm dừng chuyển động" (WCAG 2.2.2). `!important` là bắt buộc: các rule
+   `:hover` tương ứng nằm trong <style scoped> của component, cùng specificity
+   nhưng được Vite inject SAU main.css. */
+.home-page-v3.motion-paused .home-marquee-track,
+.home-page-v3.motion-paused .promo-track,
+.home-page-v3.motion-paused .fab {
+  animation-play-state: paused !important;
+}
+
 /* ── Components ─────────────────────────────────── */
 @layer components {
   /* Container */

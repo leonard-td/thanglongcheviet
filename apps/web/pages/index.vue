@@ -1,7 +1,10 @@
 <script setup lang="ts">
-// Trang chủ clone từ v2 (theme Modis - "Select Preview").
-// CSS trong ~/assets/css, ảnh trong ~/assets/images — build bởi Vite.
-// layout: false để render standalone đúng như trang gốc v2.
+// Trang chủ (bản v3) — cải tiến từ bố cục cũ dựa trên `HomePillarList`:
+//   1. Lưới 3 cột phân bổ lại -> card đạt đúng 346px thay vì ~269px.
+//   2. Cột trái chia chiều cao bằng flex thay cho `max-height: 50vh` tuỳ tiện.
+//   3. Chỉ còn 2 khối chuyển động (marquee + card khuyến mãi) + nút tạm dừng thật.
+//   4. Sửa `--site-marquee-h` để cột trái sticky không chui dưới thanh marquee.
+// Bố cục cũ vẫn nằm ở `components/home/HomePillarList.vue` (hiện không dùng).
 definePageMeta({ layout: false })
 
 // Nền đặt trên lớp fixed riêng (không dùng body background-attachment:fixed)
@@ -12,80 +15,31 @@ useHead({
   ],
 })
 
-// Tablet/mobile: banner + marquee là cụm cố định ở đỉnh. Khi cuộn tới footer,
-// đẩy cả cụm lên để đáy cụm luôn nằm TRÊN đỉnh footer (không đè vào footer).
-onMounted(() => {
-  const mq = window.matchMedia('(max-width: 1023px)')
-  const sel = (s: string) => document.querySelector<HTMLElement>(s)
-  let banner = sel('.home-mobile-banner')
-  let marquee = sel('.home-marquee')
-  let footer = sel('.home-footer-wrap')
-
-  const update = () => {
-    banner ||= sel('.home-mobile-banner')
-    marquee ||= sel('.home-marquee')
-    footer ||= sel('.home-footer-wrap')
-    if (!banner || !marquee) return
-
-    if (!mq.matches) {
-      banner.style.transform = ''
-      marquee.style.transform = ''
-      return
-    }
-
-    if (!footer) return
-
-    const clusterBottom = banner.offsetHeight + marquee.offsetHeight
-    const footerTop = footer.getBoundingClientRect().top
-    const offset = Math.min(0, footerTop - clusterBottom)
-    const tf = offset < 0 ? `translateY(${offset}px)` : ''
-    banner.style.transform = tf
-    marquee.style.transform = tf
-  }
-
-  update()
-  window.addEventListener('scroll', update, { passive: true })
-  window.addEventListener('resize', update)
-  mq.addEventListener('change', update)
-
-  onUnmounted(() => {
-    window.removeEventListener('scroll', update)
-    window.removeEventListener('resize', update)
-    mq.removeEventListener('change', update)
-  })
-})
+const { paused } = useMotionPause()
 </script>
 
 <template>
-  <div id="wrapper" class="home-page">
+  <div id="wrapper" class="home-page home-page-v3" :class="{ 'motion-paused': paused }">
     <HomePageBackground :base-blur="0" :left-blur="0" />
 
-    <HomeNewsMarquee />
+    <HomeNewsMarquee motion-toggle slow />
 
     <div class="home-main">
       <HomeMobileTopBanner :base-blur="0" :left-blur="0" />
-      <div class="container text-center home-pillars-wrap">
-        <div class="row">
-          <div class="col-sm-2 col-sm-offset-2" />
-          <div class="col-sm-8 col-sm-offset-0">
-            <HomePillarList />
-          </div>
-        </div>
+      <div class="home-pillars-wrap">
+        <!-- Nút ngôn ngữ + widget liên hệ nằm trong cột giữa của lưới này -->
+        <HomeV3PillarList />
       </div>
-
-    
     </div>
-    <WidgetsConnectWidget />
-    <!-- <div class="home-footer-wrap">
-      <LayoutAppFooter />
-    </div> -->
   </div>
 </template>
 
 <style scoped>
 .home-page {
-  --site-marquee-h: 0px;
   --home-marquee-h: 34px;
+  /* Bố cục cũ khai báo 0px trong khi thanh marquee cao thật 34px, khiến offset
+     sticky của cột trái sai và cột trái trượt chui xuống dưới thanh. */
+  --site-marquee-h: var(--home-marquee-h);
   --home-banner-h: 0px;
   min-height: 100vh;
   min-height: 100dvh;
@@ -105,8 +59,11 @@ onMounted(() => {
 }
 
 @media (max-width: 1023px) {
+  /* Bố cục cũ dùng `clamp(126px, 7vh, 210px)`: 7vh chỉ vượt 126px khi viewport
+     cao hơn 1800px, nên trên thực tế luôn dính đúng 126px. Đổi sang 18vh để
+     clamp co giãn thật. */
   .home-page {
-    --home-banner-h: clamp(126px, 7vh, 210px);
+    --home-banner-h: clamp(120px, 18vh, 200px);
   }
 
   .home-page :deep(.home-mobile-banner) {
@@ -120,7 +77,7 @@ onMounted(() => {
 
 @media (min-width: 768px) and (max-width: 1023px) {
   .home-page {
-    --home-banner-h: clamp(140px, 7vh, 224px);
+    --home-banner-h: clamp(140px, 20vh, 224px);
   }
 }
 
@@ -130,38 +87,25 @@ onMounted(() => {
   }
 }
 
+/* KHÔNG đặt `z-index` ở đây: `z-index: 1` (bản cũ) biến khối này thành một
+   stacking context, và banner mobile cố định ở đỉnh có `z-index: 5` nên sẽ đè
+   lên TOÀN BỘ cây con — kể cả nút ngôn ngữ `position: fixed; z-index: 1000`
+   trong cột giữa, khiến nút biến mất dưới 1024px. `.home-main` bọc ngoài đã có
+   `z-index: 1` để nằm trên lớp nền (`z-index: 0`) nên ở đây chỉ cần
+   `position: relative` làm containing block cho cột giữa. */
 .home-pillars-wrap {
   position: relative;
-  z-index: 1;
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 
 @media (max-width: 1023px) {
-  .home-pillars-wrap.container {
-    max-width: none;
+  .home-pillars-wrap {
     padding-left: 0;
     padding-right: 0;
   }
-
-  .home-pillars-wrap.container :deep(.row) {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .home-pillars-wrap :deep(.col-md-8),
-  .home-pillars-wrap :deep([class*="col-md-offset"]) {
-    width: 100%;
-    float: none;
-    margin-left: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
-}
-
-.home-footer-wrap {
-  position: relative;
-  z-index: 1;
-  flex-shrink: 0;
-  clear: both;
-  margin-top: auto;
 }
 </style>

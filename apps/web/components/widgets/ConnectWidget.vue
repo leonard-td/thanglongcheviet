@@ -2,6 +2,18 @@
 // Cột icon kênh liên lạc (Zalo, Facebook, Instagram) hiện thường trực, cố định
 // góc dưới bên trái — không cần bấm gì để thấy. Nút FAB bên dưới chỉ dùng để
 // mở form "Để lại thông tin".
+const props = withDefaults(defineProps<{
+  /**
+   * Nằm trong cột giữa trang chủ: bỏ `position: fixed` của chính widget để
+   * wrapper `.home-center-dock` (sticky) lo việc ghim đáy màn hình, còn dải
+   * icon vẫn nằm NGANG như mặc định. Cột giữa chỉ có chỗ từ 1440px nên biến
+   * thể này cũng chỉ đổi vị trí từ ngưỡng đó.
+   */
+  inline?: boolean
+}>(), {
+  inline: false,
+})
+
 const { t } = useI18n()
 const { social } = useSettings()
 const { setOpen, closeEpoch } = useUiOverlay()
@@ -70,7 +82,11 @@ async function submit() {
 </script>
 
 <template>
-  <div ref="root" class="connect" :class="{ 'above-buybar': quickBuyBarActive }">
+  <div
+    ref="root"
+    class="connect"
+    :class="{ 'above-buybar': quickBuyBarActive, 'is-inline': props.inline }"
+  >
     <!-- Panel: chỉ còn form "Để lại thông tin" -->
     <Transition name="cpop">
       <div v-if="open" class="panel" role="dialog" :aria-label="t('connect.leaveInfo')">
@@ -407,6 +423,27 @@ async function submit() {
 .cpop-leave-to {
   opacity: 0;
   transform: translateY(12px) scale(.97);
+}
+
+/* ── Biến thể inline: nằm trong cột giữa trang chủ ──
+   Giữ nguyên dải icon nằm ngang và form mở lên trên; chỉ nhả `position: fixed`
+   để wrapper sticky của cột giữa quyết định vị trí ngang. Cột giữa chỉ được
+   cấp chỗ từ 1440px (xem `HomeV3PillarList`), hẹp hơn thì widget vẫn nổi ở góc
+   dưới bên trái như mọi trang khác. */
+@media (min-width: 1440px) {
+  .connect.is-inline,
+  .connect.is-inline.above-buybar {
+    position: relative;
+    left: auto;
+    bottom: auto;
+  }
+
+  /* Panel rộng 280px, dải icon ~222px -> canh giữa dải thay vì căn mép trái.
+     `margin-left` chứ không `transform`, vì transform sẽ đè transition .cpop. */
+  .connect.is-inline .panel {
+    left: 50%;
+    margin-left: -140px;
+  }
 }
 
 @media (max-width: 480px) {
