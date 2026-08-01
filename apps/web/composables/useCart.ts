@@ -42,7 +42,7 @@ interface MedusaCart {
   promotions?: { id: string, code: string }[]
 }
 
-const CART_FIELDS = '*items,*promotions'
+const CART_FIELDS = '*items,*promotions,discount_total,item_subtotal,shipping_total,total'
 
 function mapLineItem(item: MedusaLineItem): CartItem {
   return {
@@ -66,6 +66,7 @@ function mapLineItem(item: MedusaLineItem): CartItem {
       collectionId: null,
       collectionName: '',
       inStock: true,
+      quickAddInStock: true,
       variants: [],
       options: [],
       material: null,
@@ -196,13 +197,16 @@ export function useCart() {
     loading.value = true
     try {
       const current = await ensureCart()
-      const codes = [...new Set([...promoCodes.value, code.trim().toUpperCase()])]
-      const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${current.id}?fields=${CART_FIELDS}`, {
-        method: 'POST',
-        body: { promo_codes: codes },
-      })
+      const normalized = code.trim().toUpperCase()
+      const res = await fetchMedusa<{ cart: MedusaCart }>(
+        `/store/carts/${current.id}/promotions?fields=${CART_FIELDS}`,
+        {
+          method: 'POST',
+          body: { promo_codes: [normalized] },
+        },
+      )
       applyCart(res.cart)
-      const appliedNow = promoCodes.value.includes(code.trim().toUpperCase())
+      const appliedNow = promoCodes.value.includes(normalized)
       return appliedNow
         ? { success: true as const, discount: totals.value.discount }
         : { success: false as const, message: t('cart.couponInvalid') }
@@ -217,11 +221,13 @@ export function useCart() {
     if (!cart.value) return
     loading.value = true
     try {
-      const codes = promoCodes.value.filter(c => c !== code)
-      const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${cart.value.id}?fields=${CART_FIELDS}`, {
-        method: 'POST',
-        body: { promo_codes: codes },
-      })
+      const res = await fetchMedusa<{ cart: MedusaCart }>(
+        `/store/carts/${cart.value.id}/promotions?fields=${CART_FIELDS}`,
+        {
+          method: 'DELETE',
+          body: { promo_codes: [code] },
+        },
+      )
       applyCart(res.cart)
     } catch (err) {
       console.error('Failed to remove promo code', err)
