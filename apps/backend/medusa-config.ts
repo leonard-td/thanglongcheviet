@@ -112,6 +112,9 @@ module.exports = defineConfig({
   plugins: [],
   modules: [
     {
+      resolve: "@medusajs/medusa/rbac",
+    },
+    {
       resolve: "./src/modules/campaign",
     },
     {
@@ -153,4 +156,7 @@ module.exports = defineConfig({
       },
     },
   ],
+  featureFlags: {
+    rbac: true,
+  },
 })
