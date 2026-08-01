@@ -18,11 +18,12 @@ export const CreateNavigationItemSchema = NavigationFieldsSchema.partial({
   is_active: true,
 }).strict()
 
-export const UpdateNavigationItemSchema = NavigationFieldsSchema.partial()
-  .strict()
-  .refine((value) => Object.keys(value).length > 0, {
+export const UpdateNavigationItemSchema = NavigationFieldsSchema.partial().refine(
+  (value) => Object.keys(value).length > 0,
+  {
     message: "At least one navigation field must be provided",
-  })
+  }
+)
 
 export const validateNavigationInput = <T>(
   schema: z.ZodType<T>,
