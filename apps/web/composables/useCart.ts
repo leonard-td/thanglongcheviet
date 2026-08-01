@@ -42,7 +42,7 @@ interface MedusaCart {
   promotions?: { id: string, code: string }[]
 }
 
-const CART_FIELDS = '*items,*promotions,discount_total,item_subtotal,shipping_total,total'
+const CART_FIELDS = 'region_id,*items,*promotions,discount_total,item_subtotal,shipping_total,total'
 
 function mapLineItem(item: MedusaLineItem): CartItem {
   return {
@@ -88,7 +88,10 @@ export function useCart() {
   const toast = useState<string | null>('cart_toast', () => null)
 
   const applyCart = (medusaCart: MedusaCart) => {
-    cart.value = { id: medusaCart.id, region_id: medusaCart.region_id }
+    cart.value = {
+      id: medusaCart.id,
+      region_id: medusaCart.region_id ?? cart.value?.region_id ?? regionId,
+    }
     items.value = (medusaCart.items ?? []).map(mapLineItem)
     totals.value = {
       subtotal: medusaCart.item_subtotal ?? 0,
@@ -277,8 +280,13 @@ export function useCart() {
 
       // Use a country that actually belongs to the cart's region ('vn' once
       // the Vietnam region is seeded; the demo seed only has EU countries).
+      const checkoutRegionId = current.region_id || regionId
+      if (!checkoutRegionId) {
+        throw new Error('Store region is not configured')
+      }
+
       const { region } = await fetchMedusa<{ region: { countries: { iso_2: string }[] } }>(
-        `/store/regions/${current.region_id}`,
+        `/store/regions/${checkoutRegionId}`,
       )
       const countryCode = region.countries.find(c => c.iso_2 === 'vn')?.iso_2
         ?? region.countries[0]?.iso_2
