@@ -80,6 +80,10 @@ module.exports = defineConfig({
       : {}),
   },
   admin: {
+    // Don't bake MEDUSA_BACKEND_URL into the dashboard login client — empty
+    // baseUrl makes @medusajs/js-sdk use window.location.origin, so /app works
+    // whether you open it via localhost, a LAN IP, or a real domain behind nginx.
+    backendUrl: "",
     vite: () => ({
       server: {
         allowedHosts: true,
