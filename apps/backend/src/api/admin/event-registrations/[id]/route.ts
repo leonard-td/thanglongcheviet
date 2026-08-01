@@ -89,7 +89,18 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     }
   )
 
-  res.json({ event_registration: registration })
+  let event: { id: string; title: string; slug: string } | null = null
+  if (registration.event_id) {
+    const events = await eventModuleService.listEvents(
+      { id: registration.event_id },
+      { take: 1 }
+    )
+    if (events.length) {
+      event = { id: events[0].id, title: events[0].title, slug: events[0].slug }
+    }
+  }
+
+  res.json({ event_registration: { ...registration, event } })
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {

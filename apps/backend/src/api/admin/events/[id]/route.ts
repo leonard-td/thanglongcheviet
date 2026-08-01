@@ -107,7 +107,11 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     })
   })
 
-  res.json({ event })
+  const seatsByEvent = await eventModuleService.countRegisteredSeats([id])
+
+  res.json({
+    event: { ...event, registered_seats: seatsByEvent.get(id) ?? 0 },
+  })
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {

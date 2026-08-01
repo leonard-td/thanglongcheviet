@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../utils/zod-validator"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
 import { parsePagination } from "../../utils/pagination"
@@ -69,7 +70,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const body = ReplySchema.parse(req.body)
+  const body = await zodValidator(ReplySchema, req.body)
 
   const care_message = await service.sendMessage(body.channel_id, {
     text: body.content,
