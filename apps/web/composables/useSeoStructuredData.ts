@@ -2,13 +2,13 @@ import type { BlogPost, Product } from '~/utils/storefront'
 
 export function useProductStructuredData(product: Ref<Product | null>) {
   const route = useRoute()
+  const requestURL = useRequestURL()
 
   useHead({
     script: computed(() => {
       if (!product.value) return []
 
-      const baseUrl = useRequestURL().origin
-      const pageUrl = `${baseUrl}${route.path}`
+      const pageUrl = `${requestURL.origin}${route.path}`
 
       return [{
         type: 'application/ld+json',
@@ -36,14 +36,14 @@ export function useProductStructuredData(product: Ref<Product | null>) {
 
 export function useArticleStructuredData(post: Ref<BlogPost | null | undefined>) {
   const route = useRoute()
+  const requestURL = useRequestURL()
   const { site } = useSettings()
 
   useHead({
     script: computed(() => {
       if (!post.value) return []
 
-      const baseUrl = useRequestURL().origin
-      const pageUrl = `${baseUrl}${route.path}`
+      const pageUrl = `${requestURL.origin}${route.path}`
 
       return [{
         type: 'application/ld+json',
