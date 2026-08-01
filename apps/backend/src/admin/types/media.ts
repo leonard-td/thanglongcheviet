@@ -12,7 +12,13 @@ export type MediaFolderItem = {
 }
 
 export type UsageEntry = {
-  kind: "card" | "campaign_post"
+  kind:
+    | "card"
+    | "campaign_post"
+    | "campaign_topic"
+    | "site_settings"
+    | "event"
+    | "product"
   id: string
   label: string
 }

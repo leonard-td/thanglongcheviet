@@ -38,7 +38,7 @@ const EventsPage = () => {
           offset,
         },
       }),
-    queryKey: [["events", limit, offset]],
+    queryKey: ["events", limit, offset],
   })
 
   const columnHelper = createDataTableColumnHelper<AppEvent>()

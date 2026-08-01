@@ -67,7 +67,7 @@ const MediaPage = () => {
   const refreshLibrary = () => {
     queryClient.invalidateQueries({ queryKey: ["media-lib"] })
     // The card thumbnail picker shares the same underlying table.
-    queryClient.invalidateQueries({ queryKey: [["card-media"]] })
+    queryClient.invalidateQueries({ queryKey: ["card-media"] })
   }
 
   // --- upload ---------------------------------------------------------------
@@ -365,14 +365,14 @@ const MediaPage = () => {
                     <DropdownMenu.Content align="end">
                       <DropdownMenu.Item onClick={() => startRenameFolder(f)}>
                         <Pencil className="mr-1" />
-                        {/* {t("mediaLib.renameFolder")} */}
+                        {t("mediaLib.renameFolder")}
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
                         className="text-ui-fg-error"
                         onClick={() => handleDeleteFolder(f)}
                       >
                         <Trash className="mr-1" />
-                        {/* {t("mediaLib.deleteFolder")} */}
+                        {t("mediaLib.deleteFolder")}
                       </DropdownMenu.Item>
                     </DropdownMenu.Content>
                   </DropdownMenu>

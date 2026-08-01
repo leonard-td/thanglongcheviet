@@ -18,6 +18,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRevalidator,
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import PageLayout from "../../../components/page-layout"
@@ -60,6 +61,7 @@ const EventRegistrationDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const prompt = usePrompt()
+  const revalidator = useRevalidator()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const { event_registration: registration } = useLoaderData() as Awaited<
@@ -79,6 +81,7 @@ const EventRegistrationDetailPage = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-registrations"] })
+      revalidator.revalidate()
     },
   })
 

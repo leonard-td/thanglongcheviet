@@ -1,4 +1,4 @@
-import { Button } from "@medusajs/ui"
+import { Button, FocusModal, Input, Label } from "@medusajs/ui"
 import type { Editor } from "@tiptap/react"
 import { useRef, useState } from "react"
 import MediaPickerModal from "../media-picker-modal"
@@ -76,33 +76,39 @@ const ToolbarButton = ({
 const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
   const colorInputRef = useRef<HTMLInputElement>(null)
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
+  const [urlDialog, setUrlDialog] = useState<{
+    open: boolean
+    mode: "link" | "youtube"
+    value: string
+  }>({ open: false, mode: "link", value: "" })
 
-  const setLink = () => {
+  const openLinkDialog = () => {
     const previousUrl = editor.getAttributes("link").href as string | undefined
-    const url = window.prompt("Link URL", previousUrl ?? "https://")
-
-    if (url === null) {
-      return
-    }
-
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run()
-      return
-    }
-
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+    setUrlDialog({ open: true, mode: "link", value: previousUrl ?? "https://" })
   }
 
-  const setYoutubeVideo = () => {
-    const url = window.prompt("Youtube URL")
+  const openYoutubeDialog = () => {
+    setUrlDialog({ open: true, mode: "youtube", value: "" })
+  }
 
-    if (url) {
+  const applyUrlDialog = () => {
+    const url = urlDialog.value.trim()
+
+    if (urlDialog.mode === "link") {
+      if (url === "") {
+        editor.chain().focus().extendMarkRange("link").unsetLink().run()
+      } else {
+        editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run()
+      }
+    } else if (url) {
       editor.commands.setYoutubeVideo({
         src: url,
         width: 640,
         height: 480,
       })
     }
+
+    setUrlDialog({ open: false, mode: "link", value: "" })
   }
 
   const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -326,7 +332,7 @@ const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
         <ToolbarButton
           title="Add link"
           active={editor.isActive("link")}
-          onClick={setLink}
+          onClick={openLinkDialog}
         >
           <Link size={16} />
         </ToolbarButton>
@@ -345,7 +351,7 @@ const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
         </ToolbarButton>
         <ToolbarButton
           title="Insert Youtube"
-          onClick={setYoutubeVideo}
+          onClick={openYoutubeDialog}
         >
           <Video size={16} color="red" />
         </ToolbarButton>
@@ -392,6 +398,61 @@ const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
         onOpenChange={setMediaPickerOpen}
         onSelect={(url) => editor.chain().focus().setImage({ src: url }).run()}
       />
+
+      <FocusModal
+        open={urlDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setUrlDialog({ open: false, mode: "link", value: "" })
+          }
+        }}
+      >
+        <FocusModal.Content>
+          <FocusModal.Header>
+            <FocusModal.Title>
+              {urlDialog.mode === "link" ? "Link URL" : "Youtube URL"}
+            </FocusModal.Title>
+          </FocusModal.Header>
+          <FocusModal.Body className="flex flex-col gap-y-4 p-6">
+            <div className="flex flex-col gap-y-2">
+              <Label htmlFor="tiptap-url-input">URL</Label>
+              <Input
+                id="tiptap-url-input"
+                value={urlDialog.value}
+                placeholder={
+                  urlDialog.mode === "link" ? "https://example.com" : "https://youtube.com/watch?v=..."
+                }
+                onChange={(event) =>
+                  setUrlDialog((current) => ({
+                    ...current,
+                    value: event.target.value,
+                  }))
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault()
+                    applyUrlDialog()
+                  }
+                }}
+              />
+            </div>
+            <div className="flex justify-end gap-x-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  setUrlDialog({ open: false, mode: "link", value: "" })
+                }
+              >
+                Cancel
+              </Button>
+              <Button type="button" variant="primary" onClick={applyUrlDialog}>
+                Apply
+              </Button>
+            </div>
+          </FocusModal.Body>
+        </FocusModal.Content>
+      </FocusModal>
     </div>
   )
 }

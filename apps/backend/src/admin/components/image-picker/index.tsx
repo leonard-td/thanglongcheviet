@@ -26,14 +26,14 @@ const ImagePicker = ({ value, onChange }: ImagePickerProps) => {
 
   const { data, isLoading } = useQuery<{ media: CardMediaItem[] }>({
     queryFn: () => sdk.client.fetch("/admin/cards/media"),
-    queryKey: [["card-media"]],
+    queryKey: ["card-media"],
     enabled: open,
   })
 
   const { mutateAsync: recordMedia } = useMutation({
     mutationFn: (body: { url: string, filename?: string | null }) =>
       sdk.client.fetch("/admin/cards/media", { method: "POST", body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [["card-media"]] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["card-media"] }),
   })
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {

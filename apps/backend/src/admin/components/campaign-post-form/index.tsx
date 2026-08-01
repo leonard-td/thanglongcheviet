@@ -95,7 +95,7 @@ const CampaignPostForm = ({
       sdk.client.fetch("/admin/campaign-topics", {
         query: { limit: 100 },
       }),
-    queryKey: [["campaign-topics", "select-options"]],
+    queryKey: ["campaign-topics", "select-options"],
   })
 
   const topics = topicsData?.campaign_topics ?? []

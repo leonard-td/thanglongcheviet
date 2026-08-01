@@ -71,6 +71,29 @@ const BackupSettingsPage = () => {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY })
 
+  const downloadBackup = async (fileName: string) => {
+    try {
+      const response = await fetch(
+        `/admin/backup/files/${encodeURIComponent(fileName)}`,
+        { credentials: "include" }
+      )
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = url
+      anchor.download = fileName
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error(t("backup.toasts.requestFailed"))
+    }
+  }
+
   const onApiError = (e: unknown) => {
     const status = (e as { status?: number })?.status
     toast.error(
@@ -284,14 +307,7 @@ const BackupSettingsPage = () => {
                         </DropdownMenu.Trigger>
                         <DropdownMenu.Content>
                           <DropdownMenu.Item
-                            onClick={() =>
-                              window.open(
-                                `/admin/backup/files/${encodeURIComponent(
-                                  backup.file_name
-                                )}`,
-                                "_blank"
-                              )
-                            }
+                            onClick={() => downloadBackup(backup.file_name)}
                           >
                             {t("backup.actions.download")}
                           </DropdownMenu.Item>

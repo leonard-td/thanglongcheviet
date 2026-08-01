@@ -11,7 +11,7 @@ import {
 } from "@medusajs/ui"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { JSONContent } from "@tiptap/core"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import ImagePicker from "../../../components/image-picker"
 import PageHeader from "../../../components/page-header"
@@ -50,7 +50,7 @@ const StoreInfoPage = () => {
 
   const { data } = useQuery<SiteSettingsResponse>({
     queryFn: () => sdk.client.fetch("/admin/site-settings"),
-    queryKey: [["site-settings"]],
+    queryKey: ["site-settings"],
   })
 
   const { data: collectionsData } = useQuery<{
@@ -60,7 +60,7 @@ const StoreInfoPage = () => {
       sdk.client.fetch("/admin/collections", {
         query: { limit: 100, fields: "id,title" },
       }),
-    queryKey: [["collections", "store-info-options"]],
+    queryKey: ["collections", "store-info-options"],
   })
 
   const [storeName, setStoreName] = useState("")
@@ -78,13 +78,19 @@ const StoreInfoPage = () => {
   const [aboutThumbnail, setAboutThumbnail] = useState("")
   const [aboutContent, setAboutContent] = useState<JSONContent | null>(null)
   const [aboutCollectionId, setAboutCollectionId] = useState("")
-  const [loadedId, setLoadedId] = useState<string | null>(null)
+  const lastSyncedRef = useRef<string | null>(null)
 
   useEffect(() => {
     const settings = data?.site_settings
-    if (!settings || settings.id === loadedId) {
+    if (!settings) {
       return
     }
+
+    const fingerprint = JSON.stringify(settings)
+    if (fingerprint === lastSyncedRef.current) {
+      return
+    }
+
     setStoreName(settings.store_name ?? "")
     setEmail(settings.email ?? "")
     setPhone(settings.phone ?? "")
@@ -100,14 +106,14 @@ const StoreInfoPage = () => {
     setAboutThumbnail(settings.about_thumbnail ?? "")
     setAboutContent(settings.about_content ?? null)
     setAboutCollectionId(settings.about_collection_id ?? "")
-    setLoadedId(settings.id)
-  }, [data, loadedId])
+    lastSyncedRef.current = fingerprint
+  }, [data])
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       sdk.client.fetch("/admin/site-settings", { method: "POST", body }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [["site-settings"]] })
+      queryClient.invalidateQueries({ queryKey: ["site-settings"] })
     },
   })
 
@@ -299,7 +305,7 @@ const StoreInfoPage = () => {
         <div className="flex flex-col gap-y-2">
           <Label>{t("storeInfo.fields.aboutContent")}</Label>
           <TiptapEditor
-            editorKey={loadedId ?? "loading"}
+            editorKey={data?.site_settings?.id ?? "loading"}
             value={aboutContent}
             onChange={setAboutContent}
           />
