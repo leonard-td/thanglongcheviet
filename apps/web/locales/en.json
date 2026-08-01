@@ -215,6 +215,7 @@
     "couponPlaceholder": "Enter coupon code",
     "couponApply": "Apply",
     "couponApplied": "Discount {amount}",
+    "couponAlreadyApplied": "A promotion is already applied to this cart.",
     "couponInvalid": "Invalid coupon",
     "couponError": "Could not validate coupon.",
     "discount": "Discount",

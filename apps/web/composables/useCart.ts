@@ -197,19 +197,40 @@ export function useCart() {
     loading.value = true
     try {
       const current = await ensureCart()
-      const normalized = code.trim().toUpperCase()
-      const res = await fetchMedusa<{ cart: MedusaCart }>(
-        `/store/carts/${current.id}/promotions?fields=${CART_FIELDS}`,
-        {
-          method: 'POST',
-          body: { promo_codes: [normalized] },
-        },
-      )
+      const normalized = code.trim()
+      const beforeDiscount = totals.value.discount
+
+      const tryApply = (promoCode: string) =>
+        fetchMedusa<{ cart: MedusaCart }>(
+          `/store/carts/${current.id}/promotions?fields=${CART_FIELDS}`,
+          {
+            method: 'POST',
+            body: { promo_codes: [promoCode] },
+          },
+        )
+
+      let res: { cart: MedusaCart }
+      try {
+        res = await tryApply(normalized)
+      } catch (firstErr) {
+        // Medusa codes are often lowercase (e.g. "ssss"); retry once if casing differs.
+        const lower = normalized.toLowerCase()
+        if (lower !== normalized) {
+          res = await tryApply(lower)
+        } else {
+          throw firstErr
+        }
+      }
+
       applyCart(res.cart)
-      const appliedNow = promoCodes.value.includes(normalized)
-      return appliedNow
-        ? { success: true as const, discount: totals.value.discount }
-        : { success: false as const, message: t('cart.couponInvalid') }
+      const codeApplied = promoCodes.value.some(
+        c => c.toLowerCase() === normalized.toLowerCase(),
+      )
+      const discountIncreased = totals.value.discount > beforeDiscount
+      if (codeApplied || discountIncreased) {
+        return { success: true as const, discount: totals.value.discount }
+      }
+      return { success: false as const, message: t('cart.couponInvalid') }
     } catch (err) {
       return { success: false as const, message: parseApiError(err, t('cart.couponInvalid')) }
     } finally {
