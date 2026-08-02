@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
-import { zodValidator } from "@medusajs/framework"
+import { zodValidator } from "../../../../utils/zod-validator"
 import { CARD_MODULE } from "../../../../../modules/card"
 import type CardModuleService from "../../../../../modules/card/service"
 

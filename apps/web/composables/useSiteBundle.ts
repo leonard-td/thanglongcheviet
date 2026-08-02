@@ -21,6 +21,20 @@ const localFallback: SiteBundle = {
   testimonials: fallbackTestimonials,
 }
 
+/**
+ * Admin stores hours as a single text string (e.g. "08:00 – 21:00" or
+ * "T2–T6: 08:00–21:00, T7–CN: 08:00–22:00"). Parse it into the array
+ * shape the footer/contact page expects. Falls back to the local JSON
+ * when the string is empty or unparseable.
+ */
+function parseHours(
+  raw: string | null | undefined,
+  fallback: { days: { vi: string, en: string }, time: string }[],
+) {
+  if (!raw || typeof raw !== 'string' || !raw.trim()) return fallback
+  return [{ days: { vi: raw.trim(), en: raw.trim() }, time: '' }]
+}
+
 /** Avoid spamming the same Store 400 across header/footer/plugin mounts. */
 let siteSettingsWarnOnce = false
 
@@ -52,10 +66,11 @@ export function useSiteBundle() {
               : localFallback.settings.contact.address,
             phone: remoteSettings.phone || localFallback.settings.contact.phone,
             phoneDisplay: remoteSettings.phone || localFallback.settings.contact.phoneDisplay,
-            mobile: remoteSettings.phone || localFallback.settings.contact.mobile,
+            mobile: localFallback.settings.contact.mobile,
             email: remoteSettings.email || localFallback.settings.contact.email,
+            mapEmbed: remoteSettings.google_map_url || localFallback.settings.contact.mapEmbed,
           },
-          hours: remoteSettings.hours || localFallback.settings.hours,
+          hours: parseHours(remoteSettings.open_hours, localFallback.settings.hours),
           social: {
             ...localFallback.settings.social,
             facebook: remoteSettings.facebook_url || localFallback.settings.social.facebook,

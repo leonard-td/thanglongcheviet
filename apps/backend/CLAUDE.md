@@ -56,3 +56,35 @@ route through `useTranslation()` + a key in both `vi.json`/`en.json` (see the
 existing `campaign-posts`, `campaign-topics`, `cards`, `mediaLib` namespaces
 for the pattern). Never inline an English or Vietnamese string directly in a
 `.tsx` file.
+
+# Product admin extensions
+
+Two widgets extend the core product detail page (both use `HttpTypes.AdminProduct`
+as `data`, both translate through the `productDescription`/`productDuplicate`
+i18n namespaces per the rule above):
+
+- `src/admin/widgets/product-description.tsx` (zone `product.details.after`) —
+  rich-text (TipTap) editor that saves HTML straight into the core
+  `product.description` field via `sdk.admin.product.update(id, { description })`.
+  Medusa's built-in Description textarea still renders above it (core form
+  fields can't be removed by a widget) — this widget is the one to use for
+  actually-formatted content; the storefront already renders `description`
+  with `v-html`, so no Nuxt-side change is needed when editing it.
+- `src/admin/widgets/product-duplicate.tsx` (zone `product.details.side.after`)
+  — calls the custom `POST /admin/products/:id/duplicate` route
+  (`src/api/admin/products/[id]/duplicate/route.ts`), then navigates to the
+  new product. That route clones every field pulled via `query.graph`
+  (options, variants, prices, images, categories/tags, sales channels,
+  shipping profile) but:
+  - always creates the copy as `status: "draft"`;
+  - regenerates `handle` as `<original>-copy`, `-copy-2`, `-copy-3`, … since
+    handle is unique — check `generateUniqueHandle` before changing the
+    suffix scheme;
+  - deliberately drops SKU/barcode-type fields so the copy doesn't collide on
+    those unique constraints; the user re-enters them on the new product.
+
+Storefront category/collection data these widgets don't touch: linking a
+product category to a curated collection banner is done by admins setting
+`metadata.related_collection_id` on the **category** (read by the storefront's
+`useProducts().relatedCollectionIdByCategory`) — there's no dedicated UI field
+for it yet, it's a raw metadata key.

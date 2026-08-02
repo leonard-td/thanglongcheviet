@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
-import { zodValidator } from "@medusajs/framework"
+import { zodValidator } from "../../../utils/zod-validator"
 import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
 import type CampaignModuleService from "../../../../modules/campaign/service"
 import { toRelativeMediaUrl } from "../../../utils/media-url"

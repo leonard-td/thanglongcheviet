@@ -9,7 +9,7 @@ export function useSeoHreflang() {
 
   useHead({
     link: computed(() => {
-      const links = locales.value.map((loc) => ({
+      const links: { rel: string, hreflang: string, href: string }[] = locales.value.map((loc) => ({
         rel: 'alternate',
         hreflang: loc.code,
         href: `${siteUrl}${switchLocalePath(loc.code)}`,

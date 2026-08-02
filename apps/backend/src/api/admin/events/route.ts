@@ -1,6 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
-import { zodValidator } from "@medusajs/framework"
+import { zodValidator } from "../../utils/zod-validator"
 import { EVENT_MODULE } from "../../../modules/event"
 import type EventModuleService from "../../../modules/event/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../utils/media-url"

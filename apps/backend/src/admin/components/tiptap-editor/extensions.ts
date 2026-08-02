@@ -1,3 +1,4 @@
+import type { JSONContent } from "@tiptap/core"
 import Color from "@tiptap/extension-color"
 import Highlight from "@tiptap/extension-highlight"
 import Image from "@tiptap/extension-image"
@@ -67,7 +68,7 @@ export const getCampaignEditorExtensions = (): Extensions => [
   }),
 ]
 
-export const EMPTY_TIPTAP_DOC = {
+export const EMPTY_TIPTAP_DOC: JSONContent = {
   type: "doc",
   content: [{ type: "paragraph" }],
-} as const
+}

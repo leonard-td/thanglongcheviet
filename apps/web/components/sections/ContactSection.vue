@@ -84,7 +84,7 @@ const localText = (field: Record<string, string> | undefined) =>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
 
         <!-- Left: info -->
-        <div class="animate-on-scroll space-y-6">
+        <div class="animate-on-scroll space-y-6 flex flex-col">
 
           <div class="flex items-start gap-4">
             <div class="w-10 h-10 flex-shrink-0 bg-primary-500/20 border border-primary-500/30
@@ -161,8 +161,8 @@ const localText = (field: Record<string, string> | undefined) =>
             </div>
           </div>
 
-          <!-- Map -->
-          <div class="mt-6 h-48 bg-white/5 border border-white/10 overflow-hidden">
+          <!-- Map — stretch to fill remaining height so it aligns with the form column -->
+          <div class="mt-6 flex-1 min-h-[200px] bg-white/5 border border-white/10 overflow-hidden">
             <iframe v-if="contact.mapEmbed" :src="contact.mapEmbed" class="w-full h-full border-0" loading="lazy"
               referrerpolicy="no-referrer-when-downgrade" :title="t('contact.map')" />
             <div v-else class="h-full flex items-center justify-center">
