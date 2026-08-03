@@ -7,21 +7,16 @@
 #   1. build-local.sh — npm install + `medusa build` + `nuxt build`, all with
 #      plain LOCAL Node.js (Git Bash on Windows, macOS, Linux — no docker
 #      needed on this machine)
-#   2. copy ONLY built artifacts + runtime files (never node_modules, never
-#      src/) to the server:
-#        apps/backend/.medusa/server   compiled Medusa API + admin dashboard
-#        apps/web/.output              self-contained Nitro server
-#        infra/                        WHOLE dir: compose, nginx config, and
-#                                      the backup service's build context
-#        ops scripts, .env.prod (first deploy)
+#   2. copy-to-server.sh — ships ONLY built artifacts + runtime files (never
+#      node_modules, never src/) plus .env.prod on the first deploy. That
+#      script owns the whole payload/rsync/tar story and runs standalone too
+#      (reship files without restarting the stack) — see its header.
 #   3. run run-prod-stack.sh on the server: docker compose starts the stack on
 #      stock node:20 images. Its one-shot `deps` service only installs the
 #      prebuilt backend's runtime deps (npm install --omit=dev) and refetches
 #      sharp's linux binary — no compile/build of any kind happens there.
 #
-# Works from Git Bash (Windows), Linux, and macOS:
-#   - rsync on both ends -> incremental sync + stale-artifact delete
-#   - no rsync (stock Git Bash) -> tar-over-ssh full-copy fallback
+# Works from Git Bash (Windows), Linux, and macOS.
 #
 # Prerequisites:
 #   local : bash + ssh + Node >= 20 + npm + (rsync or tar), SSH key auth
@@ -34,18 +29,13 @@
 #   DEPLOY_SERVER=user@ip   override the default server
 #   DEPLOY_DIR=/path        override the default remote directory
 #   DEPLOY_SSH_PORT=22      SSH port
+#   SKIP_BUILD=1            redeploy the existing local build output as-is
+#   SKIP_INSTALL=1          build, but skip the root `npm install`
 #   PUSH_ENV=1              overwrite the server's .env.prod with the local one
 #   DEPLOY_DOMAIN=domain    when pushing .env.prod, set its DOMAIN to this
 #                           (e.g. thanglongcheviet.ddnsfree.com)
-#   SKIP_BUILD=1            redeploy the existing local build output as-is
-#   SKIP_INSTALL=1          build, but skip the root `npm install`
-#
-# .env.prod handling: the server keeps its OWN copy (it may hold real secrets).
-# It is only pushed on the FIRST deploy — or when you explicitly pass
-# PUSH_ENV=1 — never silently overwritten. On push, DOMAIN is resolved as:
-#   DEPLOY_DOMAIN set          -> use it
-#   local DOMAIN=localhost     -> rewrite to the server IP (LAN fallback)
-#   local DOMAIN=<real domain> -> keep as-is (never clobbered by the IP)
+# The last two are forwarded to copy-to-server.sh, which owns .env.prod
+# handling (first-deploy-only push + DOMAIN resolution) — see its header.
 # =============================================================================
 set -euo pipefail
 
@@ -100,96 +90,12 @@ echo "==> Preflight: checking the server..."
   docker compose version >/dev/null 2>&1 || { echo 'ERROR: docker compose v2 plugin is missing on the server'; exit 1; }
   mkdir -p $REMOTE_DIR"
 
-# --- .env.prod ----------------------------------------------------------------
-if [ "$PUSH_ENV" = "1" ] || ! "${SSH[@]}" "[ -f $REMOTE_DIR/.env.prod ]"; then
-  [ -f .env.prod ] || { echo "ERROR: local .env.prod missing (cp .env.example .env.prod first)." >&2; exit 1; }
-  if grep -q '^REBUILD_ALL=true' .env.prod; then
-    echo "!!  WARNING: .env.prod has REBUILD_ALL=true — on the server run-prod-stack.sh"
-    echo "!!  will wipe ALL prod volumes, INCLUDING the Postgres database."
-    echo "!!  (store data + publishable key are re-provisioned automatically after)"
-    read -r -p "!!  Continue anyway? [y/N] " ans
-    # case (not \${ans,,}): macOS ships bash 3.2 without lowercase expansion.
-    case "$ans" in y|Y) ;; *) exit 1 ;; esac
-  fi
-  echo "==> Pushing .env.prod..."
-  scp -P "$SSH_PORT" -q .env.prod "$SERVER:$REMOTE_DIR/.env.prod"
-  # DOMAIN on the server: an explicit DEPLOY_DOMAIN wins; otherwise only the
-  # localhost placeholder is rewritten to the server IP — a real domain in the
-  # local .env.prod is kept as-is (never clobbered back to the IP).
-  if [ -n "$DEPLOY_DOMAIN" ]; then
-    echo "==> Setting DOMAIN=$DEPLOY_DOMAIN in the server's .env.prod..."
-    "${SSH[@]}" "sed -i 's/^DOMAIN=.*/DOMAIN=$DEPLOY_DOMAIN/' $REMOTE_DIR/.env.prod"
-  elif grep -q '^DOMAIN=localhost[[:space:]]*$' .env.prod; then
-    echo "==> Local DOMAIN=localhost — rewriting to server IP $HOST_IP (set DEPLOY_DOMAIN=<domain> to use a real domain)..."
-    "${SSH[@]}" "sed -i 's/^DOMAIN=.*/DOMAIN=$HOST_IP/' $REMOTE_DIR/.env.prod"
-  else
-    echo "==> Keeping DOMAIN from the local .env.prod."
-  fi
-else
-  echo "==> Server already has .env.prod — keeping it (PUSH_ENV=1 to overwrite)."
-fi
-
-# --- sync BUILT artifacts + runtime files ---------------------------------------
-# Deliberately no src/, no node_modules: the deploy payload is only what the
-# stack needs at runtime. `static` (uploads) and the backend's node_modules
-# live on docker named volumes on the server — never part of the transfer.
-# infra/ is shipped WHOLE (not a hand-picked file list): besides the compose
-# file and the nginx config, it holds build contexts the stack references —
-# e.g. the `backup` service's `build: context: ./backup` (restic + pg_dump).
-# Cherry-picking paths here silently breaks every such service on the server
-# with "unable to prepare context: path ... not found".
-PAYLOAD=(
-  apps/backend/.medusa/server
-  apps/web/.output
-  infra
-  scripts/setup-web-integration.mjs
-  run-prod-stack.sh provisioning.sh create-admin.sh
-)
-# Path-SPECIFIC excludes — a generic 'node_modules' pattern must NOT be used
-# here: apps/web/.output/server/node_modules is part of the built artifact
-# (nuxt bundles its runtime deps — ipx, sharp, vue... — in there) and the web
-# service dies with ERR_MODULE_NOT_FOUND without it. Only the BACKEND's
-# node_modules stays behind (the server installs it via the one-shot `deps`
-# service) along with its static/ uploads (docker named volume).
-# .env*: medusa build copies apps/backend/.env (dev secrets) into its output
-# when one exists — never ship it. The server's .env.prod is scp'd separately.
-EXCLUDES=(
-  'apps/backend/.medusa/server/node_modules'
-  'apps/backend/.medusa/server/static'
-  '.env*'
-)
-
-if command -v rsync >/dev/null && "${SSH[@]}" "command -v rsync >/dev/null"; then
-  echo "==> Syncing built output with rsync to $SERVER:$REMOTE_DIR ..."
-  RSYNC_EX=()
-  for e in "${EXCLUDES[@]}"; do RSYNC_EX+=(--exclude "$e"); done
-  # -R (--relative) recreates the apps/... / infra/... paths on the server;
-  # --delete drops stale build chunks. --stats (not --info=stats1): macOS
-  # ships rsync 2.6.9 which lacks --info.
-  # -L (--copy-links): nitro's .output/server/node_modules uses SYMLINKS into
-  # its .nitro store with ABSOLUTE local paths (e.g. entities, css-tree) —
-  # copied verbatim they dangle on the server and the web service dies with
-  # "Cannot find module 'entities/decode'". Dereferencing ships real files.
-  rsync -azLR --delete --stats -e "ssh -p $SSH_PORT" "${RSYNC_EX[@]}" \
-    "${PAYLOAD[@]}" "$SERVER:$REMOTE_DIR/"
-else
-  echo "==> rsync not available on both ends — falling back to tar over ssh (full copy)."
-  # Without rsync --delete, stale build chunks (renamed bundles etc.) would
-  # linger, so wipe the pure-artifact dirs first. .env.prod and the docker
-  # named volumes (Postgres, backend node_modules, uploads) are untouched.
-  "${SSH[@]}" "cd $REMOTE_DIR &&
-    rm -rf apps/backend/.medusa/server apps/web/.output infra scripts 2>/dev/null || true"
-  # Pair each pattern with ./-anchored and */-prefixed variants so both GNU tar
-  # (Git Bash/Linux) and bsdtar (macOS) match nested paths the same way.
-  TAR_EX=()
-  for e in "${EXCLUDES[@]}"; do
-    TAR_EX+=(--exclude "$e" --exclude "./$e" --exclude "*/$e")
-  done
-  # -h (--dereference): materialize nitro's absolute-path symlinks (see the
-  # rsync -L comment above) — GNU tar and bsdtar both accept -h for this.
-  tar czhf - "${TAR_EX[@]}" "${PAYLOAD[@]}" | "${SSH[@]}" "tar xzf - -C $REMOTE_DIR"
-  echo "    Transfer done."
-fi
+# --- copy .env.prod + built artifacts to the server ---------------------------
+# Everything about WHAT gets shipped and HOW lives in copy-to-server.sh (it is
+# runnable on its own to reship files without restarting the stack). The env
+# vars are passed explicitly rather than relied on through inheritance.
+DEPLOY_SSH_PORT="$SSH_PORT" PUSH_ENV="$PUSH_ENV" DEPLOY_DOMAIN="$DEPLOY_DOMAIN" \
+  bash ./copy-to-server.sh "$SERVER" "$REMOTE_DIR"
 
 # --- deploy ---------------------------------------------------------------------
 echo "==> Starting the stack on the server (prebuilt output — no build there)..."
