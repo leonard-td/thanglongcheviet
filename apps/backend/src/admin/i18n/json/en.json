@@ -9,7 +9,9 @@
     "careChannels": "Care Channels",
     "careMessages": "Care Messages",
     "backup": "Backup & Restore",
-    "storeInfo": "Store Information"
+    "storeInfo": "Store Information",
+    "employees": "Employees",
+    "navigation": "Navigation"
   },
   "relatedCollection": {
     "title": "Related collection",
@@ -676,6 +678,150 @@
       "copyLink": "Copy link",
       "copied": "Link copied",
       "copyFailed": "Failed to copy link"
+    }
+  },
+  "permissions": {
+    "resources": {
+      "rbac_role": "Role",
+      "rbac_policy": "Policy",
+      "campaign_post": "Campaign Posts",
+      "campaign_topic": "Campaign Topics",
+      "card": "Homepage Cards",
+      "event": "Events",
+      "event_registration": "Event Registrations",
+      "inquiry": "Inquiries",
+      "media": "Media Library",
+      "navigation": "Navigation",
+      "care_channel": "Care Channels",
+      "care_message": "Care Messages",
+      "site_settings": "Store Info",
+      "backup": "Backup & Restore"
+    }
+  },
+  "employees": {
+    "title": "Employees",
+    "hint": "Create and manage admin accounts directly (no invite required).",
+    "create": "Create employee",
+    "createHint": "Enter email, password, and optional roles. Share the password with the employee via an internal channel.",
+    "editHint": "Rename, block, assign roles, or reset the password.",
+    "loading": "Loading…",
+    "columns": {
+      "email": "Email",
+      "name": "Name",
+      "roles": "Roles",
+      "status": "Status",
+      "createdAt": "Created",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "blocked": "Blocked"
+    },
+    "fields": {
+      "email": "Email",
+      "emailReadonly": "Email cannot be changed after creation.",
+      "password": "Password",
+      "passwordHint": "At least 8 characters.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "roles": "Roles",
+      "rolesHint": "Select one or more RBAC roles.",
+      "noRoles": "No roles yet. Create roles under Settings → Roles.",
+      "blocked": "Block account",
+      "blockedHint": "Blocked users cannot call admin APIs."
+    },
+    "passwordSection": {
+      "title": "Reset password",
+      "hint": "Overwrite the current password — no email is sent."
+    },
+    "dangerZone": {
+      "title": "Danger zone",
+      "hint": "Delete this account (soft-delete). Not reversible from the UI."
+    },
+    "actions": {
+      "create": "Create employee",
+      "edit": "Edit",
+      "save": "Save",
+      "delete": "Delete",
+      "backToList": "Back to list",
+      "setPassword": "Set password"
+    },
+    "messages": {
+      "created": "Employee created",
+      "createFailed": "Failed to create employee",
+      "updated": "Employee updated",
+      "updateFailed": "Failed to update employee",
+      "deleted": "Employee deleted",
+      "deleteFailed": "Failed to delete employee",
+      "deleteConfirmTitle": "Delete employee?",
+      "deleteConfirmDesc": "You are about to delete {{name}}. This cannot be undone.",
+      "confirmDelete": "Delete",
+      "cancelDelete": "Cancel",
+      "passwordUpdated": "Password updated",
+      "passwordUpdateFailed": "Failed to update password",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordMismatch": "Password confirmation does not match"
+    }
+  },
+  "navigation": {
+    "title": "Navigation",
+    "hint": "Manage multiple menu templates as a tree. Only one Active template is shown on the website.",
+    "menusTitle": "Menu templates",
+    "loading": "Loading…",
+    "emptyMenus": "No menu templates yet. Create one to get started.",
+    "emptyTree": "This menu has no items yet. Add a root item above.",
+    "selectMenu": "Select a menu template on the left",
+    "activeMenuHint": "Currently used on the website (Active).",
+    "inactiveMenuHint": "Not Active — use Set Active to publish it on the website.",
+    "status": {
+      "active": "Active",
+      "hidden": "Hidden"
+    },
+    "fields": {
+      "menuName": "Template name",
+      "menuSlug": "Slug",
+      "menuSlugHint": "Leave blank to auto-generate from the name (kebab-case).",
+      "activateOnCreate": "Set Active right after creating",
+      "label": "Label",
+      "url": "Path / URL",
+      "openInNewTab": "Open in new tab",
+      "isActive": "Visible on the website"
+    },
+    "actions": {
+      "createMenu": "Create menu template",
+      "deleteMenu": "Delete template",
+      "setActive": "Set Active",
+      "addRoot": "Add root item",
+      "addChild": "Add child item",
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "hide": "Hide",
+      "show": "Show",
+      "drag": "Drag to reorder"
+    },
+    "messages": {
+      "menuCreated": "Menu template created",
+      "menuCreateFailed": "Failed to create menu template",
+      "menuActivated": "“{{name}}” is now Active",
+      "menuActivateFailed": "Failed to set Active",
+      "menuDeleted": "Menu template deleted",
+      "menuDeleteFailed": "Failed to delete menu template",
+      "deleteMenuTitle": "Delete menu template?",
+      "deleteMenuDesc": "Delete “{{name}}” and all of its items. This cannot be undone.",
+      "itemCreated": "Item created",
+      "itemUpdated": "Item updated",
+      "itemSaveFailed": "Failed to save item",
+      "itemDeleted": "Item deleted",
+      "itemDeleteFailed": "Failed to delete item",
+      "deleteItemTitle": "Delete item?",
+      "deleteItemDesc": "Delete “{{name}}” (and children if any).",
+      "confirmDelete": "Delete",
+      "cancelDelete": "Cancel",
+      "reorderFailed": "Failed to reorder"
     }
   }
 }

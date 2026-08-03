@@ -2,6 +2,7 @@ import { model } from "@medusajs/framework/utils"
 
 export const NavigationItem = model.define("navigation_item", {
   id: model.id({ prefix: "navi" }).primaryKey(),
+  menu_id: model.text(),
   label: model.text(),
   url: model.text(),
   order: model.number().default(0),

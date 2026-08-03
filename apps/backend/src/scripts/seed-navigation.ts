@@ -1,42 +1,103 @@
 import type { ExecArgs } from "@medusajs/framework/types"
+import { NAVIGATION_MODULE } from "../modules/navigation"
+import type NavigationModuleService from "../modules/navigation/service"
 
-const NAVIGATION_MODULE = "navigation"
-const NAVIGATION_NAME = "storefront-header"
+const DEFAULT_MENU = {
+  id: "navm_storefront_header",
+  name: "Storefront Header",
+  slug: "storefront-header",
+}
 
-const DEFAULT_ITEMS = [
-  { name: "Trang chủ", url: "/", index: 0 },
-  { name: "Cửa hàng", url: "/store", index: 1 },
-  { name: "Bài viết", url: "/campaign-posts", index: 2 },
-  { name: "Tài khoản", url: "/account", index: 3 },
-  { name: "Giỏ hàng", url: "/cart", index: 4 },
+const DEFAULT_TREE: Array<{
+  label: string
+  url: string
+  children?: Array<{ label: string; url: string }>
+}> = [
+  { label: "Trang chủ", url: "/" },
+  {
+    label: "Sản phẩm",
+    url: "/san-pham-list",
+    children: [
+      { label: "Trà Việt", url: "/san-pham-list" },
+      { label: "An Quang Caffé", url: "/an-quang-caffe" },
+      { label: "Quà tặng doanh nghiệp", url: "/qua-tang-doanh-nghiep" },
+    ],
+  },
+  { label: "Dự án & Đối tác", url: "/du-an-doi-tac" },
+  { label: "Sự kiện", url: "/trai-nghiem" },
+  {
+    label: "Tin tức",
+    url: "/tin-tuc",
+    children: [
+      { label: "Nếp Trà Việt", url: "/nep-tra-viet" },
+      { label: "Văn hoá Việt", url: "/van-hoa-viet" },
+      { label: "Di sản trà cũ", url: "/di-san-tra-cu" },
+      { label: "Vườn An Quang", url: "/vuon-an-quang" },
+    ],
+  },
+  { label: "Thư viện văn hóa", url: "/thu-vien-van-hoa" },
+  { label: "Liên hệ", url: "/lien-he" },
 ]
 
 export default async function seedNavigation({ container }: ExecArgs) {
-  const navigationService = container.resolve(NAVIGATION_MODULE) as {
-    listNavigations: (filters?: { name?: string }) => Promise<{ id: string; name: string }[]>
-    createNestedNavigation: (
-      service: unknown,
-      name: string,
-      items: typeof DEFAULT_ITEMS,
-    ) => Promise<{ id: string; name: string }>
+  const service: NavigationModuleService = container.resolve(NAVIGATION_MODULE)
+
+  let [menus] = await service.listAndCountNavigationMenus(
+    { slug: DEFAULT_MENU.slug },
+    { take: 1 }
+  )
+
+  let menu = menus[0]
+
+  if (!menu) {
+    menu = await service.createNavigationMenus({
+      id: DEFAULT_MENU.id,
+      name: DEFAULT_MENU.name,
+      slug: DEFAULT_MENU.slug,
+      is_active: false,
+    })
+    console.log(`Created menu "${menu.slug}" (${menu.id}).`)
+  } else {
+    console.log(`Menu "${menu.slug}" already exists (${menu.id}).`)
   }
 
-  const existing = await navigationService.listNavigations({ name: NAVIGATION_NAME })
+  await service.setActiveMenu(menu.id)
 
-  if (existing.length) {
+  const existingItems = await service.listItemsByMenu(menu.id)
+  if (existingItems.length > 0) {
     console.log(
-      `Navigation "${NAVIGATION_NAME}" already exists (id: ${existing[0].id}).`,
+      `Menu already has ${existingItems.length} items — skipping item seed.`
     )
-    console.log(`Set in .env: NEXT_PUBLIC_MEDUSA_NAVIGATION_ID=${existing[0].id}`)
+    console.log(`Active menu id: ${menu.id}`)
     return
   }
 
-  const navigation = await navigationService.createNestedNavigation(
-    navigationService,
-    NAVIGATION_NAME,
-    DEFAULT_ITEMS,
-  )
+  for (let order = 0; order < DEFAULT_TREE.length; order++) {
+    const node = DEFAULT_TREE[order]
+    const root = await service.createNavigationItems({
+      menu_id: menu.id,
+      label: node.label,
+      url: node.url,
+      order,
+      parent_id: null,
+      is_active: true,
+      openInNewTab: false,
+    })
 
-  console.log(`Created navigation "${NAVIGATION_NAME}" (id: ${navigation.id}).`)
-  console.log(`Set in .env: NEXT_PUBLIC_MEDUSA_NAVIGATION_ID=${navigation.id}`)
+    for (let childOrder = 0; childOrder < (node.children?.length || 0); childOrder++) {
+      const child = node.children![childOrder]
+      await service.createNavigationItems({
+        menu_id: menu.id,
+        label: child.label,
+        url: child.url,
+        order: childOrder,
+        parent_id: root.id,
+        is_active: true,
+        openInNewTab: false,
+      })
+    }
+  }
+
+  console.log(`Seeded ${DEFAULT_TREE.length} root items into "${menu.slug}".`)
+  console.log(`Active menu id: ${menu.id}`)
 }

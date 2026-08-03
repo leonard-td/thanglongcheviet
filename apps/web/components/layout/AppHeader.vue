@@ -27,7 +27,8 @@ interface NavLink {
   key: string
   path: string
   label?: string
-  children?: { key: string, path: string, label?: string }[]
+  openInNewTab?: boolean
+  children?: { key: string, path: string, label?: string, openInNewTab?: boolean }[]
 }
 
 const { getStoreNavigation, mapNavigationToNavLinks } = useNavigation()
@@ -110,6 +111,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
               :to="localePath(link.path)"
               class="site-nav-link"
               active-class="site-nav-active"
+              :target="link.openInNewTab ? '_blank' : undefined"
+              :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
             >
               {{ link.label || t(link.key) }}
             </NuxtLink>
@@ -139,6 +142,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :key="child.key"
                 :to="localePath(child.path)"
                 class="site-dropdown-link"
+                :target="child.openInNewTab ? '_blank' : undefined"
+                :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
               >
                 {{ child.label || t(child.key) }}
               </NuxtLink>
@@ -196,6 +201,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :to="localePath(link.path)"
                 class="site-mobile-link flex-1"
                 active-class="text-[#e8d5a8]"
+                :target="link.openInNewTab ? '_blank' : undefined"
+                :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
                 @click="isMenuOpen = false"
               >
                 {{ link.label || t(link.key) }}
@@ -223,6 +230,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :key="child.key"
                 :to="localePath(child.path)"
                 class="site-mobile-sublink"
+                :target="child.openInNewTab ? '_blank' : undefined"
+                :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
                 @click="isMenuOpen = false"
               >
                 {{ child.label || t(child.key) }}
