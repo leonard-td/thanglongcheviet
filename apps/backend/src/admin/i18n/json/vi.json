@@ -976,7 +976,9 @@
       "delete": "Xóa",
       "hide": "Ẩn",
       "show": "Hiện",
-      "drag": "Kéo để sắp xếp"
+      "drag": "Kéo để sắp xếp",
+      "indent": "Thụt vào (làm con của mục trước)",
+      "outdent": "Đưa ra (lên thành mục gốc)"
     },
     "messages": {
       "menuCreated": "Đã tạo mẫu menu",

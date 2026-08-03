@@ -5,9 +5,7 @@
 const BASE = process.env.MEDUSA_URL || "http://localhost:9000"
 const EMAIL = process.env.ADMIN_EMAIL || "admin@medusa.local"
 const PASSWORD = process.env.ADMIN_PASSWORD || "supersecret123"
-const PUB_KEY =
-  process.env.NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
-  "pk_213115e8240117a01b70781280509a7fcc4ca1f9e6c710a57738d848c4102c89"
+const PUB_KEY_ENV = process.env.NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
 
 const results = []
 
@@ -53,6 +51,20 @@ async function main() {
     process.exit(1)
   }
   ok("admin login", EMAIL)
+
+  // Resolve a real publishable key (env override, else first admin key)
+  let publishableKey = PUB_KEY_ENV
+  if (!publishableKey) {
+    const keys = await req("/admin/api-keys?limit=20&type=publishable", {
+      token,
+    })
+    publishableKey = (keys.json.api_keys || []).find((k) => k.token)?.token || ""
+  }
+  if (!publishableKey) {
+    fail("resolve publishable key", "none found — set NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY")
+  } else {
+    ok("resolve publishable key", `${publishableKey.slice(0, 8)}…`)
+  }
 
   // ---- Navigation ----
   const menusList = await req("/admin/navigation-menus", { token })
@@ -175,7 +187,7 @@ async function main() {
       ? ok("POST activate menu", activate.json.menu.slug)
       : fail("POST activate menu", JSON.stringify(activate.json).slice(0, 300))
 
-    const store = await req("/store/navigations", { publishable: PUB_KEY })
+    const store = await req("/store/navigations", { publishable: publishableKey })
     const storeRoots = store.json.navigations || []
     const activeSlug = store.json.menu?.slug
     store.status === 200 && activeSlug === slug
@@ -309,12 +321,11 @@ async function main() {
       ? ok("POST block employee", "blocked=true")
       : fail("POST block employee", JSON.stringify(block.json).slice(0, 300))
 
-    // Blocked employee should get 403 on admin API
+    // Blocked employee should get 403 (MedusaError.FORBIDDEN) on admin API
     const empToken = empLogin.json.token
     if (empToken) {
       const blockedCall = await req("/admin/employees", { token: empToken })
-      blockedCall.status === 403 ||
-      blockedCall.json?.message?.toLowerCase?.().includes("block")
+      blockedCall.status === 403
         ? ok(
             "blocked employee denied /admin",
             `${blockedCall.status} ${blockedCall.json.message || ""}`

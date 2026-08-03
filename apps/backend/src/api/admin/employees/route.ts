@@ -5,6 +5,7 @@ import type {
 import { MedusaError, Modules } from "@medusajs/framework/utils"
 import { createUsersWorkflow } from "@medusajs/medusa/core-flows"
 import { z } from "zod"
+import { zodValidator } from "../../utils/zod-validator"
 import { listEmployees, retrieveEmployee } from "./helpers"
 
 const CreateEmployeeSchema = z.object({
@@ -37,7 +38,7 @@ export async function POST(
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) {
-  const body = CreateEmployeeSchema.parse(req.body)
+  const body = await zodValidator(CreateEmployeeSchema, req.body)
   const authModule = req.scope.resolve(Modules.AUTH)
 
   const { result: users } = await createUsersWorkflow(req.scope).run({

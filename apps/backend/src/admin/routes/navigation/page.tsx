@@ -1,43 +1,12 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { ListBullet, PlusMini } from "@medusajs/icons"
+import { Button, Heading, toast, usePrompt } from "@medusajs/ui"
 import {
-  DotsSix,
-  EllipsisHorizontal,
-  FolderOpen,
-  ListBullet,
-  PlusMini,
-  TriangleDownMini,
-  TriangleRightMini,
-} from "@medusajs/icons"
-import {
-  Badge,
-  Button,
-  Checkbox,
-  Drawer,
-  DropdownMenu,
-  Heading,
-  IconButton,
-  Input,
-  Label,
-  Text,
-  clx,
-  toast,
-  usePrompt,
-} from "@medusajs/ui"
-import {
-  DndContext,
   PointerSensor,
-  closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core"
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -49,170 +18,18 @@ import type {
   NavigationMenusResponse,
   NavigationTreeResponse,
 } from "../../types/navigation"
-
-type ItemFormState = {
-  id?: string
-  label: string
-  url: string
-  openInNewTab: boolean
-  is_active: boolean
-  parent_id: string | null
-}
-
-const emptyItemForm = (parentId: string | null = null): ItemFormState => ({
-  label: "",
-  url: "/",
-  openInNewTab: false,
-  is_active: true,
-  parent_id: parentId,
-})
-
-function flattenForReorder(tree: NavigationItem[]) {
-  const items: Array<{ id: string; parent_id: string | null; order: number }> =
-    []
-  tree.forEach((root, index) => {
-    items.push({ id: root.id, parent_id: null, order: index })
-    ;(root.children || []).forEach((child, childIndex) => {
-      items.push({
-        id: child.id,
-        parent_id: root.id,
-        order: childIndex,
-      })
-    })
-  })
-  return items
-}
-
-type SortableRowProps = {
-  item: NavigationItem
-  depth: number
-  expanded: boolean
-  onToggleExpand: () => void
-  onEdit: () => void
-  onAddChild: () => void
-  onDelete: () => void
-  onToggleActive: () => void
-}
-
-const SortableNavRow = ({
-  item,
-  depth,
-  expanded,
-  onToggleExpand,
-  onEdit,
-  onAddChild,
-  onDelete,
-  onToggleActive,
-}: SortableRowProps) => {
-  const { t } = useTranslation()
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.55 : 1,
-  }
-
-  const hasChildren = (item.children?.length || 0) > 0
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={clx(
-        "group flex items-center gap-x-2 border-b border-ui-border-base px-3 py-2 hover:bg-ui-bg-subtle-hover",
-        !item.is_active && "opacity-60"
-      )}
-    >
-      <div style={{ width: depth * 20 }} className="flex-shrink-0" />
-
-      <button
-        type="button"
-        className="cursor-grab active:cursor-grabbing text-ui-fg-muted touch-none"
-        aria-label={t("navigation.actions.drag")}
-        {...attributes}
-        {...listeners}
-      >
-        <DotsSix />
-      </button>
-
-      {depth === 0 ? (
-        <button
-          type="button"
-          className="text-ui-fg-muted w-5 flex items-center justify-center"
-          onClick={onToggleExpand}
-          disabled={!hasChildren}
-        >
-          {hasChildren ? (
-            expanded ? (
-              <TriangleDownMini />
-            ) : (
-              <TriangleRightMini />
-            )
-          ) : (
-            <span className="w-4" />
-          )}
-        </button>
-      ) : (
-        <span className="w-5" />
-      )}
-
-      <div className="min-w-0 flex-1">
-        <Text size="small" weight="plus" className="truncate">
-          {item.label}
-        </Text>
-        <Text size="xsmall" className="text-ui-fg-subtle truncate">
-          {item.url}
-        </Text>
-      </div>
-
-      {!item.is_active && (
-        <Badge size="2xsmall" color="grey">
-          {t("navigation.status.hidden")}
-        </Badge>
-      )}
-
-      <div onClick={(e) => e.stopPropagation()}>
-        <DropdownMenu>
-          <DropdownMenu.Trigger asChild>
-            <IconButton size="small" variant="transparent">
-              <EllipsisHorizontal />
-            </IconButton>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            <DropdownMenu.Item onClick={onEdit}>
-              {t("navigation.actions.edit")}
-            </DropdownMenu.Item>
-            {depth === 0 && (
-              <DropdownMenu.Item onClick={onAddChild}>
-                {t("navigation.actions.addChild")}
-              </DropdownMenu.Item>
-            )}
-            <DropdownMenu.Item onClick={onToggleActive}>
-              {item.is_active
-                ? t("navigation.actions.hide")
-                : t("navigation.actions.show")}
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item
-              className="text-ui-fg-error"
-              onClick={onDelete}
-            >
-              {t("navigation.actions.delete")}
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu>
-      </div>
-    </div>
-  )
-}
+import { ItemDrawer } from "./components/item-drawer"
+import { MenuDrawer } from "./components/menu-drawer"
+import { MenuSidebar } from "./components/menu-sidebar"
+import { TreePanel } from "./components/tree-panel"
+import {
+  applyDragEnd,
+  emptyItemForm,
+  flattenForReorder,
+  indentItem,
+  outdentItem,
+  type ItemFormState,
+} from "./tree-utils"
 
 const NavigationPage = () => {
   const { t } = useTranslation()
@@ -529,34 +346,27 @@ const NavigationPage = () => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const activeId = String(active.id)
-    const overId = String(over.id)
+    const nextTree = applyDragEnd(tree, String(active.id), String(over.id))
+    if (!nextTree) return
+    await persistTree(nextTree)
+  }
 
-    const rootIndex = tree.findIndex((item) => item.id === activeId)
-    const overRootIndex = tree.findIndex((item) => item.id === overId)
-
-    // Reorder roots
-    if (rootIndex >= 0 && overRootIndex >= 0) {
-      await persistTree(arrayMove(tree, rootIndex, overRootIndex))
-      return
-    }
-
-    // Reorder children within the same parent
-    for (let parentIndex = 0; parentIndex < tree.length; parentIndex++) {
-      const children = tree[parentIndex].children || []
-      const oldIndex = children.findIndex((item) => item.id === activeId)
-      const newIndex = children.findIndex((item) => item.id === overId)
-      if (oldIndex < 0 || newIndex < 0) {
-        continue
-      }
-
-      const nextChildren = arrayMove(children, oldIndex, newIndex)
-      const nextTree = tree.map((node, index) =>
-        index === parentIndex ? { ...node, children: nextChildren } : node
+  const handleIndent = async (item: NavigationItem) => {
+    const nextTree = indentItem(tree, item.id)
+    if (!nextTree) return
+    setExpanded((prev) => {
+      const parent = nextTree.find((root) =>
+        (root.children || []).some((child) => child.id === item.id)
       )
-      await persistTree(nextTree)
-      return
-    }
+      return parent ? { ...prev, [parent.id]: true } : prev
+    })
+    await persistTree(nextTree)
+  }
+
+  const handleOutdent = async (item: NavigationItem) => {
+    const nextTree = outdentItem(tree, item.id)
+    if (!nextTree) return
+    await persistTree(nextTree)
   }
 
   const allSortableIds = useMemo(() => {
@@ -584,310 +394,57 @@ const NavigationPage = () => {
       </div>
 
       <div className="grid min-h-[560px] grid-cols-1 divide-y border-t border-ui-border-base md:grid-cols-[280px_1fr] md:divide-x md:divide-y-0">
-        {/* Left: menu templates */}
-        <aside className="flex flex-col bg-ui-bg-subtle">
-          <div className="border-b border-ui-border-base px-4 py-3">
-            <Text size="small" weight="plus" className="text-ui-fg-subtle">
-              {t("navigation.menusTitle")}
-            </Text>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            {menusLoading ? (
-              <Text size="small" className="px-2 py-3 text-ui-fg-muted">
-                {t("navigation.loading")}
-              </Text>
-            ) : menus.length === 0 ? (
-              <Text size="small" className="px-2 py-3 text-ui-fg-muted">
-                {t("navigation.emptyMenus")}
-              </Text>
-            ) : (
-              menus.map((menu) => (
-                <div
-                  key={menu.id}
-                  className={clx(
-                    "mb-1 flex items-center gap-x-1 rounded-md px-2 py-2",
-                    selectedMenuId === menu.id
-                      ? "bg-ui-bg-base shadow-borders-base"
-                      : "hover:bg-ui-bg-base-hover"
-                  )}
-                >
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 text-left"
-                    onClick={() => setSelectedMenuId(menu.id)}
-                  >
-                    <div className="flex items-center gap-x-2">
-                      <FolderOpen className="text-ui-fg-muted flex-shrink-0" />
-                      <div className="min-w-0">
-                        <Text size="small" weight="plus" className="truncate">
-                          {menu.name}
-                        </Text>
-                        <Text
-                          size="xsmall"
-                          className="text-ui-fg-muted truncate"
-                        >
-                          {menu.slug}
-                        </Text>
-                      </div>
-                    </div>
-                  </button>
-                  {menu.is_active && (
-                    <Badge size="2xsmall" color="green">
-                      {t("navigation.status.active")}
-                    </Badge>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenu.Trigger asChild>
-                      <IconButton size="small" variant="transparent">
-                        <EllipsisHorizontal />
-                      </IconButton>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content>
-                      {!menu.is_active && (
-                        <DropdownMenu.Item onClick={() => handleActivate(menu)}>
-                          {t("navigation.actions.setActive")}
-                        </DropdownMenu.Item>
-                      )}
-                      <DropdownMenu.Item
-                        className="text-ui-fg-error"
-                        onClick={() => handleDeleteMenu(menu)}
-                        disabled={menu.is_active}
-                      >
-                        {t("navigation.actions.deleteMenu")}
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu>
-                </div>
-              ))
-            )}
-          </div>
-        </aside>
-
-        {/* Right: tree */}
-        <section className="flex flex-col">
-          <div className="flex items-center justify-between gap-3 border-b border-ui-border-base px-4 py-3">
-            <div className="min-w-0">
-              <Text size="small" weight="plus">
-                {selectedMenu?.name || t("navigation.selectMenu")}
-              </Text>
-              {selectedMenu?.is_active ? (
-                <Text size="xsmall" className="text-ui-fg-subtle">
-                  {t("navigation.activeMenuHint")}
-                </Text>
-              ) : selectedMenu ? (
-                <Text size="xsmall" className="text-ui-fg-subtle">
-                  {t("navigation.inactiveMenuHint")}
-                </Text>
-              ) : null}
-            </div>
-            <Button
-              size="small"
-              variant="secondary"
-              disabled={!selectedMenuId}
-              onClick={() => openCreateItem(null)}
-            >
-              <PlusMini />
-              {t("navigation.actions.addRoot")}
-            </Button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto">
-            {!selectedMenuId ? (
-              <Text size="small" className="px-4 py-6 text-ui-fg-muted">
-                {t("navigation.selectMenu")}
-              </Text>
-            ) : treeLoading ? (
-              <Text size="small" className="px-4 py-6 text-ui-fg-muted">
-                {t("navigation.loading")}
-              </Text>
-            ) : tree.length === 0 ? (
-              <Text size="small" className="px-4 py-6 text-ui-fg-muted">
-                {t("navigation.emptyTree")}
-              </Text>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={allSortableIds}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {tree.map((root) => (
-                    <div key={root.id}>
-                      <SortableNavRow
-                        item={root}
-                        depth={0}
-                        expanded={!!expanded[root.id]}
-                        onToggleExpand={() =>
-                          setExpanded((prev) => ({
-                            ...prev,
-                            [root.id]: !prev[root.id],
-                          }))
-                        }
-                        onEdit={() => openEditItem(root)}
-                        onAddChild={() => openCreateItem(root.id)}
-                        onDelete={() => handleDeleteItem(root)}
-                        onToggleActive={() => handleToggleItemActive(root)}
-                      />
-                      {expanded[root.id] &&
-                        (root.children || []).map((child) => (
-                          <SortableNavRow
-                            key={child.id}
-                            item={child}
-                            depth={1}
-                            expanded={false}
-                            onToggleExpand={() => undefined}
-                            onEdit={() => openEditItem(child)}
-                            onAddChild={() => undefined}
-                            onDelete={() => handleDeleteItem(child)}
-                            onToggleActive={() =>
-                              handleToggleItemActive(child)
-                            }
-                          />
-                        ))}
-                    </div>
-                  ))}
-                </SortableContext>
-              </DndContext>
-            )}
-          </div>
-        </section>
+        <MenuSidebar
+          menus={menus}
+          selectedMenuId={selectedMenuId}
+          isLoading={menusLoading}
+          onSelect={setSelectedMenuId}
+          onActivate={handleActivate}
+          onDelete={handleDeleteMenu}
+        />
+        <TreePanel
+          selectedMenu={selectedMenu}
+          selectedMenuId={selectedMenuId}
+          tree={tree}
+          expanded={expanded}
+          isLoading={treeLoading}
+          sortableIds={allSortableIds}
+          sensors={sensors}
+          onAddRoot={() => openCreateItem(null)}
+          onDragEnd={handleDragEnd}
+          onToggleExpand={(id) =>
+            setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
+          }
+          onEdit={openEditItem}
+          onAddChild={(parentId) => openCreateItem(parentId)}
+          onDelete={handleDeleteItem}
+          onToggleActive={handleToggleItemActive}
+          onIndent={handleIndent}
+          onOutdent={handleOutdent}
+        />
       </div>
 
-      {/* Create menu drawer */}
-      <Drawer open={menuDrawerOpen} onOpenChange={setMenuDrawerOpen}>
-        <Drawer.Content>
-          <Drawer.Header>
-            <Drawer.Title>{t("navigation.actions.createMenu")}</Drawer.Title>
-          </Drawer.Header>
-          <form onSubmit={handleCreateMenu}>
-            <Drawer.Body className="flex flex-col gap-y-4">
-              <div className="flex flex-col gap-y-2">
-                <Label htmlFor="menu_name">{t("navigation.fields.menuName")}</Label>
-                <Input
-                  id="menu_name"
-                  required
-                  value={menuName}
-                  onChange={(e) => setMenuName(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-y-2">
-                <Label htmlFor="menu_slug">{t("navigation.fields.menuSlug")}</Label>
-                <Input
-                  id="menu_slug"
-                  placeholder="storefront-header"
-                  value={menuSlug}
-                  onChange={(e) => setMenuSlug(e.target.value)}
-                />
-                <Text size="xsmall" className="text-ui-fg-muted">
-                  {t("navigation.fields.menuSlugHint")}
-                </Text>
-              </div>
-              <label className="flex items-center gap-x-2 text-sm">
-                <Checkbox
-                  checked={activateOnCreate}
-                  onCheckedChange={(v) => setActivateOnCreate(v === true)}
-                />
-                {t("navigation.fields.activateOnCreate")}
-              </label>
-            </Drawer.Body>
-            <Drawer.Footer>
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() => setMenuDrawerOpen(false)}
-              >
-                {t("navigation.actions.cancel")}
-              </Button>
-              <Button type="submit" isLoading={creatingMenu}>
-                {t("navigation.actions.createMenu")}
-              </Button>
-            </Drawer.Footer>
-          </form>
-        </Drawer.Content>
-      </Drawer>
+      <MenuDrawer
+        open={menuDrawerOpen}
+        onOpenChange={setMenuDrawerOpen}
+        name={menuName}
+        slug={menuSlug}
+        activateOnCreate={activateOnCreate}
+        isLoading={creatingMenu}
+        onNameChange={setMenuName}
+        onSlugChange={setMenuSlug}
+        onActivateChange={setActivateOnCreate}
+        onSubmit={handleCreateMenu}
+      />
 
-      {/* Create / edit item drawer */}
-      <Drawer open={itemDrawerOpen} onOpenChange={setItemDrawerOpen}>
-        <Drawer.Content>
-          <Drawer.Header>
-            <Drawer.Title>
-              {itemForm.id
-                ? t("navigation.actions.edit")
-                : itemForm.parent_id
-                  ? t("navigation.actions.addChild")
-                  : t("navigation.actions.addRoot")}
-            </Drawer.Title>
-          </Drawer.Header>
-          <form onSubmit={handleSaveItem}>
-            <Drawer.Body className="flex flex-col gap-y-4">
-              <div className="flex flex-col gap-y-2">
-                <Label htmlFor="item_label">{t("navigation.fields.label")}</Label>
-                <Input
-                  id="item_label"
-                  required
-                  value={itemForm.label}
-                  onChange={(e) =>
-                    setItemForm((prev) => ({ ...prev, label: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-y-2">
-                <Label htmlFor="item_url">{t("navigation.fields.url")}</Label>
-                <Input
-                  id="item_url"
-                  required
-                  value={itemForm.url}
-                  onChange={(e) =>
-                    setItemForm((prev) => ({ ...prev, url: e.target.value }))
-                  }
-                />
-              </div>
-              <label className="flex items-center gap-x-2 text-sm">
-                <Checkbox
-                  checked={itemForm.openInNewTab}
-                  onCheckedChange={(v) =>
-                    setItemForm((prev) => ({
-                      ...prev,
-                      openInNewTab: v === true,
-                    }))
-                  }
-                />
-                {t("navigation.fields.openInNewTab")}
-              </label>
-              <label className="flex items-center gap-x-2 text-sm">
-                <Checkbox
-                  checked={itemForm.is_active}
-                  onCheckedChange={(v) =>
-                    setItemForm((prev) => ({
-                      ...prev,
-                      is_active: v === true,
-                    }))
-                  }
-                />
-                {t("navigation.fields.isActive")}
-              </label>
-            </Drawer.Body>
-            <Drawer.Footer>
-              <Button
-                variant="secondary"
-                type="button"
-                onClick={() => setItemDrawerOpen(false)}
-              >
-                {t("navigation.actions.cancel")}
-              </Button>
-              <Button
-                type="submit"
-                isLoading={savingItem || updatingItem}
-              >
-                {t("navigation.actions.save")}
-              </Button>
-            </Drawer.Footer>
-          </form>
-        </Drawer.Content>
-      </Drawer>
+      <ItemDrawer
+        open={itemDrawerOpen}
+        onOpenChange={setItemDrawerOpen}
+        form={itemForm}
+        isLoading={savingItem || updatingItem}
+        onChange={setItemForm}
+        onSubmit={handleSaveItem}
+      />
     </PageLayout>
   )
 }

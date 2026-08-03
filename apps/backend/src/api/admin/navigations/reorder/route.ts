@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../../utils/zod-validator"
 import { NAVIGATION_MODULE } from "../../../../modules/navigation"
 import type NavigationModuleService from "../../../../modules/navigation/service"
 
@@ -21,7 +22,7 @@ const ReorderSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const service: NavigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
-  const body = ReorderSchema.parse(req.body)
+  const body = await zodValidator(ReorderSchema, req.body)
 
   const tree = await service.reorderItems(body.menu_id, body.items)
   res.json({ tree, navigations: tree })

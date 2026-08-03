@@ -3,6 +3,7 @@ import type {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../../../utils/zod-validator"
 import { retrieveEmployee, setEmailPassPassword } from "../../helpers"
 
 const SetPasswordSchema = z.object({
@@ -16,7 +17,7 @@ export async function POST(
   req: AuthenticatedMedusaRequest,
   res: MedusaResponse
 ) {
-  const body = SetPasswordSchema.parse(req.body)
+  const body = await zodValidator(SetPasswordSchema, req.body)
   const employee = await retrieveEmployee(req, req.params.id)
 
   await setEmailPassPassword(req, employee.email, body.password)

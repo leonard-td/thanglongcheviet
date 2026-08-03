@@ -801,7 +801,9 @@
       "delete": "Delete",
       "hide": "Hide",
       "show": "Show",
-      "drag": "Drag to reorder"
+      "drag": "Drag to reorder",
+      "indent": "Indent (make child of previous)",
+      "outdent": "Outdent (promote to root)"
     },
     "messages": {
       "menuCreated": "Menu template created",

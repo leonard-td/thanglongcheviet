@@ -41,7 +41,7 @@ export async function rejectBlockedAdminUser(
     ) {
       return next(
         new MedusaError(
-          MedusaError.Types.NOT_ALLOWED,
+          MedusaError.Types.FORBIDDEN,
           "Your account has been blocked. Contact an administrator."
         )
       )

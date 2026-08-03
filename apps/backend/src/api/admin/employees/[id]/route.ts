@@ -8,6 +8,7 @@ import {
   updateUsersWorkflow,
 } from "@medusajs/medusa/core-flows"
 import { z } from "zod"
+import { zodValidator } from "../../../utils/zod-validator"
 import {
   isBlocked,
   retrieveEmployee,
@@ -40,12 +41,12 @@ export async function POST(
   res: MedusaResponse
 ) {
   const userId = req.params.id
-  const body = UpdateEmployeeSchema.parse(req.body)
+  const body = await zodValidator(UpdateEmployeeSchema, req.body)
   const existing = await retrieveEmployee(req, userId)
 
   if (body.blocked === true && req.auth_context?.actor_id === userId) {
     throw new MedusaError(
-      MedusaError.Types.NOT_ALLOWED,
+      MedusaError.Types.FORBIDDEN,
       "You cannot block your own account"
     )
   }
@@ -109,7 +110,7 @@ export async function DELETE(
 
   if (req.auth_context?.actor_id === userId) {
     throw new MedusaError(
-      MedusaError.Types.NOT_ALLOWED,
+      MedusaError.Types.FORBIDDEN,
       "You cannot delete your own account"
     )
   }

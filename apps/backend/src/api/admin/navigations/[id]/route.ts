@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../../utils/zod-validator"
 import { NAVIGATION_MODULE } from "../../../../modules/navigation"
 import type NavigationModuleService from "../../../../modules/navigation/service"
 
@@ -26,7 +27,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
  */
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
   const service: NavigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
-  const body = UpdateItemSchema.parse(req.body)
+  const body = await zodValidator(UpdateItemSchema, req.body)
   const existing = (await service.retrieveNavigationItem(
     req.params.id
   )) as unknown as { id: string; menu_id: string }
