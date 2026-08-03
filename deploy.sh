@@ -11,7 +11,9 @@
 #      src/) to the server:
 #        apps/backend/.medusa/server   compiled Medusa API + admin dashboard
 #        apps/web/.output              self-contained Nitro server
-#        infra/ compose + nginx config, ops scripts, .env.prod (first deploy)
+#        infra/                        WHOLE dir: compose, nginx config, and
+#                                      the backup service's build context
+#        ops scripts, .env.prod (first deploy)
 #   3. run run-prod-stack.sh on the server: docker compose starts the stack on
 #      stock node:20 images. Its one-shot `deps` service only installs the
 #      prebuilt backend's runtime deps (npm install --omit=dev) and refetches
@@ -131,12 +133,15 @@ fi
 # Deliberately no src/, no node_modules: the deploy payload is only what the
 # stack needs at runtime. `static` (uploads) and the backend's node_modules
 # live on docker named volumes on the server — never part of the transfer.
+# infra/ is shipped WHOLE (not a hand-picked file list): besides the compose
+# file and the nginx config, it holds build contexts the stack references —
+# e.g. the `backup` service's `build: context: ./backup` (restic + pg_dump).
+# Cherry-picking paths here silently breaks every such service on the server
+# with "unable to prepare context: path ... not found".
 PAYLOAD=(
   apps/backend/.medusa/server
   apps/web/.output
-  infra/docker-compose.prod.yml
-  infra/nginx/nginx.conf
-  infra/nginx/conf.d
+  infra
   scripts/setup-web-integration.mjs
   run-prod-stack.sh provisioning.sh create-admin.sh
 )

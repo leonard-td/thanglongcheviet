@@ -126,7 +126,7 @@ export default async function seedTeaProducts({ container }: ExecArgs) {
       await updateProductsWorkflow(container).run({
         input: {
           selector: { id: existing.id },
-          update: { status: "published" as any, categories: [{ id: category.id }] },
+          update: { status: "published" as any, category_ids: [category.id] },
         },
       })
       logger.info(`seed-tea-products: ${tea.handle} already exists, published + linked to category.`)
@@ -145,7 +145,7 @@ export default async function seedTeaProducts({ container }: ExecArgs) {
             status: "published" as any,
             thumbnail: urls[0],
             images: urls.map((url) => ({ url })),
-            categories: [{ id: category.id }],
+            category_ids: [category.id],
             options: [{ title: "Loại", values: ["Nguyên hộp (10 gói)", "Bán lẻ (1 gói 10g)"] }],
             variants: [
               {
