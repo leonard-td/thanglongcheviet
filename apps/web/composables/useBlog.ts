@@ -4,8 +4,6 @@ import { tiptapFirstImage, tiptapToHtml, tiptapToText } from '~/utils/tiptap'
 import { isNotFoundError } from '~/utils/fetch-status'
 import fallbackPosts from '~/content/blog.json'
 
-export type { BlogPost, BlogTopic } from '~/utils/storefront'
-
 interface CampaignPost {
   id: string
   title: string

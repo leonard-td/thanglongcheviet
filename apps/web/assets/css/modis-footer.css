@@ -58,13 +58,20 @@
 }
 
 .modis-site-footer .list-border-bottom li {
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 
 .modis-site-footer .box-border.double {
   border: solid 1px rgba(255, 255, 255, .1);
   padding: 16px;
+  max-width: 280px;
+}
+
+@media (max-width: 990px) {
+  .modis-site-footer .box-border.double {
+    max-width: none;
+  }
 }
 
 .modis-site-footer .id-color {

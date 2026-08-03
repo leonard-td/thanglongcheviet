@@ -58,7 +58,7 @@ const navLinks = computed<NavLink[]>(() => {
       key: 'nav.products',
       path: '/san-pham-list',
       children: [
-        { key: 'nav.productsMenu.teaViet', path: '/san-pham-list' },
+        { key: 'nav.productsMenu.teaViet', path: '/san-pham/danh-muc/thang-long-che-viet' },
         { key: 'nav.productsMenu.anQuangCaffe', path: '/an-quang-caffe' },
         { key: 'nav.productsMenu.corporateGifts', path: '/qua-tang-doanh-nghiep' },
       ],

@@ -405,8 +405,12 @@ useProductStructuredData(product)
               </NuxtLink>
             </div>
 
-            <!-- Trust badges -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3 gap-3 mb-8 border-t border-white/10 pt-6">
+            <!-- Trust badges — flex-wrap instead of viewport-breakpoint grid-cols:
+                 this column's actual width depends on whether the specs aside
+                 rendered (see `specs.length` above), not on the viewport alone,
+                 so a fixed xl:/2xl: column count can end up far wider than the
+                 content and strand the last badge on its own line. -->
+            <div class="flex flex-wrap gap-x-6 gap-y-3 mb-8 border-t border-white/10 pt-6">
               <div class="flex items-center gap-2.5 text-xs text-white/65 max-w-[fit-content]">
                 <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="1.75" aria-hidden="true">

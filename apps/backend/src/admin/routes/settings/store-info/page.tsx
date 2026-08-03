@@ -301,7 +301,9 @@ const StoreInfoPage = () => {
           <TiptapEditor
             editorKey={loadedId ?? "loading"}
             value={aboutContent}
-            onChange={setAboutContent}
+            onChange={(content) => {
+              if (typeof content !== "string") setAboutContent(content)
+            }}
           />
         </div>
 

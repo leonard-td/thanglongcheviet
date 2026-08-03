@@ -2,7 +2,7 @@ import Lenis from 'lenis'
 
 // Smooth scrolling toàn site (quán tính khi lăn chuột/trackpad).
 // Là plugin client global -> tự áp dụng cho MỌI trang, kể cả trang phát triển sau.
-export default defineNuxtPlugin((nuxtApp) => {
+export default defineNuxtPlugin(() => {
   // Tôn trọng người dùng giảm chuyển động -> dùng cuộn gốc của trình duyệt.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
@@ -25,12 +25,12 @@ export default defineNuxtPlugin((nuxtApp) => {
     lenis.scrollTo(0, { immediate: true })
   })
 
-  // Dọn dẹp khi HMR / app unmount.
+  // Dọn dẹp khi HMR (không có hook Nuxt tương ứng cho "app unmount" thật sự —
+  // full page reload/close tự giải phóng mọi thứ).
   const cleanup = () => {
     cancelAnimationFrame(rafId)
     lenis.destroy()
   }
-  nuxtApp.hook('app:unmounted', cleanup)
   if (import.meta.hot) import.meta.hot.dispose(cleanup)
 
   // Cho phép component khác gọi: const { $lenis } = useNuxtApp()

@@ -33,7 +33,7 @@ const footerHours = computed(() => {
 
 <template>
   <footer class="modis-site-footer">
-    <div class="container">
+    <div class="container-page">
       <div class="row">
         <div class="col-md-4">
           <div class="widget widget_recent_post">
@@ -71,10 +71,6 @@ const footerHours = computed(() => {
                 <a :href="`tel:${contact.phone}`">{{ contact.phoneDisplay }}</a>
               </span>
               <span>
-                <strong>{{ t('footer.hotline') }}:</strong>
-                <a :href="`tel:${contact.mobile}`">{{ contact.mobile?.replace('+84 ', '0') }}</a>
-              </span>
-              <span>
                 <strong>{{ t('footer.email') }}:</strong>
                 <a :href="`mailto:${contact.email}`">{{ contact.email }}</a>
               </span>
@@ -101,3 +97,4 @@ const footerHours = computed(() => {
     </div>
   </footer>
 </template>
+

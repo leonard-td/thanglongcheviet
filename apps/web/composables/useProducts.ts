@@ -4,8 +4,6 @@ import { transformMedusaCategory, transformMedusaProduct } from '~/utils/medusa'
 import { categoryLabel } from '~/utils/storefront'
 import { isNotFoundError } from '~/utils/fetch-status'
 
-export type { Product } from '~/utils/storefront'
-
 export interface ProductGroup {
   id: string
   slug: string
