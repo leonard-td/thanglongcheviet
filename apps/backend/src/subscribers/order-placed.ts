@@ -48,7 +48,8 @@ export default async function orderPlacedHandler({
       formatOrderMessage({
         ...order,
         total: order.summary?.current_order_total,
-      })
+      }),
+      data.id
     )
     const failed = results.filter((message) => message.status === "failed")
 

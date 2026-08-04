@@ -23,6 +23,7 @@ export async function walkFiles(root: string): Promise<string[]> {
     const entries = await fsp.readdir(abs, { withFileTypes: true })
     for (const entry of entries) {
       if (entry.name.startsWith(".")) continue
+      if (entry.name.startsWith("private-")) continue
       const childRel = rel ? `${rel}/${entry.name}` : entry.name
       if (entry.isDirectory()) {
         await walk(childRel)

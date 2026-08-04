@@ -19,7 +19,7 @@ const promotions = computed(() =>
     image: p.image,
     shortDesc: p.shortDesc,
     variantId: p.variantId,
-    inStock: p.inStock,
+    inStock: p.quickAddInStock,
   })),
 )
 

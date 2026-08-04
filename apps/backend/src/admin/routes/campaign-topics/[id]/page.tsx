@@ -7,6 +7,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRevalidator,
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CampaignTopicForm from "../../../components/campaign-topic-form"
@@ -40,6 +41,7 @@ const EditCampaignTopicPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const prompt = usePrompt()
+  const revalidator = useRevalidator()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const { campaign_topic } = useLoaderData() as Awaited<
@@ -63,6 +65,7 @@ const EditCampaignTopicPage = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign-topics"] })
+      revalidator.revalidate()
     },
   })
 

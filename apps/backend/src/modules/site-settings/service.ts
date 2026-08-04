@@ -13,7 +13,25 @@ class SiteSettingsModuleService extends MedusaService({
     if (existing) {
       return existing
     }
-    return await this.createSiteSettings({})
+    try {
+      return await this.createSiteSettings({})
+    } catch (error) {
+      const candidate = error as {
+        code?: string
+        cause?: { code?: string }
+      }
+      if (
+        candidate.code === "23505" ||
+        candidate.cause?.code === "23505"
+      ) {
+        const [createdByConcurrentRequest] = await this.listSiteSettings(
+          {},
+          { take: 1 }
+        )
+        if (createdByConcurrentRequest) return createdByConcurrentRequest
+      }
+      throw error
+    }
   }
 
   async updateSingleton(data: Record<string, unknown>) {

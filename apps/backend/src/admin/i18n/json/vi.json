@@ -8,6 +8,8 @@
     "eventRegistrations": "Đăng ký sự kiện",
     "careChannels": "Kênh CSKH",
     "careMessages": "Tin nhắn CSKH",
+    "inquiries": "Yêu cầu khách hàng",
+    "navigation": "Navigation",
     "backup": "Sao lưu & Phục hồi",
     "storeInfo": "Thông tin cửa hàng",
     "employees": "Nhân viên",
@@ -366,6 +368,117 @@
       "cancelDelete": "Hủy"
     }
   },
+  "navigation": {
+    "title": "Navigation",
+    "loading": "Đang tải...",
+    "empty": "Chưa có mục menu nào.",
+    "form": {
+      "create": "Thêm mục menu",
+      "edit": "Sửa mục menu"
+    },
+    "fields": {
+      "label": "Nhãn",
+      "labelPlaceholder": "Trang chủ",
+      "url": "URL",
+      "urlPlaceholder": "/",
+      "order": "Thứ tự",
+      "parent": "Mục cha",
+      "parentNone": "Không có",
+      "isActive": "Hiển thị",
+      "openInNewTab": "Mở tab mới"
+    },
+    "columns": {
+      "label": "Nhãn",
+      "url": "URL",
+      "order": "Thứ tự",
+      "parent": "Mục cha",
+      "active": "Trạng thái",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "active": "Đang hiển thị",
+      "inactive": "Ẩn"
+    },
+    "actions": {
+      "create": "Thêm",
+      "update": "Cập nhật",
+      "cancel": "Hủy",
+      "delete": "Xóa"
+    },
+    "messages": {
+      "requiredFields": "Vui lòng nhập nhãn và URL.",
+      "created": "Đã thêm mục menu.",
+      "updated": "Đã cập nhật mục menu.",
+      "deleted": "Đã xóa mục menu.",
+      "saveFailed": "Lưu mục menu thất bại.",
+      "deleteFailed": "Xóa mục menu thất bại.",
+      "deleteConfirmTitle": "Xóa mục menu",
+      "deleteConfirmDesc": "Bạn có chắc muốn xóa \"{{label}}\" không?"
+    }
+  },
+  "inquiries": {
+    "title": "Yêu cầu khách hàng",
+    "detail": "Chi tiết yêu cầu",
+    "columns": {
+      "name": "Khách hàng",
+      "phone": "Số điện thoại",
+      "type": "Loại",
+      "service": "Dịch vụ / Lịch hẹn",
+      "source": "Nguồn",
+      "status": "Trạng thái",
+      "createdAt": "Thời gian gửi"
+    },
+    "filters": {
+      "type": "Lọc theo loại",
+      "allTypes": "Tất cả loại",
+      "status": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái"
+    },
+    "type": {
+      "contact": "Liên hệ",
+      "booking": "Đặt lịch"
+    },
+    "status": {
+      "new": "Mới",
+      "confirmed": "Đã xác nhận",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
+    },
+    "sources": {
+      "connect-widget": "Widget liên hệ",
+      "website": "Website",
+      "contact-page": "Trang liên hệ",
+      "corporate-contact": "Liên hệ doanh nghiệp",
+      "booking-form": "Form đặt lịch",
+      "corporate-landing": "Landing doanh nghiệp"
+    },
+    "sections": {
+      "customer": "Thông tin khách hàng",
+      "handling": "Xử lý yêu cầu",
+      "handlingHint": "Liên hệ khách hàng và cập nhật trạng thái sau khi xử lý."
+    },
+    "fields": {
+      "type": "Loại yêu cầu",
+      "name": "Họ tên",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "service": "Dịch vụ",
+      "schedule": "Thời gian hẹn",
+      "message": "Lời nhắn",
+      "source": "Nguồn",
+      "createdAt": "Thời gian gửi",
+      "currentStatus": "Trạng thái hiện tại",
+      "status": "Trạng thái"
+    },
+    "actions": {
+      "save": "Lưu thay đổi",
+      "backToList": "Quay lại danh sách"
+    },
+    "messages": {
+      "updated": "Cập nhật yêu cầu thành công",
+      "updateFailed": "Cập nhật yêu cầu thất bại"
+    }
+  },
   "campaign-posts": {
     "title": "Bài viết Campaign",
     "create": "Tạo bài viết",
@@ -630,7 +743,10 @@
       "kind": {
         "card": "Card",
         "campaign_post": "Bài viết",
-        "campaign_topic": "Chủ đề bài viết"
+        "campaign_topic": "Chủ đề bài viết",
+        "site_settings": "Thông tin cửa hàng",
+        "event": "Sự kiện",
+        "product": "Sản phẩm"
       },
       "confirm": "Xóa",
       "cancel": "Hủy",

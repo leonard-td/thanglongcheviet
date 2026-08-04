@@ -60,7 +60,7 @@ const EventRegistrationsPage = () => {
           ...(eventId ? { event_id: eventId } : {}),
         },
       }),
-    queryKey: [["event-registrations", limit, offset, status, eventId]],
+    queryKey: ["event-registrations", limit, offset, status, eventId],
   })
 
   const { data: eventsData } = useQuery<EventsResponse>({
@@ -68,7 +68,7 @@ const EventRegistrationsPage = () => {
       sdk.client.fetch(`/admin/events`, {
         query: { limit: 100 },
       }),
-    queryKey: [["events", "registration-filter"]],
+    queryKey: ["events", "registration-filter"],
   })
 
   const events = eventsData?.events ?? []

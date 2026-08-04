@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import fsp from "node:fs/promises"
 import path from "node:path"
+import { Transform } from "node:stream"
 import { pipeline } from "node:stream/promises"
 import unzipper from "unzipper"
 import { from as copyFrom } from "pg-copy-streams"
@@ -16,6 +17,11 @@ import {
 import { hashFile } from "./fs-utils"
 import { manifestSchema, type BackupManifest } from "./manifest"
 import { STATIC_DIR, TMP_DIR } from "./paths"
+import {
+  getZipSafetyLimits,
+  validateZipMetadata,
+  type ZipEntryMetadata,
+} from "./zip-safety"
 
 export type RestoreResult = {
   preRestoreFile: string
@@ -31,6 +37,18 @@ function sameSet(a: string[], b: string[]): boolean {
 // tuyệt đối hoặc backslash đều bị từ chối).
 async function extractZip(zipPath: string, staging: string): Promise<void> {
   const dir = await unzipper.Open.file(zipPath)
+  const limits = getZipSafetyLimits()
+  const metadata = dir.files.map((entry) => {
+    return {
+      path: entry.path,
+      compressedSize: entry.compressedSize,
+      uncompressedSize: entry.uncompressedSize,
+    }
+  })
+  validateZipMetadata(metadata, limits)
+  const metadataByPath = new Map(metadata.map((item) => [item.path, item]))
+
+  let extractedTotal = 0
   for (const entry of dir.files) {
     if (entry.type !== "File") continue
     const rel = entry.path
@@ -43,7 +61,31 @@ async function extractZip(zipPath: string, staging: string): Promise<void> {
     }
     const dest = path.join(staging, ...rel.split("/"))
     await fsp.mkdir(path.dirname(dest), { recursive: true })
-    await pipeline(entry.stream(), fs.createWriteStream(dest))
+    const declared = metadataByPath.get(rel) as ZipEntryMetadata
+    let extractedEntry = 0
+    const enforceLimits = new Transform({
+      transform(chunk: Buffer, _encoding, callback) {
+        extractedEntry += chunk.length
+        extractedTotal += chunk.length
+        if (
+          extractedEntry > declared.uncompressedSize ||
+          extractedEntry > limits.maxEntryBytes
+        ) {
+          callback(new Error(`Zip entry exceeds extracted size limit: ${rel}`))
+          return
+        }
+        if (extractedTotal > limits.maxTotalBytes) {
+          callback(
+            new Error(
+              `Backup archive exceeds extracted size limit (${limits.maxTotalBytes} bytes)`
+            )
+          )
+          return
+        }
+        callback(null, chunk)
+      },
+    })
+    await pipeline(entry.stream(), enforceLimits, fs.createWriteStream(dest))
   }
 }
 

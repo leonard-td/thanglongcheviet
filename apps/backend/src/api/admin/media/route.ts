@@ -4,6 +4,7 @@ import { zodValidator } from "../../utils/zod-validator"
 import { CARD_MODULE } from "../../../modules/card"
 import type CardModuleService from "../../../modules/card/service"
 import { toRelativeMediaUrl } from "../../utils/media-url"
+import { parsePagination } from "../../utils/pagination"
 
 const RecordMediaSchema = z.object({
   url: z.string().min(1),
@@ -26,12 +27,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   if (folderParam === "root") filters.folder_id = null
   else if (folderParam) filters.folder_id = folderParam
 
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 100,
+    max: 500,
+  })
+
   const [media, count] = await cardModuleService.listAndCountCardMedias(
     filters,
-    { order: { created_at: "DESC" }, take: 500 }
+    { order: { created_at: "DESC" }, take: limit, skip: offset }
   )
 
-  res.json({ media, count })
+  res.json({ media, count, limit, offset })
 }
 
 /**

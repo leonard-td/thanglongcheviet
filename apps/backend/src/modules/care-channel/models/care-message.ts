@@ -16,6 +16,7 @@ const CareMessage = model.define("care_message", {
   external_user_id: model.text().nullable(),
   external_user_name: model.text().nullable(),
   external_message_id: model.text().nullable(),
+  reference_id: model.text().nullable(),
   content: model.text().searchable(),
   status: model.enum(["sent", "failed", "received"]),
   error: model.text().nullable(),

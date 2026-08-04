@@ -102,7 +102,7 @@ const formatPrice = (price: number) =>
             <p class="text-primary-400 font-semibold text-sm mb-3">
               {{ formatPrice(p.price) }}
             </p>
-            <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock" />
+            <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.quickAddInStock" />
           </div>
         </article>
         </div>

@@ -108,9 +108,14 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
+      TELEGRAM_SEED_FORCE_UPDATE: ${TELEGRAM_SEED_FORCE_UPDATE:-}
       TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
+      BACKUP_RESTORE_MAX_EXTRACTED_BYTES: ${BACKUP_RESTORE_MAX_EXTRACTED_BYTES:-8589934592}
+      BACKUP_RESTORE_MAX_ENTRY_BYTES: ${BACKUP_RESTORE_MAX_ENTRY_BYTES:-4294967296}
+      BACKUP_RESTORE_MAX_ENTRIES: ${BACKUP_RESTORE_MAX_ENTRIES:-100000}
+      BACKUP_RESTORE_MAX_COMPRESSION_RATIO: ${BACKUP_RESTORE_MAX_COMPRESSION_RATIO:-1000}
       # LOCAL/HTTP ONLY: let the admin session cookie work over plain http
       # (NODE_ENV=production otherwise forces a Secure/HTTPS-only cookie, which
       # the browser drops → every /admin call is 401). Leave unset on a real
@@ -123,6 +128,7 @@ services:
       # working dir) — named volume so uploads outlive redeploys, which wipe
       # and re-extract the surrounding .medusa/server artifact dir.
       - backend_static:/workspace/apps/backend/.medusa/server/static
+      - backend_private_exports:/workspace/apps/backend/.medusa/server/.private-exports
       # Backup zips (admin Settings > Backup writes to ./.backups under the
       # working dir) — named volume for the same redeploy-survival reason.
       - backend_backups:/workspace/apps/backend/.medusa/server/.backups
@@ -240,5 +246,6 @@ volumes:
   postgres_data:
   backend_server_node_modules:
   backend_static:
+  backend_private_exports:
   backend_backups:
   restic_repo:

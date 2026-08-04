@@ -13,6 +13,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRevalidator,
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CampaignPostForm from "../../../components/campaign-post-form"
@@ -47,6 +48,7 @@ const EditCampaignPostPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const prompt = usePrompt()
+  const revalidator = useRevalidator()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const { campaign_post } = useLoaderData() as Awaited<ReturnType<typeof loader>>
@@ -81,6 +83,7 @@ const EditCampaignPostPage = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign-posts"] })
+      revalidator.revalidate()
     },
   })
 
@@ -91,7 +94,7 @@ const EditCampaignPostPage = () => {
         { method: "POST" }
       ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [["campaign-posts"]] })
+      queryClient.invalidateQueries({ queryKey: ["campaign-posts"] })
       toast.success(t("campaign-posts.messages.duplicated"))
       navigate("..")
     },

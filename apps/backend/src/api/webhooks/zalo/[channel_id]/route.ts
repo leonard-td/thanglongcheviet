@@ -57,7 +57,19 @@ export async function POST(
   const signature = req.headers["x-zevent-signature"]
   const body = req.body ?? {}
 
-  if (config.app_id && config.secret_key && typeof signature === "string") {
+  // Never process inbound messages unless webhook verification is fully
+  // configured. A missing signature must not bypass verification.
+  if (!config.app_id || !config.secret_key) {
+    res.status(200).json({ ok: true })
+    return
+  }
+
+  if (typeof signature !== "string") {
+    res.status(401).json({ ok: false })
+    return
+  }
+
+  {
     const rawBody = req.rawBody
       ? req.rawBody.toString()
       : JSON.stringify(body)

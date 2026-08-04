@@ -110,6 +110,10 @@ services:
       AUTH_CORS: ${AUTH_CORS:-/.*/}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
+      BACKUP_RESTORE_MAX_EXTRACTED_BYTES: ${BACKUP_RESTORE_MAX_EXTRACTED_BYTES:-8589934592}
+      BACKUP_RESTORE_MAX_ENTRY_BYTES: ${BACKUP_RESTORE_MAX_ENTRY_BYTES:-4294967296}
+      BACKUP_RESTORE_MAX_ENTRIES: ${BACKUP_RESTORE_MAX_ENTRIES:-100000}
+      BACKUP_RESTORE_MAX_COMPRESSION_RATIO: ${BACKUP_RESTORE_MAX_COMPRESSION_RATIO:-1000}
       # Public origin for uploaded-file URLs (file-local provider appends
       # /static). Only matters for the transient absolute URL returned right
       # after an upload — every URL we persist is normalized to a relative
@@ -120,6 +124,7 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
+      TELEGRAM_SEED_FORCE_UPDATE: ${TELEGRAM_SEED_FORCE_UPDATE:-}
       TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
       # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
       # host check (only matters when DOMAIN != localhost).

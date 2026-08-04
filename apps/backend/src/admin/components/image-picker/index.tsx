@@ -26,14 +26,14 @@ const ImagePicker = ({ value, onChange }: ImagePickerProps) => {
 
   const { data, isLoading } = useQuery<{ media: CardMediaItem[] }>({
     queryFn: () => sdk.client.fetch("/admin/cards/media"),
-    queryKey: [["card-media"]],
+    queryKey: ["card-media"],
     enabled: open,
   })
 
   const { mutateAsync: recordMedia } = useMutation({
     mutationFn: (body: { url: string, filename?: string | null }) =>
       sdk.client.fetch("/admin/cards/media", { method: "POST", body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [["card-media"]] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["card-media"] }),
   })
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +74,6 @@ const ImagePicker = ({ value, onChange }: ImagePickerProps) => {
           // previous load failure's inline `display: none` never carries over
           // onto the next (valid) image — without it the broken-image state
           // stuck around until a full page reload.
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={value}
             src={value}
@@ -166,7 +165,6 @@ const ImagePicker = ({ value, onChange }: ImagePickerProps) => {
                       setOpen(false)
                     }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={m.url} alt={m.filename ?? ""} className="h-full w-full object-cover" />
                   </button>
                 ))}

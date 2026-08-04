@@ -30,14 +30,14 @@ const MediaPickerModal = ({ open, onOpenChange, onSelect }: MediaPickerModalProp
 
   const { data, isLoading } = useQuery<{ media: MediaItem[] }>({
     queryFn: () => sdk.client.fetch("/admin/media"),
-    queryKey: [["media-library", "picker"]],
+    queryKey: ["media-lib", "picker"],
     enabled: open,
   })
 
   const { mutateAsync: recordMedia } = useMutation({
     mutationFn: (body: { url: string, filename?: string | null }) =>
       sdk.client.fetch("/admin/media", { method: "POST", body }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [["media-library"]] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["media-lib"] }),
   })
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,7 +136,6 @@ const MediaPickerModal = ({ open, onOpenChange, onSelect }: MediaPickerModalProp
                     onOpenChange(false)
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={m.url} alt={m.filename ?? ""} className="h-full w-full object-cover" />
                 </button>
               ))}

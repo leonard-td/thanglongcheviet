@@ -8,6 +8,8 @@
     "eventRegistrations": "Event Registrations",
     "careChannels": "Care Channels",
     "careMessages": "Care Messages",
+    "inquiries": "Customer Inquiries",
+    "navigation": "Navigation",
     "backup": "Backup & Restore",
     "storeInfo": "Store Information",
     "employees": "Employees",
@@ -366,6 +368,117 @@
       "cancelDelete": "Cancel"
     }
   },
+  "navigation": {
+    "title": "Navigation",
+    "loading": "Loading...",
+    "empty": "No menu items yet.",
+    "form": {
+      "create": "Add menu item",
+      "edit": "Edit menu item"
+    },
+    "fields": {
+      "label": "Label",
+      "labelPlaceholder": "Home",
+      "url": "URL",
+      "urlPlaceholder": "/",
+      "order": "Order",
+      "parent": "Parent item",
+      "parentNone": "None",
+      "isActive": "Visible",
+      "openInNewTab": "Open in new tab"
+    },
+    "columns": {
+      "label": "Label",
+      "url": "URL",
+      "order": "Order",
+      "parent": "Parent",
+      "active": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Visible",
+      "inactive": "Hidden"
+    },
+    "actions": {
+      "create": "Add",
+      "update": "Update",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "messages": {
+      "requiredFields": "Please enter a label and URL.",
+      "created": "Menu item added.",
+      "updated": "Menu item updated.",
+      "deleted": "Menu item deleted.",
+      "saveFailed": "Failed to save menu item.",
+      "deleteFailed": "Failed to delete menu item.",
+      "deleteConfirmTitle": "Delete menu item",
+      "deleteConfirmDesc": "Are you sure you want to delete \"{{label}}\"?"
+    }
+  },
+  "inquiries": {
+    "title": "Customer Inquiries",
+    "detail": "Inquiry detail",
+    "columns": {
+      "name": "Customer",
+      "phone": "Phone",
+      "type": "Type",
+      "service": "Service / Schedule",
+      "source": "Source",
+      "status": "Status",
+      "createdAt": "Submitted at"
+    },
+    "filters": {
+      "type": "Filter by type",
+      "allTypes": "All types",
+      "status": "Filter by status",
+      "allStatuses": "All statuses"
+    },
+    "type": {
+      "contact": "Contact",
+      "booking": "Booking"
+    },
+    "status": {
+      "new": "New",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "sources": {
+      "connect-widget": "Contact widget",
+      "website": "Website",
+      "contact-page": "Contact page",
+      "corporate-contact": "Corporate contact",
+      "booking-form": "Booking form",
+      "corporate-landing": "Corporate landing"
+    },
+    "sections": {
+      "customer": "Customer information",
+      "handling": "Handle inquiry",
+      "handlingHint": "Contact the customer and update the status after handling."
+    },
+    "fields": {
+      "type": "Inquiry type",
+      "name": "Name",
+      "phone": "Phone",
+      "email": "Email",
+      "service": "Service",
+      "schedule": "Preferred schedule",
+      "message": "Message",
+      "source": "Source",
+      "createdAt": "Submitted at",
+      "currentStatus": "Current status",
+      "status": "Status"
+    },
+    "actions": {
+      "save": "Save changes",
+      "backToList": "Back to list"
+    },
+    "messages": {
+      "updated": "Inquiry updated successfully",
+      "updateFailed": "Failed to update inquiry"
+    }
+  },
   "campaign-posts": {
     "title": "Campaign Posts",
     "create": "Create post",
@@ -630,7 +743,10 @@
       "kind": {
         "card": "Card",
         "campaign_post": "Post",
-        "campaign_topic": "Post topic"
+        "campaign_topic": "Post topic",
+        "site_settings": "Store info",
+        "event": "Event",
+        "product": "Product"
       },
       "confirm": "Delete",
       "cancel": "Cancel",

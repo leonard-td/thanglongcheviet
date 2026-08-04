@@ -13,6 +13,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRevalidator,
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import EventForm from "../../../components/event-form"
@@ -42,6 +43,7 @@ const EditEventPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const prompt = usePrompt()
+  const revalidator = useRevalidator()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const { event: eventData } = useLoaderData() as Awaited<ReturnType<typeof loader>>
@@ -74,6 +76,7 @@ const EditEventPage = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] })
+      revalidator.revalidate()
     },
   })
 

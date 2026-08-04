@@ -39,7 +39,7 @@ const CategoryRelatedCollectionWidget = ({
       sdk.client.fetch("/admin/collections", {
         query: { limit: 100, fields: "id,title" },
       }),
-    queryKey: [["collections", "category-widget-options"]],
+    queryKey: ["collections", "category-widget-options"],
   })
 
   const collections = collectionsData?.collections ?? []

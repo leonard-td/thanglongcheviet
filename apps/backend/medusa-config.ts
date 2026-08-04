@@ -80,6 +80,10 @@ module.exports = defineConfig({
       : {}),
   },
   admin: {
+    // Don't bake MEDUSA_BACKEND_URL into the dashboard login client — empty
+    // baseUrl makes @medusajs/js-sdk use window.location.origin, so /app works
+    // whether you open it via localhost, a LAN IP, or a real domain behind nginx.
+    backendUrl: "",
     vite: () => ({
       server: {
         allowedHosts: true,
@@ -144,6 +148,7 @@ module.exports = defineConfig({
             id: "local",
             options: {
               upload_dir: "static",
+              private_upload_dir: ".private-exports",
               // LocalFileService serves uploads from the "static" dir under a
               // "/static" URL path (its own default is
               // "http://localhost:9000/static") — this was missing the

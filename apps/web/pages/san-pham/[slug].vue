@@ -105,7 +105,8 @@ function isValueAvailable(optionTitle: string, value: string) {
   if (!product.value) return false
   const candidate = { ...selectedOptions.value, [optionTitle]: value }
   return product.value.variants.some(v =>
-    product.value!.options.every(o => v.optionValues[o.title] === candidate[o.title]),
+    v.inStock
+    && product.value!.options.every(o => v.optionValues[o.title] === candidate[o.title]),
   )
 }
 
@@ -124,7 +125,13 @@ const missingOption = computed(() => {
   return product.value.options.find(o => !selectedOptions.value[o.title]) ?? product.value.options[0] ?? null
 })
 
-const canAddToCart = computed(() => Boolean(selectedVariant.value) && !cartLoading.value)
+const canAddToCart = computed(() =>
+  Boolean(selectedVariant.value?.inStock) && Boolean(selectedVariant.value) && !cartLoading.value,
+)
+
+const selectedOutOfStock = computed(() =>
+  Boolean(selectedVariant.value) && !selectedVariant.value!.inStock,
+)
 
 const incrementQty = () => { quantity.value++ }
 const decrementQty = () => { if (quantity.value > 1) quantity.value-- }
@@ -353,6 +360,9 @@ useProductStructuredData(product)
               <p v-if="missingOption" class="text-xs text-amber-400/90">
                 {{ t('products.chooseOption', { option: missingOption.title }) }}
               </p>
+              <p v-else-if="selectedOutOfStock" class="text-xs text-red-400/90">
+                {{ t('products.outOfStock') }}
+              </p>
             </div>
 
             <!-- Quantity + CTA (mốc theo dõi cho thanh mua nhanh cố định) -->
@@ -479,7 +489,7 @@ useProductStructuredData(product)
               <p class="text-primary-400 text-xs font-semibold p-0 mb-0">
                 {{ formatMoney(p.price, p.currencyCode, locale === 'en' ? 'en-US' : 'vi-VN') }}
               </p>
-              <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock" icon-only />
+              <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.quickAddInStock" icon-only />
             </div>
           </article>
         </div>
@@ -556,6 +566,9 @@ useProductStructuredData(product)
             </div>
             <p v-if="missingOption" class="text-xs text-amber-400/90">
               {{ t('products.chooseOption', { option: missingOption.title }) }}
+            </p>
+            <p v-else-if="selectedOutOfStock" class="text-xs text-red-400/90">
+              {{ t('products.outOfStock') }}
             </p>
           </div>
 

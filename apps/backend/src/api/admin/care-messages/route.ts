@@ -1,7 +1,9 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../utils/zod-validator"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
+import { parsePagination } from "../../utils/pagination"
 
 const ReplySchema = z.object({
   channel_id: z.string().min(1),
@@ -14,14 +16,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const limit = Math.min(Number(req.query.limit) || 20, 200)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 20,
+    max: 200,
+  })
 
   const filters: Record<string, unknown> = {}
   for (const key of [
     "channel_id",
     "direction",
     "kind",
+    "status",
     "external_user_id",
   ] as const) {
     if (typeof req.query[key] === "string" && req.query[key]) {
@@ -66,7 +71,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     CARE_CHANNEL_MODULE
   )
 
-  const body = ReplySchema.parse(req.body)
+  const body = await zodValidator(ReplySchema, req.body)
 
   const care_message = await service.sendMessage(body.channel_id, {
     text: body.content,

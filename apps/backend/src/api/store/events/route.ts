@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { EVENT_MODULE } from "../../../modules/event"
 import type EventModuleService from "../../../modules/event/service"
+import { parsePagination } from "../../utils/pagination"
 
 /**
  * GET /store/events?limit=&offset=
@@ -11,12 +12,14 @@ import type EventModuleService from "../../../modules/event/service"
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const limit = Math.min(Number(req.query.limit) || 20, 100)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 20,
+    max: 100,
+  })
 
   const [events, count] = await eventModuleService.listAndCountActiveEvents(
     {},
-    { take: limit, skip: offset, order: { start_at: "DESC" } }
+    { take: limit, skip: offset, order: { start_at: "ASC" } }
   )
 
   const seatsByEvent = await eventModuleService.countRegisteredSeats(

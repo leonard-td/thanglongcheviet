@@ -16,6 +16,15 @@ const {
 const { customer, isLoggedIn, fetchProfile } = useCustomerAuth()
 const { methods: paymentMethods, fetchPaymentMethods } = usePayment()
 
+// Utility page: keep header solid so cart rows don't scroll under transparent nav.
+const headerThreshold = useHeaderSolidThreshold()
+onMounted(() => {
+  headerThreshold.value = -1
+})
+onBeforeUnmount(() => {
+  headerThreshold.value = DEFAULT_HEADER_SOLID_THRESHOLD
+})
+
 const form = reactive({
   name: '',
   phone: '',
@@ -52,6 +61,11 @@ const handleApplyCoupon = async () => {
   couponOk.value = res.success
   if (res.success) {
     couponMessage.value = t('cart.couponApplied', { amount: formatPrice(res.discount ?? 0) })
+    couponCode.value = ''
+  } else if (totals.discount > 0 && promoCodes.value.length) {
+    // Automatic promotions may already discount the cart; manual apply is not needed.
+    couponMessage.value = t('cart.couponAlreadyApplied')
+    couponOk.value = true
     couponCode.value = ''
   } else {
     couponMessage.value = res.message || t('cart.couponInvalid')
@@ -191,7 +205,7 @@ useSeoMeta({
               v-model="couponCode"
               type="text"
               :placeholder="t('cart.couponPlaceholder')"
-              class="flex-1 px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px] uppercase"
+              class="flex-1 px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px]"
               @keyup.enter="handleApplyCoupon"
             >
             <button

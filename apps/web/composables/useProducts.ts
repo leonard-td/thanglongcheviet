@@ -13,7 +13,8 @@ export interface ProductGroup {
 }
 
 const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,*images,*categories,'
-  + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price'
+  + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price,'
+  + '*variants.manage_inventory,*variants.allow_backorder,*variants.inventory_quantity'
 
 export function useProducts() {
   const { locale } = useI18n()

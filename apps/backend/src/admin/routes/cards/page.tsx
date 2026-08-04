@@ -1,5 +1,5 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { ArrowDownTray, ArrowUpTray, DotsSix, GridLayout } from "@medusajs/icons"
+import { ArrowDownTray, ArrowUpTray, DotsSix, GridLayout, LockClosedSolid } from "@medusajs/icons"
 import { Badge, Button, Checkbox, DropdownMenu, Heading, Switch, Text, Tooltip, toast, usePrompt } from "@medusajs/ui"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
@@ -91,7 +91,6 @@ const CardRow = ({ card, onNavigate, onToggleActive, togglingId, selected, onTog
           // key={card.image} forces a fresh <img> mount whenever the URL
           // changes, so a stale load-error's inline `display: none` never
           // carries over onto a newly-picked (valid) image.
-          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={card.image}
             src={card.image}
@@ -128,7 +127,7 @@ const CardRow = ({ card, onNavigate, onToggleActive, togglingId, selected, onTog
       {card.locked && (
         <Tooltip content={t("cards.lockedNotice")}>
           <Badge size="2xsmall" color="orange">
-            🔒
+            <LockClosedSolid />
           </Badge>
         </Tooltip>
       )}
@@ -156,7 +155,7 @@ const CardsPage = () => {
 
   const { data, isLoading } = useQuery<CardsResponse>({
     queryFn: () => sdk.client.fetch(`/admin/cards`),
-    queryKey: [["cards"]],
+    queryKey: ["cards"],
   })
 
   // Local, immediately-rendered order — synced from the query, then updated
@@ -170,11 +169,11 @@ const CardsPage = () => {
     mutationFn: (payload: { id: string, rank: number }[]) =>
       sdk.client.fetch("/admin/cards/reorder", { method: "POST", body: { items: payload } }),
     onSuccess: (response: CardsResponse) => {
-      queryClient.setQueryData([["cards"]], { cards: response.cards, count: response.cards.length })
+      queryClient.setQueryData(["cards"], { cards: response.cards, count: response.cards.length })
     },
     onError: () => {
       toast.error(t("cards.messages.reorderFailed"))
-      queryClient.invalidateQueries({ queryKey: [["cards"]] })
+      queryClient.invalidateQueries({ queryKey: ["cards"] })
     },
   })
 
@@ -214,7 +213,7 @@ const CardsPage = () => {
       sdk.client.fetch<ImportResult>("/admin/cards/import", { method: "POST", body: { items: rows } }),
     onSuccess: (result) => {
       setItems(result.cards)
-      queryClient.setQueryData([["cards"]], { cards: result.cards, count: result.cards.length })
+      queryClient.setQueryData(["cards"], { cards: result.cards, count: result.cards.length })
       toast.success(
         t("cards.messages.importDone", {
           created: result.created,
@@ -269,7 +268,7 @@ const CardsPage = () => {
       }),
     onSuccess: (result) => {
       setItems(result.cards)
-      queryClient.setQueryData([["cards"]], { cards: result.cards, count: result.cards.length })
+      queryClient.setQueryData(["cards"], { cards: result.cards, count: result.cards.length })
       setSelectedIds(new Set())
       toast.success(t("cards.bulk.deleteDone", { count: result.deleted }))
       if (result.skipped > 0) toast.warning(t("cards.bulk.deleteSkipped", { count: result.skipped }))

@@ -42,7 +42,7 @@ const CampaignTopicsPage = () => {
           offset,
         },
       }),
-    queryKey: [["campaign-topics", limit, offset]],
+    queryKey: ["campaign-topics", limit, offset],
   })
 
   const columnHelper = createDataTableColumnHelper<CampaignTopic>()

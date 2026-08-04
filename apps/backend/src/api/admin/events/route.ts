@@ -4,6 +4,7 @@ import { zodValidator } from "../../utils/zod-validator"
 import { EVENT_MODULE } from "../../../modules/event"
 import type EventModuleService from "../../../modules/event/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../utils/media-url"
+import { MedusaError } from "@medusajs/framework/utils"
 
 const CreateEventSchema = z.object({
   title: z.string().min(1),
@@ -58,6 +59,16 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
   const body = await zodValidator(CreateEventSchema, req.body)
+  if (
+    body.start_at &&
+    body.end_at &&
+    new Date(body.start_at) > new Date(body.end_at)
+  ) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "end_at must be after start_at"
+    )
+  }
   const slug = body.slug || slugify(body.title)
 
   const event = await eventModuleService.createEvents({

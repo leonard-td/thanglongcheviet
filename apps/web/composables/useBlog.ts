@@ -53,6 +53,28 @@ function transformCampaignPost(p: CampaignPost, resolveUrl: (url: string | null 
   }
 }
 
+/** blog.json uses bare filenames; map known backend uploads, else rotate public images. */
+const BLOG_JSON_STATIC: Record<string, string> = {
+  'sp-001.jpg': '/static/1783325099969-sp-001.jpg',
+  'sp-003.jpg': '/static/1783325352620-sp-003.jpg',
+}
+
+const BLOG_JSON_ROTATION = [
+  '/images/hero/hero-1.jpg',
+  '/images/hero/hero-2.jpg',
+  '/images/gallery/hair-1.jpg',
+  '/images/gallery/hair-2.jpg',
+  '/images/gallery/color-1.jpg',
+  '/images/gallery/color-2.jpg',
+  '/images/og-image.jpg',
+] as const
+
+function resolveBlogJsonImage(thumbnail: string | undefined, index: number): string {
+  if (!thumbnail) return BLOG_JSON_ROTATION[index % BLOG_JSON_ROTATION.length]
+  if (thumbnail.startsWith('http') || thumbnail.startsWith('/')) return thumbnail
+  return BLOG_JSON_STATIC[thumbnail] ?? BLOG_JSON_ROTATION[index % BLOG_JSON_ROTATION.length]
+}
+
 function transformCampaignTopic(t: CampaignTopic, resolveUrl: (url: string | null | undefined) => string): BlogTopic {
   return {
     id: t.id,
@@ -76,12 +98,12 @@ export function useBlog() {
   const { resolveMediaUrl } = useMediaUrl()
 
   const localFallback = computed<BlogPost[]>(() =>
-    (fallbackPosts as any[]).map(p => ({
+    (fallbackPosts as any[]).map((p, index) => ({
       slug: p.slug,
       title: p.title?.[locale.value] ?? p.title?.vi ?? '',
       excerpt: p.excerpt?.[locale.value] ?? p.excerpt?.vi ?? '',
       content: '',
-      image: FALLBACK_POST_IMAGE,
+      image: resolveBlogJsonImage(p.thumbnail, index),
       date: p.date ?? '',
       author: 'Thăng Long Chè Việt',
       topic: null,

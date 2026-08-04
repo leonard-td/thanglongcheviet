@@ -4,6 +4,8 @@ import { zodValidator } from "../../../utils/zod-validator"
 import { EVENT_MODULE } from "../../../../modules/event"
 import type EventModuleService from "../../../../modules/event/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../../utils/media-url"
+import { withDatabaseLock } from "../../../../lib/database-lock"
+import { MedusaError } from "@medusajs/framework/utils"
 
 const UpdateEventSchema = z.object({
   title: z.string().min(1).optional(),
@@ -40,27 +42,76 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
   const body = await zodValidator(UpdateEventSchema, req.body)
+  const existingEvent = await eventModuleService.retrieveEvent(id)
+  const nextStart =
+    body.start_at === undefined
+      ? existingEvent.start_at
+      : body.start_at
+        ? new Date(body.start_at)
+        : null
+  const nextEnd =
+    body.end_at === undefined
+      ? existingEvent.end_at
+      : body.end_at
+        ? new Date(body.end_at)
+        : null
 
-  const event = await eventModuleService.updateEvents({
-    id,
-    ...body,
-    content: body.content === undefined ? undefined : normalizeTiptapImageUrls(body.content),
-    thumbnail: body.thumbnail === undefined ? undefined : toRelativeMediaUrl(body.thumbnail),
-    start_at:
-      body.start_at === undefined
-        ? undefined
-        : body.start_at
-          ? new Date(body.start_at)
-          : null,
-    end_at:
-      body.end_at === undefined
-        ? undefined
-        : body.end_at
-          ? new Date(body.end_at)
-          : null,
+  if (nextStart && nextEnd && new Date(nextStart) > new Date(nextEnd)) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "end_at must be after start_at"
+    )
+  }
+
+  const event = await withDatabaseLock(`event-capacity:${id}`, async (client) => {
+    if (body.capacity !== undefined && body.capacity !== null) {
+      const countResult = await client.query(
+        `SELECT coalesce(sum(quantity), 0)::int AS seats
+         FROM event_registration
+         WHERE event_id = $1
+           AND deleted_at IS NULL
+           AND status <> 'cancelled'`,
+        [id]
+      )
+      if (Number(countResult.rows[0]?.seats ?? 0) > body.capacity) {
+        throw new MedusaError(
+          MedusaError.Types.INVALID_DATA,
+          "capacity cannot be lower than currently reserved seats"
+        )
+      }
+    }
+
+    return await eventModuleService.updateEvents({
+      id,
+      ...body,
+      content:
+        body.content === undefined
+          ? undefined
+          : normalizeTiptapImageUrls(body.content),
+      thumbnail:
+        body.thumbnail === undefined
+          ? undefined
+          : toRelativeMediaUrl(body.thumbnail),
+      start_at:
+        body.start_at === undefined
+          ? undefined
+          : body.start_at
+            ? new Date(body.start_at)
+            : null,
+      end_at:
+        body.end_at === undefined
+          ? undefined
+          : body.end_at
+            ? new Date(body.end_at)
+            : null,
+    })
   })
 
-  res.json({ event })
+  const seatsByEvent = await eventModuleService.countRegisteredSeats([id])
+
+  res.json({
+    event: { ...event, registered_seats: seatsByEvent.get(id) ?? 0 },
+  })
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
@@ -68,7 +119,15 @@ export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
 
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  await eventModuleService.deleteEvents(id)
+  await withDatabaseLock(`event-capacity:${id}`, async (client) => {
+    await client.query(
+      `UPDATE event_registration
+       SET deleted_at = now(), updated_at = now()
+       WHERE event_id = $1 AND deleted_at IS NULL`,
+      [id]
+    )
+    await eventModuleService.deleteEvents(id)
+  })
 
   res.status(200).json({
     id,

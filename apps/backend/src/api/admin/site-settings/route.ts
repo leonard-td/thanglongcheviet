@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
+import { zodValidator } from "../../utils/zod-validator"
 import { SITE_SETTINGS_MODULE } from "../../../modules/site-settings"
 import type SiteSettingsModuleService from "../../../modules/site-settings/service"
 import {
@@ -9,7 +10,10 @@ import {
 
 const UpdateSiteSettingsSchema = z.object({
   store_name: z.string().nullable().optional(),
-  email: z.string().nullable().optional(),
+  email: z
+    .union([z.string().email(), z.literal(""), z.null()])
+    .optional()
+    .transform((value) => (value === "" || value === undefined ? null : value)),
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   google_map_url: z.string().nullable().optional(),
@@ -37,7 +41,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const service: SiteSettingsModuleService =
     req.scope.resolve(SITE_SETTINGS_MODULE)
 
-  const body = UpdateSiteSettingsSchema.parse(req.body)
+  const body = await zodValidator(UpdateSiteSettingsSchema, req.body)
 
   const data: Record<string, unknown> = { ...body }
   if (body.hero_images) {

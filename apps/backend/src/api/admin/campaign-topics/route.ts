@@ -4,6 +4,7 @@ import { zodValidator } from "../../utils/zod-validator"
 import { CAMPAIGN_MODULE } from "../../../modules/campaign"
 import type CampaignModuleService from "../../../modules/campaign/service"
 import { toRelativeMediaUrl } from "../../utils/media-url"
+import { parsePagination } from "../../utils/pagination"
 
 const CreateCampaignTopicSchema = z.object({
   name: z.string().min(1),
@@ -29,8 +30,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
 
-  const limit = Math.min(Number(req.query.limit) || 50, 100)
-  const offset = Number(req.query.offset) || 0
+  const { limit, offset } = parsePagination(req.query, {
+    limit: 50,
+    max: 100,
+  })
 
   const [topics, count] =
     await campaignModuleService.listAndCountCampaignTopics(

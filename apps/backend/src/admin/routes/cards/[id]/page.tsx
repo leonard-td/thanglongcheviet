@@ -7,6 +7,7 @@ import {
   useLoaderData,
   useNavigate,
   useParams,
+  useRevalidator,
 } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import CardForm from "../../../components/card-form"
@@ -30,6 +31,7 @@ const EditCardPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const prompt = usePrompt()
+  const revalidator = useRevalidator()
   const queryClient = useQueryClient()
   const { t } = useTranslation()
   const { card } = useLoaderData() as Awaited<ReturnType<typeof loader>>
@@ -48,6 +50,7 @@ const EditCardPage = () => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cards"] })
+      revalidator.revalidate()
     },
   })
 

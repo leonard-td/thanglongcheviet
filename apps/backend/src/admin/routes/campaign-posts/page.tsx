@@ -46,7 +46,7 @@ const CampaignPostsPage = () => {
           offset,
         },
       }),
-    queryKey: [["campaign-posts", limit, offset]],
+    queryKey: ["campaign-posts", limit, offset],
   })
 
   const { data: topicsData } = useQuery<CampaignTopicsResponse>({
@@ -54,7 +54,7 @@ const CampaignPostsPage = () => {
       sdk.client.fetch(`/admin/campaign-topics`, {
         query: { limit: 100 },
       }),
-    queryKey: [["campaign-topics", "post-list"]],
+    queryKey: ["campaign-topics", "post-list"],
   })
 
   const topicNameById = useMemo(() => {
@@ -72,7 +72,7 @@ const CampaignPostsPage = () => {
         { method: "POST" }
       ),
     onSuccess: ({ campaign_post }) => {
-      queryClient.invalidateQueries({ queryKey: [["campaign-posts"]] })
+      queryClient.invalidateQueries({ queryKey: ["campaign-posts"] })
       toast.success(t("campaign-posts.messages.duplicated"))
       navigate(campaign_post.id)
     },

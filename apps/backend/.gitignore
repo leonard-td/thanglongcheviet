@@ -4,6 +4,9 @@
 /uploads
 # file zip backup do admin Settings > Backup tạo ra
 /.backups
+# Medusa order exports and other private file-local uploads (PII — admin auth only)
+/static/private-*
+/.private-exports
 # thư mục runtime của quá trình restore media (bản cũ giữ lại để quay lui)
 /static/.old-*
 /static/.restore-tmp

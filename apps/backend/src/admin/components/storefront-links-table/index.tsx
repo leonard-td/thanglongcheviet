@@ -56,7 +56,7 @@ const StorefrontLinksTable = ({
 
   const { data, isLoading } = useQuery({
     queryFn: () => fetchPage(pagination),
-    queryKey: [[queryKey, pagination.pageIndex]],
+    queryKey: [queryKey, pagination.pageIndex],
   })
 
   const copyLink = async (handle: string | null) => {

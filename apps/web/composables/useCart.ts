@@ -42,7 +42,7 @@ interface MedusaCart {
   promotions?: { id: string, code: string }[]
 }
 
-const CART_FIELDS = '*items,*promotions'
+const CART_FIELDS = 'region_id,*items,*promotions,discount_total,item_subtotal,shipping_total,total'
 
 function mapLineItem(item: MedusaLineItem): CartItem {
   return {
@@ -66,6 +66,7 @@ function mapLineItem(item: MedusaLineItem): CartItem {
       collectionId: null,
       collectionName: '',
       inStock: true,
+      quickAddInStock: true,
       variants: [],
       options: [],
       material: null,
@@ -87,7 +88,10 @@ export function useCart() {
   const toast = useState<string | null>('cart_toast', () => null)
 
   const applyCart = (medusaCart: MedusaCart) => {
-    cart.value = { id: medusaCart.id, region_id: medusaCart.region_id }
+    cart.value = {
+      id: medusaCart.id,
+      region_id: medusaCart.region_id ?? cart.value?.region_id ?? regionId,
+    }
     items.value = (medusaCart.items ?? []).map(mapLineItem)
     totals.value = {
       subtotal: medusaCart.item_subtotal ?? 0,
@@ -196,16 +200,40 @@ export function useCart() {
     loading.value = true
     try {
       const current = await ensureCart()
-      const codes = [...new Set([...promoCodes.value, code.trim().toUpperCase()])]
-      const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${current.id}?fields=${CART_FIELDS}`, {
-        method: 'POST',
-        body: { promo_codes: codes },
-      })
+      const normalized = code.trim()
+      const beforeDiscount = totals.value.discount
+
+      const tryApply = (promoCode: string) =>
+        fetchMedusa<{ cart: MedusaCart }>(
+          `/store/carts/${current.id}/promotions?fields=${CART_FIELDS}`,
+          {
+            method: 'POST',
+            body: { promo_codes: [promoCode] },
+          },
+        )
+
+      let res: { cart: MedusaCart }
+      try {
+        res = await tryApply(normalized)
+      } catch (firstErr) {
+        // Medusa codes are often lowercase (e.g. "ssss"); retry once if casing differs.
+        const lower = normalized.toLowerCase()
+        if (lower !== normalized) {
+          res = await tryApply(lower)
+        } else {
+          throw firstErr
+        }
+      }
+
       applyCart(res.cart)
-      const appliedNow = promoCodes.value.includes(code.trim().toUpperCase())
-      return appliedNow
-        ? { success: true as const, discount: totals.value.discount }
-        : { success: false as const, message: t('cart.couponInvalid') }
+      const codeApplied = promoCodes.value.some(
+        c => c.toLowerCase() === normalized.toLowerCase(),
+      )
+      const discountIncreased = totals.value.discount > beforeDiscount
+      if (codeApplied || discountIncreased) {
+        return { success: true as const, discount: totals.value.discount }
+      }
+      return { success: false as const, message: t('cart.couponInvalid') }
     } catch (err) {
       return { success: false as const, message: parseApiError(err, t('cart.couponInvalid')) }
     } finally {
@@ -217,11 +245,13 @@ export function useCart() {
     if (!cart.value) return
     loading.value = true
     try {
-      const codes = promoCodes.value.filter(c => c !== code)
-      const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${cart.value.id}?fields=${CART_FIELDS}`, {
-        method: 'POST',
-        body: { promo_codes: codes },
-      })
+      const res = await fetchMedusa<{ cart: MedusaCart }>(
+        `/store/carts/${cart.value.id}/promotions?fields=${CART_FIELDS}`,
+        {
+          method: 'DELETE',
+          body: { promo_codes: [code] },
+        },
+      )
       applyCart(res.cart)
     } catch (err) {
       console.error('Failed to remove promo code', err)
@@ -250,8 +280,13 @@ export function useCart() {
 
       // Use a country that actually belongs to the cart's region ('vn' once
       // the Vietnam region is seeded; the demo seed only has EU countries).
+      const checkoutRegionId = current.region_id || regionId
+      if (!checkoutRegionId) {
+        throw new Error('Store region is not configured')
+      }
+
       const { region } = await fetchMedusa<{ region: { countries: { iso_2: string }[] } }>(
-        `/store/regions/${current.region_id}`,
+        `/store/regions/${checkoutRegionId}`,
       )
       const countryCode = region.countries.find(c => c.iso_2 === 'vn')?.iso_2
         ?? region.countries[0]?.iso_2
