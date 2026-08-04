@@ -41,6 +41,10 @@ export const config = defineWidgetConfig({
     "promotion.details.before",
     "campaign.list.before",
     "campaign.details.before",
+    "role.list.before",
+    "role.details.before",
+    "policy.list.before",
+    "policy.details.before",
   ],
 })
 

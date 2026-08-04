@@ -9,7 +9,9 @@
     "careChannels": "Kênh CSKH",
     "careMessages": "Tin nhắn CSKH",
     "backup": "Sao lưu & Phục hồi",
-    "storeInfo": "Thông tin cửa hàng"
+    "storeInfo": "Thông tin cửa hàng",
+    "employees": "Nhân viên",
+    "navigation": "Điều hướng"
   },
   "relatedCollection": {
     "title": "Bộ sưu tập liên quan",
@@ -676,6 +678,327 @@
       "copyLink": "Copy liên kết",
       "copied": "Đã sao chép liên kết",
       "copyFailed": "Sao chép liên kết thất bại"
+    }
+  },
+  "fields": {
+    "resource": "Tài nguyên",
+    "operation": "Thao tác",
+    "roles": "Vai trò",
+    "users": "Người dùng",
+    "permissions": "Quyền"
+  },
+  "roles": {
+    "domain": "Vai trò",
+    "subtitle": "Quản lý vai trò truy cập và quyền hạn.",
+    "create": {
+      "header": "Tạo vai trò",
+      "hint": "Tạo vai trò để quản lý quyền truy cập trong admin.",
+      "successToast": "Đã tạo vai trò {{name}}",
+      "tabs": {
+        "details": "Chi tiết",
+        "permissions": "Quyền"
+      },
+      "permissions": {
+        "empty": {
+          "heading": "Không có quyền",
+          "description": "Không có quyền nào để chọn."
+        },
+        "filtered": {
+          "heading": "Không có kết quả",
+          "description": "Không có quyền nào khớp bộ lọc hiện tại."
+        }
+      }
+    },
+    "edit": {
+      "header": "Sửa vai trò",
+      "successToast": "Đã cập nhật vai trò {{name}}"
+    },
+    "delete": {
+      "title": "Xóa vai trò",
+      "description": "Bạn sắp xóa vai trò {{name}}. Hành động này không thể hoàn tác.",
+      "successToast": "Đã xóa vai trò {{name}}"
+    },
+    "fields": {
+      "permissions": "Quyền"
+    },
+    "actions": {
+      "managePermissions": "Quản lý quyền"
+    },
+    "users": {
+      "alreadyAddedTooltip": "Người dùng đã có vai trò này.",
+      "unassignableRoleTooltip": "Bạn không có quyền gán vai trò này — quyền của bạn không bao phủ đủ các chính sách của vai trò.",
+      "add": {
+        "successToast_one": "Đã thêm người dùng vào vai trò.",
+        "successToast_other": "Đã thêm người dùng vào vai trò.",
+        "list": {
+          "noRecordsMessage": "Hãy tạo người dùng trước."
+        }
+      },
+      "remove": {
+        "title_one": "Gỡ người dùng",
+        "title_other": "Gỡ người dùng",
+        "description_one": "Bạn sắp gỡ {{count}} người dùng khỏi vai trò. Hành động này không thể hoàn tác.",
+        "description_other": "Bạn sắp gỡ {{count}} người dùng khỏi vai trò. Hành động này không thể hoàn tác."
+      },
+      "list": {
+        "noRecordsMessage": "Vai trò này chưa có người dùng."
+      }
+    },
+    "permissions": {
+      "header": "Quản lý quyền",
+      "hint": "Chọn các quyền mà vai trò này sẽ bao gồm.",
+      "empty": {
+        "heading": "Không có quyền",
+        "description": "Không có quyền nào để chọn."
+      },
+      "filtered": {
+        "heading": "Không có kết quả",
+        "description": "Không có quyền nào khớp bộ lọc hiện tại."
+      }
+    },
+    "list": {
+      "empty": {
+        "heading": "Chưa có vai trò",
+        "description": "Tạo vai trò để quản lý quyền truy cập trong admin."
+      },
+      "filtered": {
+        "heading": "Không có kết quả",
+        "description": "Không có vai trò nào khớp bộ lọc hiện tại."
+      }
+    }
+  },
+  "policies": {
+    "domain": "Chính sách",
+    "subtitle": "Định nghĩa các quyền mà vai trò có thể cấp.",
+    "create": {
+      "header": "Tạo chính sách",
+      "hint": "Định nghĩa quyền mới có thể gắn vào vai trò.",
+      "successToast": "Đã tạo chính sách {{key}}"
+    },
+    "edit": {
+      "header": "Sửa chính sách",
+      "successToast": "Đã cập nhật chính sách {{key}}"
+    },
+    "delete": {
+      "title": "Xóa chính sách",
+      "description": "Bạn sắp xóa chính sách {{key}}. Hành động này không thể hoàn tác.",
+      "successToast": "Đã xóa chính sách {{key}}"
+    },
+    "fields": {
+      "roles": "Vai trò",
+      "users": "Người dùng"
+    },
+    "list": {
+      "empty": {
+        "heading": "Chưa có chính sách",
+        "description": "Tạo chính sách để quản lý các quyền mà vai trò có thể cấp."
+      },
+      "filtered": {
+        "heading": "Không có kết quả",
+        "description": "Không có chính sách nào khớp bộ lọc hiện tại."
+      }
+    },
+    "roles": {
+      "list": {
+        "noRecordsMessage": "Chưa có vai trò nào dùng chính sách này."
+      },
+      "empty": {
+        "heading": "Không có vai trò",
+        "description": "Chưa có vai trò nào dùng chính sách này."
+      }
+    }
+  },
+  "permissions": {
+    "accessDenied": {
+      "title": "Không có quyền truy cập",
+      "description": "Bạn không có quyền truy cập trang này.",
+      "requiredPermission": "Quyền cần thiết: {{permission}}",
+      "action": "Bạn không có quyền thực hiện thao tác này."
+    },
+    "requiredPermissions": {
+      "title": "Quyền bắt buộc",
+      "none": "Không có quyền nào được khai báo trong view này.",
+      "anyOf": "Một trong các quyền",
+      "allOf": "Tất cả các quyền",
+      "source": "Nguồn: {{source}}"
+    },
+    "resources": {
+      "customer": "Khách hàng",
+      "customer_group": "Nhóm khách hàng",
+      "order": "Đơn hàng",
+      "product": "Sản phẩm",
+      "product_category": "Danh mục sản phẩm",
+      "product_collection": "Bộ sưu tập sản phẩm",
+      "product_tag": "Thẻ sản phẩm",
+      "product_type": "Loại sản phẩm",
+      "inventory": "Tồn kho",
+      "reservation": "Giữ chỗ tồn kho",
+      "promotion": "Khuyến mãi",
+      "campaign": "Chiến dịch",
+      "price_list": "Bảng giá",
+      "region": "Khu vực",
+      "store": "Cửa hàng",
+      "user": "Người dùng",
+      "role": "Vai trò",
+      "permission": "Quyền",
+      "sales_channel": "Kênh bán hàng",
+      "stock_location": "Kho / địa điểm tồn",
+      "shipping_profile": "Hồ sơ vận chuyển",
+      "shipping_option": "Tùy chọn vận chuyển",
+      "tax_region": "Khu vực thuế",
+      "api_key": "API Key",
+      "return_reason": "Lý do trả hàng",
+      "refund_reason": "Lý do hoàn tiền",
+      "workflow": "Workflow",
+      "translation": "Bản dịch",
+      "rbac_role": "Vai trò",
+      "rbac_policy": "Chính sách",
+      "campaign_post": "Bài viết Campaign",
+      "campaign_topic": "Chủ đề bài viết",
+      "card": "Card trang chủ",
+      "event": "Sự kiện",
+      "event_registration": "Đăng ký sự kiện",
+      "inquiry": "Liên hệ / đặt lịch",
+      "media": "Thư viện ảnh",
+      "navigation": "Điều hướng",
+      "care_channel": "Kênh CSKH",
+      "care_message": "Tin nhắn CSKH",
+      "site_settings": "Thông tin cửa hàng",
+      "backup": "Sao lưu & Phục hồi"
+    },
+    "actions": {
+      "read": "Xem",
+      "create": "Tạo",
+      "update": "Sửa",
+      "delete": "Xóa"
+    }
+  },
+  "employees": {
+    "title": "Nhân viên",
+    "hint": "Tạo và quản lý tài khoản admin trực tiếp (không cần invite).",
+    "create": "Tạo nhân viên",
+    "createHint": "Nhập email, mật khẩu và (tuỳ chọn) vai trò. Gửi mật khẩu cho nhân viên qua kênh nội bộ.",
+    "editHint": "Đổi tên, khóa tài khoản, gán vai trò hoặc đặt lại mật khẩu.",
+    "loading": "Đang tải…",
+    "columns": {
+      "email": "Email",
+      "name": "Họ tên",
+      "roles": "Vai trò",
+      "status": "Trạng thái",
+      "createdAt": "Ngày tạo",
+      "actions": "Thao tác"
+    },
+    "status": {
+      "active": "Hoạt động",
+      "blocked": "Đã khóa"
+    },
+    "fields": {
+      "email": "Email",
+      "emailReadonly": "Không đổi được email sau khi tạo.",
+      "password": "Mật khẩu",
+      "passwordHint": "Tối thiểu 8 ký tự.",
+      "newPassword": "Mật khẩu mới",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "firstName": "Tên",
+      "lastName": "Họ",
+      "roles": "Vai trò",
+      "rolesHint": "Chọn một hoặc nhiều vai trò RBAC.",
+      "noRoles": "Chưa có vai trò nào. Tạo role trong Settings → Roles.",
+      "blocked": "Khóa tài khoản",
+      "blockedHint": "User bị khóa không gọi được API admin."
+    },
+    "passwordSection": {
+      "title": "Đặt lại mật khẩu",
+      "hint": "Ghi đè mật khẩu hiện tại — không gửi email."
+    },
+    "dangerZone": {
+      "title": "Vùng nguy hiểm",
+      "hint": "Xóa tài khoản (soft-delete). Không thể hoàn tác từ UI."
+    },
+    "actions": {
+      "create": "Tạo nhân viên",
+      "edit": "Chỉnh sửa",
+      "save": "Lưu",
+      "delete": "Xóa",
+      "backToList": "Quay lại danh sách",
+      "setPassword": "Đặt mật khẩu"
+    },
+    "messages": {
+      "created": "Đã tạo nhân viên",
+      "createFailed": "Tạo nhân viên thất bại",
+      "updated": "Đã cập nhật nhân viên",
+      "updateFailed": "Cập nhật thất bại",
+      "deleted": "Đã xóa nhân viên",
+      "deleteFailed": "Xóa thất bại",
+      "deleteConfirmTitle": "Xóa nhân viên?",
+      "deleteConfirmDesc": "Bạn sắp xóa {{name}}. Hành động này không thể hoàn tác.",
+      "confirmDelete": "Xóa",
+      "cancelDelete": "Hủy",
+      "passwordUpdated": "Đã đặt mật khẩu mới",
+      "passwordUpdateFailed": "Đặt mật khẩu thất bại",
+      "passwordTooShort": "Mật khẩu tối thiểu 8 ký tự",
+      "passwordMismatch": "Mật khẩu xác nhận không khớp"
+    }
+  },
+  "navigation": {
+    "title": "Điều hướng",
+    "hint": "Quản lý nhiều mẫu menu dạng cây. Chỉ một mẫu Active hiển thị trên website.",
+    "menusTitle": "Mẫu menu",
+    "loading": "Đang tải…",
+    "emptyMenus": "Chưa có mẫu menu. Tạo mẫu mới để bắt đầu.",
+    "emptyTree": "Menu này chưa có mục nào. Thêm mục gốc bên trên.",
+    "selectMenu": "Chọn một mẫu menu bên trái",
+    "activeMenuHint": "Đang dùng trên website (Active).",
+    "inactiveMenuHint": "Chưa Active — bấm Đặt Active để dùng trên website.",
+    "status": {
+      "active": "Active",
+      "hidden": "Ẩn"
+    },
+    "fields": {
+      "menuName": "Tên mẫu",
+      "menuSlug": "Slug",
+      "menuSlugHint": "Để trống để tự tạo từ tên (kebab-case).",
+      "activateOnCreate": "Đặt Active ngay sau khi tạo",
+      "label": "Nhãn",
+      "url": "Đường dẫn / URL",
+      "openInNewTab": "Mở tab mới",
+      "isActive": "Hiển thị trên website"
+    },
+    "actions": {
+      "createMenu": "Tạo mẫu menu",
+      "deleteMenu": "Xóa mẫu",
+      "setActive": "Đặt Active",
+      "addRoot": "Thêm mục gốc",
+      "addChild": "Thêm mục con",
+      "edit": "Sửa",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "hide": "Ẩn",
+      "show": "Hiện",
+      "drag": "Kéo để sắp xếp",
+      "indent": "Thụt vào (làm con của mục trước)",
+      "outdent": "Đưa ra (lên thành mục gốc)"
+    },
+    "messages": {
+      "menuCreated": "Đã tạo mẫu menu",
+      "menuCreateFailed": "Tạo mẫu menu thất bại",
+      "menuActivated": "Đã đặt “{{name}}” làm Active",
+      "menuActivateFailed": "Đặt Active thất bại",
+      "menuDeleted": "Đã xóa mẫu menu",
+      "menuDeleteFailed": "Xóa mẫu thất bại",
+      "deleteMenuTitle": "Xóa mẫu menu?",
+      "deleteMenuDesc": "Xóa “{{name}}” và toàn bộ mục bên trong. Không thể hoàn tác.",
+      "itemCreated": "Đã thêm mục",
+      "itemUpdated": "Đã cập nhật mục",
+      "itemSaveFailed": "Lưu mục thất bại",
+      "itemDeleted": "Đã xóa mục",
+      "itemDeleteFailed": "Xóa mục thất bại",
+      "deleteItemTitle": "Xóa mục?",
+      "deleteItemDesc": "Xóa “{{name}}” (và mục con nếu có).",
+      "confirmDelete": "Xóa",
+      "cancelDelete": "Hủy",
+      "reorderFailed": "Sắp xếp lại thất bại"
     }
   }
 }

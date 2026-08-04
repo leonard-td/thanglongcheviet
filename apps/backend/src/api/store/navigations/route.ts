@@ -1,32 +1,21 @@
-import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { NAVIGATION_MODULE } from "../../../modules/navigation"
 import type NavigationModuleService from "../../../modules/navigation/service"
 
-export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
-  const navigationModuleService = req.scope.resolve<NavigationModuleService>(NAVIGATION_MODULE)
-  
-  // Fetch all active items
-  const items = await navigationModuleService.listNavigationItems(
-    { is_active: true }, 
-    { take: 1000, order: { order: "ASC" } }
-  )
+/**
+ * GET /store/navigations — tree of the currently active menu template.
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const service: NavigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
 
-  // Build nested tree
-  const map = new Map<string, any>()
-  const roots: any[] = []
+  const active = await service.getActiveMenu()
+  if (!active) {
+    return res.json({ menu: null, navigations: [] })
+  }
 
-  items.forEach(item => {
-    map.set(item.id, { ...item, children: [] })
+  const tree = await service.getMenuTree(active.id, { activeOnly: true })
+  res.json({
+    menu: { id: active.id, name: active.name, slug: active.slug },
+    navigations: tree,
   })
-
-  items.forEach(item => {
-    const node = map.get(item.id)
-    if (item.parent_id && map.has(item.parent_id)) {
-      map.get(item.parent_id).children.push(node)
-    } else {
-      roots.push(node)
-    }
-  })
-
-  res.json({ navigations: roots })
 }
