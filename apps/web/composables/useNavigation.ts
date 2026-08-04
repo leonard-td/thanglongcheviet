@@ -30,8 +30,13 @@ export interface NavLink {
  */
 export function useNavigation() {
   const { fetchMedusa } = useMedusaApi()
+  const { navigations: cachedNav } = useSiteBundle()
 
   const getStoreNavigation = async (): Promise<NavigationTreeItem[]> => {
+    if (cachedNav.value.length > 0) {
+      return cachedNav.value as NavigationTreeItem[]
+    }
+
     try {
       const data = await fetchMedusa<{ navigations: NavigationTreeItem[] }>(
         `/store/navigations`,

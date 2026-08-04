@@ -6,18 +6,15 @@ import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { INQUIRY_MODULE } from "../../../modules/inquiry"
 import type InquiryModuleService from "../../../modules/inquiry/service"
 import { normalizePhone } from "../../utils/phone"
-import { parsePagination } from "../../utils/pagination"
 
 /**
  * GET /store/my-bookings
  *
- * Bookings belonging to the logged-in customer, matched by the phone number
- * (and email) on their customer profile. Requires customer authentication
- * (see src/api/middlewares.ts).
+ * Bookings belonging to the logged-in customer (matched by profile phone/email).
  */
 export async function GET(
   req: AuthenticatedMedusaRequest,
-  res: MedusaResponse
+  res: MedusaResponse,
 ) {
   const customerId = req.auth_context.actor_id
 
@@ -33,29 +30,23 @@ export async function GET(
     return
   }
 
+  const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
   const customerPhone = normalizePhone(customer.phone ?? "")
-  const customerEmail = customer.email?.trim().toLowerCase() ?? ""
-  if (!customerPhone && !customerEmail) {
-    res.json({ bookings: [], count: 0, limit: 20, offset: 0 })
+  const filters: Record<string, unknown> = { type: "booking" }
+
+  if (customerPhone) {
+    filters.phone = customer.phone ?? customerPhone
+  } else if (customer.email) {
+    filters.email = customer.email
+  } else {
+    res.json({ bookings: [] })
     return
   }
 
-  const { limit, offset } = parsePagination(req.query, {
-    limit: 20,
-    max: 100,
+  const bookings = await inquiryService.listInquiries(filters, {
+    order: { created_at: "DESC" },
+    take: 50,
   })
-  const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
-  const ownershipFilters = [
-    ...(customerPhone ? [{ normalized_phone: customerPhone }] : []),
-    ...(customerEmail ? [{ normalized_email: customerEmail }] : []),
-  ]
-  const [bookings, count] = await inquiryService.listAndCountInquiries(
-    {
-      type: "booking",
-      $or: ownershipFilters,
-    } as never,
-    { order: { created_at: "DESC" }, take: limit, skip: offset }
-  )
 
   res.json({
     bookings: bookings.map((b) => ({
@@ -67,8 +58,5 @@ export async function GET(
       note: b.message,
       created_at: b.created_at,
     })),
-    count,
-    limit,
-    offset,
   })
 }

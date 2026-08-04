@@ -6,7 +6,12 @@ export default defineEventHandler((event) => {
   const body = [
     'User-agent: *',
     'Allow: /',
+    'Disallow: /app',
     'Disallow: /admin',
+    'Disallow: /gio-hang',
+    'Disallow: /tai-khoan',
+    'Disallow: /en/cart',
+    'Disallow: /en/account',
     '',
     `Sitemap: ${baseUrl}/sitemap.xml`,
     '',

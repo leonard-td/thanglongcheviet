@@ -4,6 +4,7 @@ import {
   MedusaError,
 } from "@medusajs/framework/utils"
 import { phonesMatch } from "../../utils/phone"
+import { enforceStoreRateLimit } from "../../utils/store-rate-limit"
 
 /**
  * GET /store/order-lookup?number=<display_id>&phone=<phone>
@@ -12,6 +13,12 @@ import { phonesMatch } from "../../utils/phone"
  * the shipping-address phone match, so order numbers alone leak nothing.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  await enforceStoreRateLimit(req, res, {
+    name: "order-lookup",
+    limit: 20,
+    windowMs: 60_000,
+  })
+
   const number = String(req.query.number || "").replace(/\D/g, "")
   const phone = String(req.query.phone || "")
 

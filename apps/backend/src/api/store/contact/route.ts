@@ -5,7 +5,8 @@ import type InquiryModuleService from "../../../modules/inquiry/service"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
 import { formatInquiryMessage } from "../../../modules/care-channel/utils/format"
-import { normalizePhone } from "../../utils/phone"
+import { enforceStoreRateLimit } from "../../utils/store-rate-limit"
+import { claimIdempotencyKey } from "../../../lib/idempotency"
 
 type ContactBody = {
   name?: string
@@ -25,6 +26,24 @@ export async function POST(
   req: MedusaRequest<ContactBody>,
   res: MedusaResponse
 ) {
+  await enforceStoreRateLimit(req, res, {
+    name: "contact",
+    limit: 8,
+    windowMs: 60_000,
+  })
+
+  const rawIdempotency = req.headers["idempotency-key"]
+  if (typeof rawIdempotency === "string" && rawIdempotency.trim()) {
+    const claimed = await claimIdempotencyKey(
+      `contact:${rawIdempotency.trim().slice(0, 128)}`,
+      3600,
+    )
+    if (claimed === false) {
+      res.status(200).json({ success: true, duplicate: true })
+      return
+    }
+  }
+
   const { name, phone, email, service, message, source } = req.body ?? {}
 
   if (!name?.trim() || !phone?.trim()) {
@@ -40,9 +59,7 @@ export async function POST(
     type: "contact",
     name: name.trim().slice(0, 200),
     phone: phone.trim().slice(0, 30),
-    normalized_phone: normalizePhone(phone),
     email: email?.trim().slice(0, 200) || null,
-    normalized_email: email?.trim().toLowerCase().slice(0, 200) || null,
     service: service?.trim().slice(0, 200) || null,
     message: message?.trim().slice(0, 4000) || null,
     source: source?.trim().slice(0, 100) || "website",

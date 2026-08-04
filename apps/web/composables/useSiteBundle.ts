@@ -1,9 +1,9 @@
+import type { SiteSettingsDto } from '~/composables/useSiteSettings'
 import fallbackSettings from '~/content/settings.json'
 import fallbackTeam from '~/content/team.json'
 import fallbackServices from '~/content/services.json'
 import fallbackGallery from '~/content/gallery.json'
 import fallbackTestimonials from '~/content/testimonials.json'
-import { getFetchMessage, isPublishableKeyError } from '~/utils/fetch-status'
 
 export interface SiteBundle {
   settings: typeof fallbackSettings
@@ -21,72 +21,60 @@ const localFallback: SiteBundle = {
   testimonials: fallbackTestimonials,
 }
 
-/**
- * Admin stores hours as a single text string (e.g. "08:00 – 21:00" or
- * "T2–T6: 08:00–21:00, T7–CN: 08:00–22:00"). Parse it into the array
- * shape the footer/contact page expects. Falls back to the local JSON
- * when the string is empty or unparseable.
- */
-function parseHours(
-  raw: string | null | undefined,
-  fallback: { days: { vi: string, en: string }, time: string }[],
-) {
-  if (!raw || typeof raw !== 'string' || !raw.trim()) return fallback
-  return [{ days: { vi: raw.trim(), en: raw.trim() }, time: '' }]
-}
-
-/** Avoid spamming the same Store 400 across header/footer/plugin mounts. */
-let siteSettingsWarnOnce = false
-
 export function useSiteBundle() {
-  const { data, status, refresh } = useAsyncData('site-settings', async () => {
+  const navigations = useState<Array<{ id: string; label?: string; url: string; order: number; children?: unknown[] }>>(
+    'store-navigations',
+    () => [],
+  )
+
+  const { data, status, refresh } = useAsyncData('site-bundle', async () => {
     try {
       const config = useRuntimeConfig()
-      const medusaUrl = import.meta.client
-        ? config.public.medusaBackendUrl
-        : ((config as { medusaBackendUrlServer?: string }).medusaBackendUrlServer || config.public.medusaBackendUrl)
-      const res = await $fetch<{ site_settings: any }>(`${medusaUrl}/store/site-settings`, {
-        headers: {
-          'x-publishable-api-key': config.public.medusaPublishableKey,
-        },
-      })
+      const medusaUrl = import.meta.client ? config.public.medusaBackendUrl : (config.medusaBackendUrlServer || config.public.medusaBackendUrl)
+      const headers: Record<string, string> = {}
+      if (config.public.medusaPublishableKey) {
+        headers['x-publishable-api-key'] = config.public.medusaPublishableKey
+      }
+
+      const res = await $fetch<{ site_settings: Record<string, unknown>; navigations?: typeof navigations.value }>(
+        `${medusaUrl}/store/storefront-bootstrap`,
+        { headers },
+      )
 
       const remoteSettings = res?.site_settings || {}
+      if (res?.navigations?.length) {
+        navigations.value = res.navigations as typeof navigations.value
+      }
 
-      // Merge remote settings with local fallback.
-      // Remote settings take precedence.
+      const dtoState = useState<SiteSettingsDto | null>('site-settings-dto', () => null)
+      if (remoteSettings && Object.keys(remoteSettings).length) {
+        dtoState.value = { id: 'bootstrap', ...remoteSettings } as SiteSettingsDto
+      }
+
       return {
         ...localFallback,
         settings: {
           ...localFallback.settings,
           contact: {
             ...localFallback.settings.contact,
-            address: remoteSettings.address
-              ? { vi: remoteSettings.address, en: remoteSettings.address }
-              : localFallback.settings.contact.address,
-            phone: remoteSettings.phone || localFallback.settings.contact.phone,
-            phoneDisplay: remoteSettings.phone || localFallback.settings.contact.phoneDisplay,
-            mobile: localFallback.settings.contact.mobile,
-            email: remoteSettings.email || localFallback.settings.contact.email,
-            mapEmbed: remoteSettings.google_map_url || localFallback.settings.contact.mapEmbed,
+            address: remoteSettings.address ? { vi: remoteSettings.address, en: remoteSettings.address } : localFallback.settings.contact.address,
+            phone: (remoteSettings.phone as string) || localFallback.settings.contact.phone,
+            phoneDisplay: (remoteSettings.phone as string) || localFallback.settings.contact.phoneDisplay,
+            mobile: (remoteSettings.phone as string) || localFallback.settings.contact.mobile,
+            email: (remoteSettings.email as string) || localFallback.settings.contact.email,
           },
-          hours: parseHours(remoteSettings.open_hours, localFallback.settings.hours),
+          hours: localFallback.settings.hours,
           social: {
             ...localFallback.settings.social,
-            facebook: remoteSettings.facebook_url || localFallback.settings.social.facebook,
-            zalo: remoteSettings.zalo_url || localFallback.settings.social.zalo,
-            instagram: remoteSettings.instagram_url || localFallback.settings.social.instagram,
+            facebook: (remoteSettings.facebook_url as string) || localFallback.settings.social.facebook,
+            zalo: (remoteSettings.zalo_url as string) || localFallback.settings.social.zalo,
+            instagram: (remoteSettings.instagram_url as string) || localFallback.settings.social.instagram,
           },
         },
       } as SiteBundle
-    }
-    catch (err) {
-      if (import.meta.dev && !siteSettingsWarnOnce) {
-        siteSettingsWarnOnce = true
-        const hint = isPublishableKeyError(err)
-          ? 'Publishable API key missing/invalid — using local settings fallback. Run setup-web-integration.mjs.'
-          : getFetchMessage(err) || err
-        console.warn('[site-settings]', hint)
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Site bootstrap API unavailable', err)
       }
       return localFallback
     }
@@ -97,11 +85,12 @@ export function useSiteBundle() {
   return {
     bundle: computed(() => data.value || localFallback),
     settings: computed(() => (data.value || localFallback).settings),
+    navigations,
     team: computed(() => (data.value || localFallback).team),
     services: computed(() => (data.value || localFallback).services),
     gallery: computed(() => (data.value || localFallback).gallery),
     testimonials: computed(() => (data.value || localFallback).testimonials),
     status,
-    refresh
+    refresh,
   }
 }

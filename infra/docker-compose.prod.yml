@@ -41,14 +41,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-medusa}",
-        ]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-medusa}"]
       interval: 5s
       timeout: 5s
       retries: 12
+
+  redis:
+    image: redis:7-alpine
+    container_name: tlcv-redis-prod
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   # --- One-shot: runtime deps for the PREBUILT output (no build!) -------------
   # 1. backend: `medusa build` output ships package.json but no node_modules —
@@ -87,35 +94,24 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       deps:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
-      # Regex (Medusa's cors config treats a /.../-wrapped string as a
-      # RegExp) matching any http(s) origin — many domains can point at this
-      # same server without listing each one here.
-      STORE_CORS: ${STORE_CORS:-/.*/}
-      ADMIN_CORS: ${ADMIN_CORS:-/.*/}
-      AUTH_CORS: ${AUTH_CORS:-/.*/}
+      REDIS_URL: redis://redis:6379
+      # All public-facing origins derive from DOMAIN + HTTP_PORT (.env.prod) —
+      # localhost only ever appears as the fallback when DOMAIN is unset.
+      STORE_CORS: ${STORE_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      ADMIN_CORS: ${ADMIN_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      AUTH_CORS: ${AUTH_CORS:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
       # Public origin for uploaded-file URLs (file-local provider appends
-      # /static; nginx proxies /static/ back to this backend). Only matters
-      # for the transient absolute URL returned right after an upload — every
-      # URL we persist is normalized to a relative /static/... path (see
-      # api/utils/media-url.ts) and nginx proxies /static/ the same way
-      # regardless of which domain served the request.
-      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://localhost:${HTTP_PORT:-8800}}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
-      TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
-      TELEGRAM_SEED_FORCE_UPDATE: ${TELEGRAM_SEED_FORCE_UPDATE:-}
-      TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
+      # /static; nginx proxies /static/ back to this backend).
+      MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
-      BACKUP_RESTORE_MAX_EXTRACTED_BYTES: ${BACKUP_RESTORE_MAX_EXTRACTED_BYTES:-8589934592}
-      BACKUP_RESTORE_MAX_ENTRY_BYTES: ${BACKUP_RESTORE_MAX_ENTRY_BYTES:-4294967296}
-      BACKUP_RESTORE_MAX_ENTRIES: ${BACKUP_RESTORE_MAX_ENTRIES:-100000}
-      BACKUP_RESTORE_MAX_COMPRESSION_RATIO: ${BACKUP_RESTORE_MAX_COMPRESSION_RATIO:-1000}
       # LOCAL/HTTP ONLY: let the admin session cookie work over plain http
       # (NODE_ENV=production otherwise forces a Secure/HTTPS-only cookie, which
       # the browser drops → every /admin call is 401). Leave unset on a real
@@ -128,7 +124,6 @@ services:
       # working dir) — named volume so uploads outlive redeploys, which wipe
       # and re-extract the surrounding .medusa/server artifact dir.
       - backend_static:/workspace/apps/backend/.medusa/server/static
-      - backend_private_exports:/workspace/apps/backend/.medusa/server/.private-exports
       # Backup zips (admin Settings > Backup writes to ./.backups under the
       # working dir) — named volume for the same redeploy-survival reason.
       - backend_backups:/workspace/apps/backend/.medusa/server/.backups
@@ -137,20 +132,20 @@ services:
     # location + shipping, publishable key) that every /store request needs.
     # The seed scripts were compiled into .medusa/server by the local build.
     command: >
-      sh -c "npx medusa db:migrate &&
-             (npx medusa exec ./src/scripts/seed-base.js || true) &&
+      sh -c "if [ \"$${JWT_SECRET:-supersecret}\" = \"supersecret\" ] || [ \"$${COOKIE_SECRET:-supersecret}\" = \"supersecret\" ]; then
+               echo 'ERROR: Set strong JWT_SECRET and COOKIE_SECRET in .env.prod before starting production.';
+               exit 1;
+             fi &&
+             npx medusa db:migrate &&
+             npx medusa exec ./src/scripts/seed-base.js &&
              (npx medusa exec ./src/scripts/seed-cards.js || true) &&
-             (npx medusa exec ./src/scripts/seed-care-channel-telegram.js || true) &&
+             (npx medusa exec ./src/scripts/seed-navigation.js || true) &&
+             (npx medusa exec ./src/scripts/remove-medusa-demo-catalog.js || true) &&
+             (npx medusa exec ./src/scripts/seed-product-inventory.js || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npm run start"
     healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://localhost:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
-        ]
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -172,17 +167,18 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: "3000"
-      # Browser-side Medusa URL — left empty so the browser calls the SAME
-      # origin the page was loaded from (nginx proxies /store, /auth, etc.
-      # there already), which works for any domain pointed at this server
-      # instead of one hardcoded host. The backend's :9000 is internal-only
-      # in prod anyway.
-      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
+      # Browser-side Medusa URL — the public origin (nginx). The backend's
+      # :9000 is internal-only in prod.
+      NUXT_PUBLIC_MEDUSA_BACKEND_URL: ${NUXT_PUBLIC_MEDUSA_BACKEND_URL:-http://${DOMAIN:-localhost}:${HTTP_PORT:-8800}}
       # SSR-side override: compose DNS, no round-trip out through nginx.
       NUXT_MEDUSA_BACKEND_URL_SERVER: http://backend:9000
       # Store API credentials for the PROD database (.env.prod).
       NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}
       NUXT_PUBLIC_MEDUSA_REGION_ID: ${NUXT_PUBLIC_MEDUSA_REGION_ID:-}
+      NUXT_PUBLIC_STRAPI_API_URL: http://host.docker.internal:1337
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ../:/workspace
     command: sh -c "node .output/server/index.mjs"
@@ -204,48 +200,8 @@ services:
       # The exact same routing as dev — one port, same proxy rules.
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
 
-  # --- Restic DB backup (scheduled PostgreSQL backup) -------------------------
-  # Runs pg_dump on a cron schedule, pushes to a Restic repository (local volume
-  # by default; switch RESTIC_REPOSITORY to s3: or sftp: for remote storage).
-  # Manual restore: docker compose exec backup /scripts/restore.sh [snapshot-id]
-  # List snapshots: docker compose exec backup /scripts/restore.sh --list
-  backup:
-    build:
-      context: ./backup
-      dockerfile: Dockerfile
-    container_name: tlcv_backup_prod
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      # Postgres connection (same creds as backend)
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-medusa}
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      # Restic configuration
-      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-/backups}
-      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-change-me-restic-password}
-      # S3 backend (optional — only needed if RESTIC_REPOSITORY starts with s3:)
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
-      # Schedule: default 2:00 AM daily (Asia/Ho_Chi_Minh timezone)
-      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
-      # Retention policy
-      BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
-      BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
-      BACKUP_KEEP_MONTHLY: ${BACKUP_KEEP_MONTHLY:-6}
-    volumes:
-      # Local backup storage (default). Mount a host directory or use a named
-      # volume. Switch to S3/SFTP by changing RESTIC_REPOSITORY.
-      - restic_repo:/backups
-
 volumes:
   postgres_data:
   backend_server_node_modules:
   backend_static:
-  backend_private_exports:
   backend_backups:
-  restic_repo:

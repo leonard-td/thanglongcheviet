@@ -13,25 +13,8 @@ class SiteSettingsModuleService extends MedusaService({
     if (existing) {
       return existing
     }
-    try {
-      return await this.createSiteSettings({})
-    } catch (error) {
-      const candidate = error as {
-        code?: string
-        cause?: { code?: string }
-      }
-      if (
-        candidate.code === "23505" ||
-        candidate.cause?.code === "23505"
-      ) {
-        const [createdByConcurrentRequest] = await this.listSiteSettings(
-          {},
-          { take: 1 }
-        )
-        if (createdByConcurrentRequest) return createdByConcurrentRequest
-      }
-      throw error
-    }
+    // DB column is NOT NULL DEFAULT '[]' — omit/null fails Mikro create.
+    return await this.createSiteSettings({ hero_images: [] })
   }
 
   async updateSingleton(data: Record<string, unknown>) {

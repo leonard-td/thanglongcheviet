@@ -1,17 +1,9 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
+import { MedusaError } from "@medusajs/framework/utils"
 import { INQUIRY_MODULE } from "../../../modules/inquiry"
 import type InquiryModuleService from "../../../modules/inquiry/service"
-import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
-import type CareChannelModuleService from "../../../modules/care-channel/service"
-import { formatBookingMessage } from "../../../modules/care-channel/utils/format"
-import {
-  DAILY_SLOTS,
-  getSlotCapacity,
-} from "../../../modules/inquiry/service"
-import { withDatabaseLock } from "../../../lib/database-lock"
-import { isFutureOrTodayInVietnam } from "../../utils/date"
-import { normalizePhone } from "../../utils/phone"
+import { countBookingsForSlot, withBookingSlotLock } from "../../../lib/pg-query"
+import { enforceStoreRateLimit } from "../../utils/store-rate-limit"
 
 type BookingBody = {
   name?: string
@@ -23,6 +15,10 @@ type BookingBody = {
   preferred_time?: string
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+const TIME_RE = /^\d{2}:\d{2}$/
+const SLOT_CAPACITY = Number(process.env.BOOKING_SLOT_CAPACITY || 3)
+
 /**
  * POST /store/bookings
  *
@@ -30,81 +26,66 @@ type BookingBody = {
  */
 export async function POST(
   req: MedusaRequest<BookingBody>,
-  res: MedusaResponse
+  res: MedusaResponse,
 ) {
+  await enforceStoreRateLimit(req, res, {
+    name: "bookings",
+    limit: 10,
+    windowMs: 60_000,
+  })
+
   const { name, phone, email, service, note, preferred_date, preferred_time } =
     req.body ?? {}
 
   if (!name?.trim() || !phone?.trim()) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
-      "name and phone are required"
+      "name and phone are required",
     )
   }
-  if (!preferred_date || !isFutureOrTodayInVietnam(preferred_date)) {
+  if (!preferred_date || !DATE_RE.test(preferred_date)) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
-      "preferred_date must be a valid date that is not in the past"
+      "preferred_date must be YYYY-MM-DD",
     )
   }
-  if (!preferred_time || !DAILY_SLOTS.includes(preferred_time)) {
+  if (preferred_time && !TIME_RE.test(preferred_time)) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
-      "preferred_time must be one of the available booking slots"
+      "preferred_time must be HH:mm",
     )
   }
 
   const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
 
-  const inquiry = await withDatabaseLock(
-    `booking-slot:${preferred_date}:${preferred_time}`,
-    async (client) => {
-      const countResult = await client.query(
-        `SELECT count(*)::int AS count
-         FROM inquiry
-         WHERE deleted_at IS NULL
-           AND type = 'booking'
-           AND preferred_date = $1
-           AND preferred_time = $2
-           AND status IN ('new', 'confirmed')`,
-        [preferred_date, preferred_time]
-      )
-      if (Number(countResult.rows[0]?.count ?? 0) >= getSlotCapacity()) {
+  const createBooking = async () => {
+    if (preferred_time) {
+      const taken = await countBookingsForSlot(preferred_date, preferred_time)
+      if (taken >= SLOT_CAPACITY) {
         throw new MedusaError(
           MedusaError.Types.NOT_ALLOWED,
-          "The selected time slot is no longer available"
+          "The selected time slot is no longer available",
         )
       }
-
-      return await inquiryService.createInquiries({
-        type: "booking",
-        name: name.trim().slice(0, 200),
-        phone: phone.trim().slice(0, 30),
-        normalized_phone: normalizePhone(phone),
-        email: email?.trim().slice(0, 200) || null,
-        normalized_email: email?.trim().toLowerCase().slice(0, 200) || null,
-        service: service?.trim().slice(0, 200) || null,
-        message: note?.trim().slice(0, 4000) || null,
-        source: "booking-form",
-        preferred_date,
-        preferred_time,
-        status: "new",
-      })
     }
-  )
 
-  const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
-  const careService: CareChannelModuleService =
-    req.scope.resolve(CARE_CHANNEL_MODULE)
-  careService
-    .notifySupportChannels(formatBookingMessage(inquiry))
-    .catch((error) => {
-      logger.warn(
-        `care-channel: failed to forward booking ${inquiry.id}: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      )
+    return inquiryService.createInquiries({
+      type: "booking",
+      name: name.trim().slice(0, 200),
+      phone: phone.trim().slice(0, 30),
+      email: email?.trim().slice(0, 200) || null,
+      service: service?.trim().slice(0, 200) || null,
+      message: note?.trim().slice(0, 4000) || null,
+      source: "booking-form",
+      preferred_date,
+      preferred_time: preferred_time || null,
+      status: "new",
     })
+  }
+
+  const inquiry = preferred_time
+    ? await withBookingSlotLock(preferred_date, preferred_time, createBooking)
+    : await createBooking()
 
   res.status(201).json({ success: true, inquiry_id: inquiry.id })
 }

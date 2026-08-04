@@ -7,6 +7,7 @@ const {
   loading,
   totals,
   promoCodes,
+  fetchCart,
   updateCart,
   removeFromCart,
   applyPromoCode,
@@ -30,10 +31,12 @@ const form = reactive({
   phone: '',
   email: '',
   address: '',
+  city: '',
   paymentMethod: 'pp_system_default',
 })
 
 onMounted(async () => {
+  await fetchCart()
   await fetchPaymentMethods()
   if (isLoggedIn.value && !customer.value) {
     await fetchProfile()
@@ -78,6 +81,22 @@ const handleRemoveCoupon = async (code: string) => {
   await removePromoCode(code)
 }
 
+const handleUpdateQty = async (itemId: string, qty: number) => {
+  error.value = ''
+  if (qty <= 0) {
+    await handleRemoveItem(itemId)
+    return
+  }
+  const res = await updateCart(itemId, qty)
+  if (res && !res.success) error.value = res.message || t('cart.updateError')
+}
+
+const handleRemoveItem = async (itemId: string) => {
+  error.value = ''
+  const res = await removeFromCart(itemId)
+  if (res && !res.success) error.value = res.message || t('cart.removeError')
+}
+
 const handleCheckout = async () => {
   error.value = ''
   message.value = ''
@@ -90,6 +109,7 @@ const handleCheckout = async () => {
     name: form.name,
     phone: form.phone,
     address: form.address,
+    city: form.city.trim() || undefined,
     email: form.email.trim() || undefined,
     payment_provider_id: form.paymentMethod,
   })
@@ -105,6 +125,7 @@ const handleCheckout = async () => {
     form.phone = ''
     form.email = ''
     form.address = ''
+    form.city = ''
     couponCode.value = ''
   } else {
     error.value = res.message
@@ -166,13 +187,13 @@ useSeoMeta({
                     class="w-20 px-2 py-1 rounded bg-dark text-white border border-white/20 min-h-[44px]"
                     @change="(e) => {
                       const qty = Number((e.target as HTMLInputElement).value)
-                      qty > 0 ? updateCart(item.id, qty) : removeFromCart(item.id)
+                      handleUpdateQty(item.id, qty)
                     }"
                   >
                   <button
                     type="button"
                     class="text-sm text-red-400 hover:text-red-300 min-h-[44px] px-2"
-                    @click="removeFromCart(item.id)"
+                    @click="handleRemoveItem(item.id)"
                   >
                     {{ t('cart.remove') }}
                   </button>
@@ -263,6 +284,13 @@ useSeoMeta({
               inputmode="email"
               autocomplete="email"
               :placeholder="t('cart.emailOptional')"
+              class="w-full px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px]"
+            >
+            <input
+              v-model="form.city"
+              type="text"
+              autocomplete="address-level2"
+              :placeholder="t('cart.city')"
               class="w-full px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px]"
             >
             <textarea

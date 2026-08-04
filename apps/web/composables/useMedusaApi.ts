@@ -10,12 +10,15 @@ export function useMedusaApi() {
   const config = useRuntimeConfig()
   const customerToken = useCookie<string | null>('customer_token', {
     maxAge: 60 * 60 * 24 * 30,
+    sameSite: 'lax',
+    secure: Boolean(config.public.cookieSecure),
   })
+
 
   // SSR inside docker must call the backend via compose DNS, the browser via
   // the published port — see runtimeConfig.medusaBackendUrlServer.
-  const baseUrl = import.meta.server && (config as any).medusaBackendUrlServer
-    ? (config as any).medusaBackendUrlServer
+  const baseUrl = import.meta.server && (config as { medusaBackendUrlServer?: string }).medusaBackendUrlServer
+    ? (config as { medusaBackendUrlServer?: string }).medusaBackendUrlServer
     : config.public.medusaBackendUrl
 
   const publishableKey = String(config.public.medusaPublishableKey || '')
@@ -76,5 +79,6 @@ export function useMedusaApi() {
     fetchMedusa,
     customerToken,
     regionId: config.public.medusaRegionId,
+    authBaseUrl: baseUrl,
   }
 }

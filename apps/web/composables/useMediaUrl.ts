@@ -11,6 +11,7 @@ export function useMediaUrl() {
 
   const resolveMediaUrl = (url: string | null | undefined): string => {
     if (!url) return ''
+    if (url.startsWith('http://') || url.startsWith('https://')) return url
     if (url.startsWith('/')) return `${config.public.medusaBackendUrl}${url}`
     return url
   }

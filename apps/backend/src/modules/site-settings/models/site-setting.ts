@@ -12,9 +12,8 @@ const SiteSetting = model.define("site_setting", {
   facebook_url: model.text().nullable(),
   zalo_url: model.text().nullable(),
   instagram_url: model.text().nullable(),
-  // The two homepage background/hero images, ordered (JSON array of URLs;
-  // DB default '[]', read as [] when null)
-  hero_images: model.json().nullable(),
+  // Homepage hero image URLs (JSON array; DB NOT NULL with default [])
+  hero_images: model.json().default([]),
   // "Giới thiệu" article shown on the storefront about page
   about_title: model.text().nullable(),
   about_thumbnail: model.text().nullable(),

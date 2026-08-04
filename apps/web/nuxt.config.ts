@@ -11,13 +11,8 @@ export default defineNuxtConfig({
     },
   },
 
-  nitro: {
-    routeRules: {
-      '/api/**': {
-        proxy: `${process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000'}/api/**`,
-      },
-    },
-  },
+  // Legacy Laravel /api proxy removed — commerce goes through Medusa Store API.
+  nitro: {},
 
   modules: [
     '@nuxtjs/i18n',
@@ -54,6 +49,8 @@ export default defineNuxtConfig({
       'trai-nghiem-slug': { en: '/events/[slug]', vi: '/trai-nghiem/[slug]' },
       'gio-hang': { en: '/cart', vi: '/gio-hang' },
       'lien-he': { en: '/contact', vi: '/lien-he' },
+      'gioi-thieu': { en: '/about', vi: '/gioi-thieu' },
+      'qua-tang-doanh-nghiep': { en: '/corporate-gifts', vi: '/qua-tang-doanh-nghiep' },
       'tai-khoan': { en: '/account', vi: '/tai-khoan' },
       'tra-cuu-don': { en: '/order-tracking', vi: '/tra-cuu-don' },
       'thanh-toan-ket-qua': { en: '/payment/result', vi: '/thanh-toan/ket-qua' },
@@ -77,7 +74,13 @@ export default defineNuxtConfig({
   image: {
     quality: 85,
     formats: ['webp', 'avif'],
-    domains: ['images.unsplash.com', 'localhost', '127.0.0.1'],
+    domains: [
+      'images.unsplash.com',
+      'localhost',
+      '127.0.0.1',
+      'thanglongcheviet.vn',
+      'thanglongcheviet.ddnsfree.com',
+    ],
     screens: {
       xs: 375,
       sm: 640,
@@ -90,15 +93,18 @@ export default defineNuxtConfig({
 
   // Runtime config
   runtimeConfig: {
-    apiProxyTarget: process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000',
     // SSR-only Medusa URL override. In docker the browser reaches the backend
-    // at localhost:9000 (published port) but the web container itself must use
+    // via nginx/public URL but the web container itself must use
     // the compose service DNS (http://backend:9000) — set
     // NUXT_MEDUSA_BACKEND_URL_SERVER there. Empty = use the public URL.
     medusaBackendUrlServer: process.env.NUXT_MEDUSA_BACKEND_URL_SERVER || '',
     public: {
       siteName: 'Thăng Long Chè Việt',
+      // Match backend COOKIE_SECURE — do not force Secure cookies on HTTP prod/local.
+      cookieSecure: process.env.NUXT_PUBLIC_COOKIE_SECURE === 'true'
+        || process.env.COOKIE_SECURE === 'true',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+
       // Medusa commerce backend (products + cart/checkout). Publishable key
       // and region id are auto-provisioned by
       // apps/admin-medusa/scripts/setup-web-integration.mjs — no manual

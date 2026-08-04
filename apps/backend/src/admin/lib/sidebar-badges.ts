@@ -9,6 +9,47 @@ export type SidebarBadgeSection = {
 }
 
 const STORAGE_PREFIX = "tlcv-admin-badge-seen:"
+const POLL_INTERVAL_MS = 30_000
+
+let pollStarted = false
+let cachedCounts: Record<string, number> = {}
+
+/** Normalize router / window paths (`/inquiries` vs `/app/inquiries`). */
+export function normalizeAdminPath(pathname: string): string {
+  return pathname.replace(/^\/app(?=\/|$)/, "") || "/"
+}
+
+export function isOnSectionPath(pathname: string, sectionPath: string): boolean {
+  const normalized = normalizeAdminPath(pathname)
+  return (
+    normalized === sectionPath || normalized.startsWith(`${sectionPath}/`)
+  )
+}
+
+export function getCachedBadgeCounts(): Record<string, number> {
+  return cachedCounts
+}
+
+/** Keeps polling alive even when SidebarBadges unmounts (e.g. on Settings pages). */
+export function ensureBadgeCountPolling(onUpdate: () => void): void {
+  if (typeof window === "undefined") {
+    return
+  }
+
+  const tick = async () => {
+    cachedCounts = await fetchAllBadgeCounts()
+    onUpdate()
+  }
+
+  if (!pollStarted) {
+    pollStarted = true
+    void tick()
+    window.setInterval(tick, POLL_INTERVAL_MS)
+    window.addEventListener("focus", tick)
+  } else {
+    void tick()
+  }
+}
 
 export const SIDEBAR_BADGE_SECTIONS: SidebarBadgeSection[] = [
   {
@@ -66,7 +107,10 @@ export async function fetchAllBadgeCounts(): Promise<Record<string, number>> {
       try {
         const count = await section.fetchCount()
         return [section.id, count] as const
-      } catch {
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.warn(`[sidebar-badges] count failed for ${section.id}`, err)
+        }
         return [section.id, 0] as const
       }
     }),
@@ -77,9 +121,11 @@ export async function fetchAllBadgeCounts(): Promise<Record<string, number>> {
 export function findSidebarNavLink(path: string): HTMLElement | null {
   if (typeof document === "undefined") return null
 
-  for (const anchor of document.querySelectorAll("a[href]")) {
+  const root = document.querySelector("aside") ?? document
+  for (const anchor of root.querySelectorAll("a[href]")) {
     const href = anchor.getAttribute("href") ?? ""
-    if (href === path || href.endsWith(path)) {
+    const normalizedHref = normalizeAdminPath(href.split("?")[0] ?? href)
+    if (normalizedHref === path || normalizedHref.startsWith(`${path}/`)) {
       return anchor as HTMLElement
     }
   }

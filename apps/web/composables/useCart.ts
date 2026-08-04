@@ -78,8 +78,14 @@ function mapLineItem(item: MedusaLineItem): CartItem {
 export function useCart() {
   const { fetchMedusa, regionId } = useMedusaApi()
   const { t } = useAppI18n()
+  const config = useRuntimeConfig()
 
-  const cartId = useCookie<string | null>('medusa_cart_id', { maxAge: 60 * 60 * 24 * 30 })
+  const cartId = useCookie<string | null>('medusa_cart_id', {
+    maxAge: 60 * 60 * 24 * 30,
+    sameSite: 'lax',
+    secure: Boolean(config.public.cookieSecure),
+  })
+
   const cart = useState<Cart | null>('cart', () => null)
   const items = useState<CartItem[]>('cart_items', () => [])
   const totals = useState<CartTotals>('cart_totals', () => ({ subtotal: 0, discount: 0, shipping: 0, total: 0 }))
@@ -109,6 +115,20 @@ export function useCart() {
       body: { region_id: regionId },
     })
     applyCart(res.cart)
+    // If the customer is already logged in, attach ownership immediately.
+    const token = useCookie<string | null>('customer_token')
+    if (token.value) {
+      try {
+        const linked = await fetchMedusa<{ cart: MedusaCart }>(
+          `/store/carts/${res.cart.id}/customer?fields=${CART_FIELDS}`,
+          { method: 'POST' },
+        )
+        applyCart(linked.cart)
+        return linked.cart
+      } catch {
+        /* guest cart still usable */
+      }
+    }
     return res.cart
   }
 
@@ -138,9 +158,34 @@ export function useCart() {
     return cart.value!
   }
 
+  /**
+   * After login/register, attach the guest cart to the authenticated customer
+   * so checkout and order history stay linked (POST /store/carts/:id/customer).
+   */
+  const transferCartToCustomer = async () => {
+    if (!cartId.value) return
+    try {
+      const res = await fetchMedusa<{ cart: MedusaCart }>(
+        `/store/carts/${cartId.value}/customer?fields=${CART_FIELDS}`,
+        { method: 'POST' },
+      )
+      applyCart(res.cart)
+    } catch (err) {
+      console.warn('Could not transfer cart to customer', err)
+    }
+  }
+
   const addToCart = async (variantId: string, quantity = 1) => {
     loading.value = true
     try {
+      try {
+        await fetchMedusa<{ ok: boolean }>(
+          `/store/variants/${variantId}/availability?quantity=${quantity}`,
+        )
+      } catch {
+        return { success: false, message: t('cart.outOfStock') }
+      }
+
       const current = await ensureCart()
       const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${current.id}/line-items?fields=${CART_FIELDS}`, {
         method: 'POST',
@@ -159,7 +204,9 @@ export function useCart() {
   }
 
   const updateCart = async (itemId: string, quantity: number) => {
-    if (!cart.value) return
+    if (!cart.value) {
+      return { success: false as const, message: t('cart.updateError') }
+    }
     loading.value = true
     try {
       const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${cart.value.id}/line-items/${itemId}?fields=${CART_FIELDS}`, {
@@ -167,15 +214,19 @@ export function useCart() {
         body: { quantity },
       })
       applyCart(res.cart)
+      return { success: true as const }
     } catch (err) {
       console.error('Failed to update cart', err)
+      return { success: false as const, message: parseApiError(err, t('cart.updateError')) }
     } finally {
       loading.value = false
     }
   }
 
   const removeFromCart = async (itemId: string) => {
-    if (!cart.value) return
+    if (!cart.value) {
+      return { success: false as const, message: t('cart.removeError') }
+    }
     loading.value = true
     try {
       await fetchMedusa(`/store/carts/${cart.value.id}/line-items/${itemId}`, {
@@ -185,8 +236,10 @@ export function useCart() {
       // keep totals/promotions consistent.
       const res = await fetchMedusa<{ cart: MedusaCart }>(`/store/carts/${cart.value.id}?fields=${CART_FIELDS}`)
       applyCart(res.cart)
+      return { success: true as const }
     } catch (err) {
       console.error('Failed to remove from cart', err)
+      return { success: false as const, message: parseApiError(err, t('cart.removeError')) }
     } finally {
       loading.value = false
     }
@@ -270,6 +323,7 @@ export function useCart() {
     name: string
     phone: string
     address: string
+    city?: string
     email?: string
     payment_provider_id?: string
   }) => {
@@ -278,13 +332,12 @@ export function useCart() {
       const current = await ensureCart()
       const [firstName, ...rest] = data.name.trim().split(/\s+/)
 
-      // Use a country that actually belongs to the cart's region ('vn' once
-      // the Vietnam region is seeded; the demo seed only has EU countries).
       const checkoutRegionId = current.region_id || regionId
       if (!checkoutRegionId) {
         throw new Error('Store region is not configured')
       }
 
+      // Prefer Vietnam when the region supports it; otherwise first country.
       const { region } = await fetchMedusa<{ region: { countries: { iso_2: string }[] } }>(
         `/store/regions/${checkoutRegionId}`,
       )
@@ -292,15 +345,19 @@ export function useCart() {
         ?? region.countries[0]?.iso_2
         ?? 'vn'
 
+      const shippingCity = (data.city || '').trim() || 'Hà Nội'
+      const shippingEmail = (data.email || '').trim()
+        || `order+${data.phone.replace(/\D/g, '')}@thanglongcheviet.vn`
+
       await fetchMedusa(`/store/carts/${current.id}`, {
         method: 'POST',
         body: {
-          email: data.email || 'khach@thanglongcheviet.vn',
+          email: shippingEmail,
           shipping_address: {
             first_name: firstName || data.name,
             last_name: rest.join(' ') || data.name,
             address_1: data.address,
-            city: 'Hà Nội',
+            city: shippingCity,
             country_code: countryCode,
             phone: data.phone,
           },
@@ -325,6 +382,15 @@ export function useCart() {
         method: 'POST',
         body: { provider_id: data.payment_provider_id || 'pp_system_default' },
       })
+
+      try {
+        await fetchMedusa<{ ok: boolean }>(
+          `/store/carts/${current.id}/validate-inventory`,
+          { method: 'POST' },
+        )
+      } catch {
+        throw new Error(t('cart.outOfStock'))
+      }
 
       const result = await fetchMedusa<{ type: string, order?: { display_id: number }, error?: { message: string } }>(
         `/store/carts/${current.id}/complete`,
@@ -373,6 +439,7 @@ export function useCart() {
     totalItems,
     totalPrice,
     fetchCart,
+    transferCartToCustomer,
     addToCart,
     updateCart,
     removeFromCart,

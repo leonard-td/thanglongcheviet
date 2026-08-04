@@ -7,8 +7,7 @@ export function useSettings() {
   const localizedText = (field: Record<string, string> | undefined) =>
     localText(field, locale.value)
 
-  // Tương thích cả key mới 'site' lẫn key cũ 'salon' (trong dữ liệu cũ/DB).
-  const siteInfo = computed<any>(() => settingsData.value.site ?? (settingsData.value as any).salon ?? {})
+  const siteInfo = computed(() => settingsData.value.site ?? {})
 
   const site = computed(() => ({
     name: localizedText(siteInfo.value.name),

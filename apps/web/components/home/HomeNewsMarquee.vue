@@ -1,38 +1,37 @@
 <script setup lang="ts">
 // inline: nằm trong luồng trang (dưới banner / đầu main) thay vì fixed top —
 // dùng trên mọi trang ngoài trang chủ; trang chủ giữ biến thể fixed.
-// Nút chuyển ngôn ngữ trước đây nằm trong thanh này; trang chủ đã chuyển nó
-// xuống cột giữa (`HomeV3PillarList`), các trang khác render qua layout.
-const props = withDefaults(defineProps<{
-  inline?: boolean
-  /** Hiện nút tạm dừng chuyển động (dùng ở trang chủ v3). */
-  motionToggle?: boolean
-  /** Chạy chậm hơn cho dễ đọc (dùng ở trang chủ v3). */
-  slow?: boolean
-}>(), {
+const props = withDefaults(defineProps<{ inline?: boolean }>(), {
   inline: false,
-  motionToggle: false,
-  slow: false,
 })
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const localePath = useLocalePath()
 const { posts: rawPosts, latestPosts } = useBlog()
 
+/** Marquee needs ≥2 items; duplicate track for loop otherwise shows the same headline twice. */
+const sourcePosts = computed(() => {
+  const latest = latestPosts.value
+  const all = rawPosts.value
+  if (latest.length >= 2) return latest
+  if (all.length >= 2) return all.slice(0, 6)
+  return latest.length ? latest : all
+})
+
 const items = computed(() =>
-  (latestPosts.value.length ? latestPosts.value : rawPosts.value).map(post => ({
+  sourcePosts.value.map(post => ({
     id: post.slug,
     slug: post.slug,
     title: post.title,
-    category: 'Tin tức', // Fallback
+    category: post.topic?.name ?? t('nav.blog'),
   })),
 )
 
-const duration = computed(() => {
-  const perItem = props.slow ? 11 : 8
-  const floor = props.slow ? 44 : 32
-  return `${Math.max(items.value.length * perItem, floor)}s`
-})
+const shouldLoop = computed(() => items.value.length >= 2)
+
+const duration = computed(() =>
+  shouldLoop.value ? `${Math.max(items.value.length * 8, 32)}s` : '0s',
+)
 </script>
 
 <template>
@@ -48,6 +47,7 @@ const duration = computed(() => {
     <div class="home-marquee-viewport">
       <div
         class="home-marquee-track"
+        :class="{ 'is-static': !shouldLoop }"
         :style="{ '--marquee-duration': duration }"
       >
         <ul class="home-marquee-list">
@@ -58,7 +58,7 @@ const duration = computed(() => {
             </NuxtLink>
           </li>
         </ul>
-        <ul class="home-marquee-list" aria-hidden="true">
+        <ul v-if="shouldLoop" class="home-marquee-list" aria-hidden="true">
           <li v-for="post in items" :key="`dup-${post.id}`" class="home-marquee-item">
             <NuxtLink
               :to="localePath(`/tin-tuc/${post.slug}`)"
@@ -72,7 +72,6 @@ const duration = computed(() => {
         </ul>
       </div>
     </div>
-    <WidgetsMotionToggle v-if="props.motionToggle" />
   </div>
 </template>
 
@@ -90,8 +89,6 @@ const duration = computed(() => {
   top: 0;
   left: 0;
   right: 0;
-  width: 100%;
-  max-width: 100vw;
   z-index: 960;
   height: var(--marquee-h);
   display: flex;
@@ -99,7 +96,6 @@ const duration = computed(() => {
   border-bottom: 2px solid var(--marquee-red);
   overflow: hidden;
   background: linear-gradient(90deg, var(--marquee-gray) 0%, var(--marquee-gray-dark) 100%);
-  box-sizing: border-box;
 }
 
 .home-marquee-brand {
@@ -135,6 +131,17 @@ const duration = computed(() => {
   display: flex;
   width: max-content;
   animation: marquee-rtl var(--marquee-duration, 40s) linear infinite;
+}
+
+.home-marquee-track.is-static {
+  animation: none;
+  width: 100%;
+}
+
+.home-marquee-track.is-static .home-marquee-list {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .home-marquee-list {
@@ -225,11 +232,7 @@ const duration = computed(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-marquee-track {
-    animation: none;
-  }
-
-  .home-marquee-list[aria-hidden="true"] {
+   .home-marquee-list[aria-hidden="true"] {
     display: none;
   }
 }

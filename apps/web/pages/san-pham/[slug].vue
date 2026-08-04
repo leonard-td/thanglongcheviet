@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import type { Product } from '~/utils/storefront'
-import { formatMoney } from '~/utils/storefront'
-import { resolveStoreLoadError } from '~/utils/fetch-status'
+import { formatMoney, FALLBACK_PRODUCT_IMAGE } from '~/utils/storefront'
+import { sanitizeHtml } from '~/utils/sanitizeHtml'
 
 const { t, locale } = useI18n()
 const { getBySlug, categories } = useProducts()
@@ -12,26 +11,12 @@ const route = useRoute()
 useScrollAnimation()
 
 const listUrl = computed(() => localePath('/san-pham-list'))
-const slug = computed(() => {
-  const raw = route.params.slug
-  const value = Array.isArray(raw) ? raw[0] : raw
-  return typeof value === 'string' ? value.trim() : ''
-})
-
-const loadMessages = () => ({
-  notFound: t('products.notFound'),
-  loadError: t('products.loadError'),
-  configError: t('products.configError'),
-})
-
-const throwProductError = (error: unknown) => {
-  const resolved = resolveStoreLoadError(error, loadMessages())
-  throw createError({ ...resolved, fatal: true })
-}
+const slug = computed(() => String(route.params.slug))
 
 const added = ref(false)
 const quantity = ref(1)
 const selectedImage = ref<string | null>(null)
+const onImageError = (e: Event) => { (e.target as HTMLImageElement).src = FALLBACK_PRODUCT_IMAGE }
 // null = no manual pick yet; the computed below falls back to the first
 // variant's option combo. Kept separate from a "resolved" ref so the very
 // first render (SSR included) can derive the default purely from `product`
@@ -40,15 +25,9 @@ const selectedImage = ref<string | null>(null)
 // which previously caused hydration mismatches on both the image and here).
 const manualOptions = ref<Record<string, string> | null>(null)
 
-const { data: productData, pending, error: productError, status } = await useAsyncData(
-  () => `product-${slug.value || 'missing'}`,
-  async () => {
-    if (!slug.value) {
-      return { product: null, relatedFromApi: [] as Product[] }
-    }
-    return getBySlug(slug.value)
-  },
-  { watch: [slug] },
+const { data: productData, pending } = useAsyncData(
+  () => `product-${slug.value}`,
+  () => getBySlug(slug.value),
 )
 
 const product = computed(() => productData.value?.product ?? null)
@@ -57,23 +36,14 @@ const category = computed(() =>
   categories.value.find(c => c.id === product.value?.categoryId) ?? null,
 )
 
-if (productError.value) {
-  throwProductError(productError.value)
-}
-if (status.value === 'success' && !product.value) {
-  throw createError({ statusCode: 404, statusMessage: t('products.notFound'), fatal: true })
-}
-
 watchEffect(() => {
-  // Avoid false 404/500 while client navigation refetches the same page component.
-  if (status.value === 'pending' || status.value === 'idle') return
-  if (productError.value) {
-    throwProductError(productError.value)
-  }
-  if (status.value === 'success' && !product.value) {
+  if (!pending.value && !product.value) {
     throw createError({ statusCode: 404, statusMessage: t('products.notFound'), fatal: true })
   }
 })
+
+// Tab "Mô tả" / "Đặc điểm nổi bật" ở khối thông tin cuối trang
+const activeTab = ref<'desc' | 'specs'>('desc')
 
 // Nuxt reuses this component instance across client-side slug navigation —
 // reset local UI state when the product actually changes.
@@ -83,6 +53,7 @@ watch(() => product.value?.id, () => {
   selectedImage.value = null
   manualOptions.value = null
   quickBuyOpen.value = false
+  activeTab.value = 'desc'
 })
 
 const activeImage = computed(() =>
@@ -105,8 +76,7 @@ function isValueAvailable(optionTitle: string, value: string) {
   if (!product.value) return false
   const candidate = { ...selectedOptions.value, [optionTitle]: value }
   return product.value.variants.some(v =>
-    v.inStock
-    && product.value!.options.every(o => v.optionValues[o.title] === candidate[o.title]),
+    product.value!.options.every(o => v.optionValues[o.title] === candidate[o.title]),
   )
 }
 
@@ -125,13 +95,7 @@ const missingOption = computed(() => {
   return product.value.options.find(o => !selectedOptions.value[o.title]) ?? product.value.options[0] ?? null
 })
 
-const canAddToCart = computed(() =>
-  Boolean(selectedVariant.value?.inStock) && Boolean(selectedVariant.value) && !cartLoading.value,
-)
-
-const selectedOutOfStock = computed(() =>
-  Boolean(selectedVariant.value) && !selectedVariant.value!.inStock,
-)
+const canAddToCart = computed(() => Boolean(selectedVariant.value) && !cartLoading.value)
 
 const incrementQty = () => { quantity.value++ }
 const decrementQty = () => { if (quantity.value > 1) quantity.value-- }
@@ -301,41 +265,31 @@ useProductStructuredData(product)
                   class="relative aspect-square w-16 flex-none overflow-hidden rounded-lg border-2 transition-colors"
                   :class="img === activeImage ? 'border-primary-500' : 'border-transparent opacity-60 hover:opacity-100'"
                   @click="selectedImage = img">
-                  <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover">
+                  <img :src="img" :alt="`${product.title} ${i + 1}`" class="w-full h-full object-cover" @error="onImageError">
                 </button>
               </div>
 
               <div ref="zoomFrameEl"
                 class="relative flex-1 min-w-0 aspect-square overflow-hidden rounded-2xl bg-[#2a3326] shadow-2xl cursor-crosshair"
                 @mouseenter="onZoomEnter" @mouseleave="zoomActive = false" @mousemove="onZoomMove">
-                <img :src="activeImage" :alt="product.title" class="w-full h-full object-cover">
+                <img :src="activeImage" :alt="product.title" class="w-full h-full object-cover" @error="onImageError">
                 <div v-show="zoomActive" class="zoom-lens" :style="lensStyle" aria-hidden="true" />
               </div>
             </div>
           </div>
 
-          <!-- Info: Highlights bên trái (260px), khối mua hàng bên phải (từ xl).
-               Mobile: Highlights trước, rồi tới nội dung mua hàng. -->
-          <div class="animate-on-scroll" :class="specs.length ? 'xl:grid xl:grid-cols-[260px_minmax(0,1fr)] xl:gap-10' : ''">
-            <!-- Đặc điểm nổi bật -->
-            <aside v-if="specs.length"
-              class="mb-8 xl:mb-0 pb-6 xl:pb-0 border-b border-white/10 xl:border-b-0 xl:border-r xl:border-white/10 xl:pr-8">
-              <h2 class="text-xs uppercase tracking-widest text-white/50 mb-4 font-semibold">
-                {{ t('products.featuresTitle') }}
-              </h2>
-              <dl class="space-y-2">
-                <div v-for="row in specs" :key="row.label"
-                  class="flex justify-between text-sm py-1.5 border-b border-white/5">
-                  <dt class="text-white/50">{{ row.label }}</dt>
-                  <dd class="text-white/85 text-right">{{ row.value }}</dd>
-                </div>
-              </dl>
-            </aside>
-
-            <div class="min-w-0">
-              <h1 class="font-heading text-3xl md:text-4xl font-bold mb-3 leading-tight">{{ product.title }}</h1>
-              <p class="text-2xl font-semibold text-primary-400 mb-5">{{ priceText }}</p>
-              <!-- <p class="text-white/70 leading-relaxed mb-6">{{ product.shortDesc }}</p> -->
+          <!-- Info -->
+          <div class="animate-on-scroll">
+            <p class="modis-eyebrow mb-3">
+              <NuxtLink v-if="category" :to="localePath(`/san-pham/danh-muc/${category.slug}`)"
+                class="hover:text-primary-300 transition-colors">
+                {{ category.label }}
+              </NuxtLink>
+              <template v-else>{{ product.categoryName || t('products.label') }}</template>
+            </p>
+            <h1 class="font-heading text-3xl md:text-4xl font-bold mb-3 leading-tight">{{ product.title }}</h1>
+            <p class="text-2xl font-semibold text-primary-400 mb-5">{{ priceText }}</p>
+            <!-- <p class="text-white/70 leading-relaxed mb-6">{{ product.shortDesc }}</p> -->
 
             <!-- Variant / option selectors -->
             <div v-if="product.options.length" class="space-y-5 mb-6">
@@ -359,9 +313,6 @@ useProductStructuredData(product)
               </div>
               <p v-if="missingOption" class="text-xs text-amber-400/90">
                 {{ t('products.chooseOption', { option: missingOption.title }) }}
-              </p>
-              <p v-else-if="selectedOutOfStock" class="text-xs text-red-400/90">
-                {{ t('products.outOfStock') }}
               </p>
             </div>
 
@@ -415,12 +366,8 @@ useProductStructuredData(product)
               </NuxtLink>
             </div>
 
-            <!-- Trust badges — flex-wrap instead of viewport-breakpoint grid-cols:
-                 this column's actual width depends on whether the specs aside
-                 rendered (see `specs.length` above), not on the viewport alone,
-                 so a fixed xl:/2xl: column count can end up far wider than the
-                 content and strand the last badge on its own line. -->
-            <div class="flex flex-wrap gap-x-6 gap-y-3 mb-8 border-t border-white/10 pt-6">
+            <!-- Trust badges -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8 border-t border-white/10 pt-6">
               <div class="flex items-center gap-2.5 text-xs text-white/65 max-w-[fit-content]">
                 <svg class="w-5 h-5 flex-shrink-0 text-primary-400" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -450,16 +397,40 @@ useProductStructuredData(product)
                 <span>{{ t('products.trustReturn') }}</span>
               </div>
             </div>
-            </div>
+
           </div>
         </div>
 
-        <!-- Mô tả sản phẩm -->
+        <!-- Mô tả + Đặc điểm nổi bật: 2 tab ngang hàng trong cùng khối -->
         <div class="mt-16 max-w-3xl animate-on-scroll">
-          <h2 class="pb-3 mb-5 border-b border-white/10 text-sm font-semibold uppercase tracking-[0.12em] text-primary-400">
-            {{ t('products.descTitle') }}
-          </h2>
-          <div class="prose prose-invert max-w-none text-white/70 leading-relaxed" v-html="product.description" />
+          <div class="flex gap-1 border-b border-white/10" role="tablist">
+            <button type="button" role="tab" :aria-selected="activeTab === 'desc'"
+              class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
+              :class="activeTab === 'desc'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-white/50 hover:text-white/80'" @click="activeTab = 'desc'">
+              {{ t('products.descTitle') }}
+            </button>
+            <button v-if="specs.length" type="button" role="tab" :aria-selected="activeTab === 'specs'"
+              class="px-5 py-3 text-sm font-semibold uppercase tracking-[0.12em] border-b-2 -mb-px transition-colors"
+              :class="activeTab === 'specs'
+                ? 'border-primary-500 text-primary-400'
+                : 'border-transparent text-white/50 hover:text-white/80'" @click="activeTab = 'specs'">
+              {{ t('products.featuresTitle') }}
+            </button>
+          </div>
+
+          <div v-show="activeTab === 'desc'" role="tabpanel"
+            class="prose prose-invert max-w-none text-white/70 leading-relaxed mt-5"
+            v-html="sanitizeHtml(product.description)"
+          />
+          <dl v-if="specs.length" v-show="activeTab === 'specs'" role="tabpanel" class="space-y-2 mt-5">
+            <div v-for="row in specs" :key="row.label"
+              class="flex justify-between text-sm py-1.5 border-b border-white/5">
+              <dt class="text-white/50">{{ row.label }}</dt>
+              <dd class="text-white/85 text-right">{{ row.value }}</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </section>
@@ -474,7 +445,8 @@ useProductStructuredData(product)
             <NuxtLink :to="localePath(`/san-pham/${p.slug}`)" :aria-label="p.title"
               class="relative block aspect-[346/197] overflow-hidden rounded-md bg-[#2a3326] shadow-lg">
               <img :src="p.image" :alt="p.title" loading="lazy"
-                class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105">
+                class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                @error="onImageError">
               <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-2 pt-6">
                 <h3
                   class="text-white text-xs uppercase tracking-[0.12em] font-semibold transition-colors group-hover:text-primary-300 line-clamp-1">
@@ -489,7 +461,7 @@ useProductStructuredData(product)
               <p class="text-primary-400 text-xs font-semibold p-0 mb-0">
                 {{ formatMoney(p.price, p.currencyCode, locale === 'en' ? 'en-US' : 'vi-VN') }}
               </p>
-              <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.quickAddInStock" icon-only />
+              <ProductCardActions :variant-id="p.variantId" :slug="p.slug" :in-stock="p.inStock" icon-only />
             </div>
           </article>
         </div>
@@ -504,7 +476,8 @@ useProductStructuredData(product)
                bg-[#1f1f1f]/95 backdrop-blur shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
         <div class="container-page flex items-center justify-end gap-3 md:gap-5 py-2.5">
           <img :src="activeImage" :alt="product.title"
-            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10">
+            class="hidden sm:block h-11 w-11 flex-none rounded-lg object-cover ring-1 ring-white/10"
+            @error="onImageError">
           <div class="hidden sm:block min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-white">{{ product.title }}</p>
             <p class="text-sm font-semibold text-primary-400">{{ priceText }}</p>
@@ -534,7 +507,8 @@ useProductStructuredData(product)
                  border border-white/10 bg-[#1f1f1f] p-5 shadow-[0_-8px_40px_rgba(0,0,0,0.5)]">
           <div class="flex items-start gap-3 mb-5">
             <img :src="activeImage" :alt="product.title"
-              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10">
+              class="h-16 w-16 flex-none rounded-lg object-cover ring-1 ring-white/10"
+              @error="onImageError">
             <div class="min-w-0 flex-1">
               <p class="text-sm font-semibold text-white leading-snug">{{ product.title }}</p>
               <p class="mt-1 text-base font-semibold text-primary-400">{{ priceText }}</p>
@@ -566,9 +540,6 @@ useProductStructuredData(product)
             </div>
             <p v-if="missingOption" class="text-xs text-amber-400/90">
               {{ t('products.chooseOption', { option: missingOption.title }) }}
-            </p>
-            <p v-else-if="selectedOutOfStock" class="text-xs text-red-400/90">
-              {{ t('products.outOfStock') }}
             </p>
           </div>
 

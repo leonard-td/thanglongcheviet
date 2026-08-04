@@ -2,7 +2,8 @@ import type { MedusaCategory, MedusaCollection, MedusaProduct } from '~/utils/me
 import type { Product } from '~/utils/storefront'
 import { transformMedusaCategory, transformMedusaProduct } from '~/utils/medusa'
 import { categoryLabel } from '~/utils/storefront'
-import { isNotFoundError } from '~/utils/fetch-status'
+
+export type { Product } from '~/utils/storefront'
 
 export interface ProductGroup {
   id: string
@@ -12,7 +13,10 @@ export interface ProductGroup {
   thumbnail: string | null
 }
 
-const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,*images,*categories,'
+const PRODUCT_LIST_FIELDS = 'id,title,handle,thumbnail,metadata,*categories,*collection,*variants,*variants.calculated_price,'
+  + '*variants.manage_inventory,*variants.allow_backorder,*variants.inventory_quantity'
+
+const PRODUCT_DETAIL_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
   + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price,'
   + '*variants.manage_inventory,*variants.allow_backorder,*variants.inventory_quantity'
 
@@ -23,7 +27,7 @@ export function useProducts() {
   const productsAsync = useAsyncData(
     'medusa-products',
     () => fetchMedusa<{ products: MedusaProduct[] }>(
-      `/store/products?limit=100&region_id=${regionId}&fields=${PRODUCT_FIELDS}`,
+      `/store/products?limit=100&region_id=${regionId}&fields=${PRODUCT_LIST_FIELDS}`,
     ),
     { default: () => ({ products: [] as MedusaProduct[] }) },
   )
@@ -33,10 +37,11 @@ export function useProducts() {
     (productsData.value?.products ?? []).map(transformMedusaProduct),
   )
 
-  // Medusa has no built-in "featured" flag out of the box — surface the
-  // first few products instead. Curate via a real flag (e.g. metadata.featured)
-  // once real product data replaces the seeded demo catalog.
-  const featuredProducts = computed<Product[]>(() => products.value.slice(0, 6))
+  // Prefer products marked metadata.featured in admin; fall back to first 6.
+  const featuredProducts = computed<Product[]>(() => {
+    const marked = products.value.filter(p => p.featured)
+    return (marked.length ? marked : products.value).slice(0, 6)
+  })
 
   const { data: categoriesData } = useAsyncData(
     'medusa-product-categories',
@@ -71,27 +76,20 @@ export function useProducts() {
   const getBySlug = async (slug: string) => {
     try {
       const res = await fetchMedusa<{ products: MedusaProduct[] }>(
-        `/store/products?handle=${encodeURIComponent(slug)}&region_id=${regionId}&fields=${PRODUCT_FIELDS}`,
+        `/store/products?handle=${encodeURIComponent(slug)}&region_id=${regionId}&fields=${PRODUCT_DETAIL_FIELDS}`,
       )
       const raw = res.products?.[0]
       if (raw) {
         const product = transformMedusaProduct(raw)
-        // Do not block SSR on the parallel catalog fetch (can hang nginx → 504).
-        // Related items populate when the catalog is already ready.
-        const relatedFromApi = productsAsync.pending.value
-          ? ([] as Product[])
-          : related(product)
-        return { product, relatedFromApi }
+        // Wait for the catalog async-data so related() has products on cold hits.
+        await productsAsync.execute().catch(() => null)
+        return { product, relatedFromApi: related(product) }
       }
-      return { product: null, relatedFromApi: [] as Product[] }
     } catch (e) {
-      // Empty handle result is not found (null). Network/SSR failures rethrow
-      // so reload does not become a false fatal 404.
-      if (isNotFoundError(e)) {
-        return { product: null, relatedFromApi: [] as Product[] }
-      }
-      throw e
+      console.error(e)
     }
+
+    return { product: null, relatedFromApi: [] as Product[] }
   }
 
   /**

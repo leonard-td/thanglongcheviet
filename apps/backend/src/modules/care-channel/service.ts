@@ -11,7 +11,6 @@ import {
   sendZaloMessage,
   type ZaloConfig,
 } from "./providers/zalo"
-import { withDatabaseLock } from "../../lib/database-lock"
 
 export type CareChannelProvider = "telegram" | "zalo_oa"
 export type CareMessageKind = "order" | "support" | "test"
@@ -35,7 +34,6 @@ export type CareMessageRecord = {
   external_user_id: string | null
   external_user_name: string | null
   external_message_id: string | null
-  reference_id: string | null
   content: string
   status: "sent" | "failed" | "received"
   error: string | null
@@ -46,7 +44,6 @@ type SendOptions = {
   kind?: CareMessageKind
   externalUserId?: string | null
   externalUserName?: string | null
-  referenceId?: string | null
 }
 
 type InboundMessage = {
@@ -86,13 +83,8 @@ class CareChannelModuleService extends MedusaService({
   }
 
   /** Thông báo tới mọi kênh chăm sóc bán hàng đang bật (`notify_orders`). */
-  async notifyOrderChannels(text: string, orderId: string) {
-    return await this.broadcast(
-      text,
-      "order",
-      { notify_orders: true },
-      `order:${orderId}`
-    )
+  async notifyOrderChannels(text: string) {
+    return await this.broadcast(text, "order", { notify_orders: true })
   }
 
   /** Thông báo tới mọi kênh CSKH chung đang bật (`receive_messages`). */
@@ -120,33 +112,30 @@ class CareChannelModuleService extends MedusaService({
       }
     }
 
-    try {
-      return await this.createCareMessages({
-        channel_id: channelId,
-        direction: "inbound",
-        kind: "support",
-        external_user_id: message.externalUserId,
-        external_user_name: message.externalUserName ?? null,
-        external_message_id: message.externalMessageId ?? null,
-        reference_id: null,
-        content: message.text,
-        status: "received",
-        error: null,
-      })
-    } catch (error) {
-      if (message.externalMessageId && this.isUniqueViolation(error)) {
+    return await this.createCareMessages({
+      channel_id: channelId,
+      direction: "inbound",
+      kind: "support",
+      external_user_id: message.externalUserId,
+      external_user_name: message.externalUserName ?? null,
+      external_message_id: message.externalMessageId ?? null,
+      content: message.text,
+      status: "received",
+      error: null,
+    }).catch(async (err: unknown) => {
+      if (message.externalMessageId) {
         const [existing] = await this.listCareMessages(
           {
             channel_id: channelId,
             direction: "inbound",
             external_message_id: message.externalMessageId,
           },
-          { take: 1 }
+          { take: 1 },
         )
         if (existing) return existing
       }
-      throw error
-    }
+      throw err
+    })
   }
 
   /** Đăng ký webhook của bot Telegram trỏ về backend. Trả về URL đã đăng ký. */
@@ -185,8 +174,7 @@ class CareChannelModuleService extends MedusaService({
   private async broadcast(
     text: string,
     kind: CareMessageKind,
-    flagFilter: Record<string, boolean>,
-    referenceId?: string
+    flagFilter: Record<string, boolean>
   ) {
     const channels = (await this.listCareChannels({
       is_active: true,
@@ -196,9 +184,7 @@ class CareChannelModuleService extends MedusaService({
     const results: CareMessageRecord[] = []
 
     for (const channel of channels) {
-      results.push(
-        ...(await this.dispatchToChannel(channel, text, kind, referenceId))
-      )
+      results.push(...(await this.dispatchToChannel(channel, text, kind)))
     }
 
     return results
@@ -207,8 +193,7 @@ class CareChannelModuleService extends MedusaService({
   private async dispatchToChannel(
     channel: CareChannelRecord,
     text: string,
-    kind: CareMessageKind,
-    referenceId?: string
+    kind: CareMessageKind
   ) {
     if (channel.provider === "zalo_oa") {
       const userIds = ((channel.config ?? {}) as ZaloConfig).notify_user_ids ?? []
@@ -231,56 +216,18 @@ class CareChannelModuleService extends MedusaService({
             text,
             kind,
             externalUserId: userId,
-            referenceId,
           })
         )
       }
       return results
     }
 
-    const telegramChatId =
-      channel.provider === "telegram"
-        ? ((channel.config ?? {}) as TelegramConfig).chat_id
-        : null
-    return [
-      await this.sendViaChannel(channel, {
-        text,
-        kind,
-        externalUserId: telegramChatId,
-        referenceId,
-      }),
-    ]
+    return [await this.sendViaChannel(channel, { text, kind })]
   }
 
   private async sendViaChannel(channel: CareChannelRecord, options: SendOptions) {
-    if (options.referenceId) {
-      const recipient = options.externalUserId ?? "default"
-      return await withDatabaseLock(
-        `care-delivery:${channel.id}:${recipient}:${options.referenceId}`,
-        async () => {
-          const [existing] = await this.listCareMessages(
-            {
-              channel_id: channel.id,
-              direction: "outbound",
-              reference_id: options.referenceId,
-              external_user_id: options.externalUserId ?? null,
-            },
-            { take: 1 }
-          )
-          if (existing) return existing as unknown as CareMessageRecord
-          return await this.deliverAndLog(channel, options)
-        }
-      )
-    }
-
-    return await this.deliverAndLog(channel, options)
-  }
-
-  private async deliverAndLog(
-    channel: CareChannelRecord,
-    options: SendOptions
-  ) {
     const kind = options.kind ?? "support"
+
     try {
       const { messageId, recipientId } = await this.deliver(
         channel,
@@ -295,7 +242,6 @@ class CareChannelModuleService extends MedusaService({
         externalUserId: recipientId,
         externalUserName: options.externalUserName ?? null,
         externalMessageId: messageId,
-        referenceId: options.referenceId ?? null,
       })
     } catch (error) {
       return await this.logMessage(channel, {
@@ -304,7 +250,6 @@ class CareChannelModuleService extends MedusaService({
         status: "failed",
         externalUserId: options.externalUserId ?? null,
         externalUserName: options.externalUserName ?? null,
-        referenceId: options.referenceId ?? null,
         error: error instanceof Error ? error.message : String(error),
       })
     }
@@ -356,27 +301,13 @@ class CareChannelModuleService extends MedusaService({
       return config.access_token
     }
 
-    return await withDatabaseLock(`zalo-token:${channel.id}`, async () => {
-      const freshChannel = (await this.retrieveCareChannel(
-        channel.id
-      )) as unknown as CareChannelRecord
-      const freshConfig = (freshChannel.config ?? {}) as ZaloConfig
+    const refreshed = await refreshZaloAccessToken(config)
 
-      if (
-        freshConfig.access_token &&
-        (!freshConfig.token_expires_at ||
-          freshConfig.token_expires_at > Date.now())
-      ) {
-        channel.config = freshConfig
-        return freshConfig.access_token
-      }
+    const nextConfig = { ...config, ...refreshed }
+    await this.updateCareChannels({ id: channel.id, config: nextConfig })
+    channel.config = nextConfig
 
-      const refreshed = await refreshZaloAccessToken(freshConfig)
-      const nextConfig = { ...freshConfig, ...refreshed }
-      await this.updateCareChannels({ id: channel.id, config: nextConfig })
-      channel.config = nextConfig
-      return refreshed.access_token
-    })
+    return refreshed.access_token
   }
 
   private async logMessage(
@@ -388,7 +319,6 @@ class CareChannelModuleService extends MedusaService({
       externalUserId?: string | null
       externalUserName?: string | null
       externalMessageId?: string | null
-      referenceId?: string | null
       error?: string | null
     }
   ): Promise<CareMessageRecord> {
@@ -399,16 +329,10 @@ class CareChannelModuleService extends MedusaService({
       external_user_id: entry.externalUserId ?? null,
       external_user_name: entry.externalUserName ?? null,
       external_message_id: entry.externalMessageId ?? null,
-      reference_id: entry.referenceId ?? null,
       content: entry.text,
       status: entry.status,
       error: entry.error ?? null,
     })
-  }
-
-  private isUniqueViolation(error: unknown): boolean {
-    const candidate = error as { code?: string; cause?: { code?: string } }
-    return candidate?.code === "23505" || candidate?.cause?.code === "23505"
   }
 }
 

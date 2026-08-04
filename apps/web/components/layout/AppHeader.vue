@@ -98,7 +98,7 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
     <div class="site-header-inner container-page">
       <LayoutSiteLogo variant="header" class="site-header-logo" />
 
-      <nav ref="desktopNavEl" class="max-lg:hidden lg:flex items-center gap-0 flex-1 justify-center min-w-0" aria-label="Main navigation">
+      <nav ref="desktopNavEl" class="max-lg:hidden lg:flex items-center gap-0 flex-1 justify-center min-w-0 h-full" aria-label="Main navigation">
         <div
           v-for="link in navLinks"
           :key="link.key"
@@ -106,7 +106,7 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
           @mouseenter="link.children && (openDropdown = link.key)"
           @mouseleave="link.children && (openDropdown = null)"
         >
-          <div class="flex items-center">
+          <div class="site-nav-row">
             <NuxtLink
               :to="localePath(link.path)"
               class="site-nav-link"
@@ -152,7 +152,17 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
         </div>
       </nav>
 
-      <div class="max-lg:hidden lg:flex items-center gap-3">
+      <div class="max-lg:hidden lg:flex items-center gap-2 shrink-0 site-header-actions">
+        <NuxtLink
+          :to="localePath('/tai-khoan')"
+          class="site-cart-link"
+          :aria-label="t('account.title')"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5 19c1.5-3.5 4-5 7-5s5.5 1.5 7 5" stroke-linecap="round" />
+          </svg>
+        </NuxtLink>
         <NuxtLink
           :to="localePath('/gio-hang')"
           class="site-cart-link"
@@ -169,11 +179,12 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
         <NuxtLink :to="localePath('/lien-he')" class="site-header-cta">
           {{ t('nav.bookNow') }}
         </NuxtLink>
+        <WidgetsLangSwitch variant="header" />
       </div>
 
       <button
         class="lg:hidden p-2 text-[#f5f0e6] min-h-[44px] min-w-[44px] flex items-center justify-center"
-        :aria-label="isMenuOpen ? 'Đóng menu' : 'Mở menu'"
+        :aria-label="isMenuOpen ? t('nav.closeMenu') : t('nav.openMenu')"
         :aria-expanded="isMenuOpen"
         @click="isMenuOpen = !isMenuOpen"
       >
@@ -239,6 +250,13 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             </div>
           </div>
           <NuxtLink
+            :to="localePath('/tai-khoan')"
+            class="site-mobile-link"
+            @click="isMenuOpen = false"
+          >
+            {{ t('account.title') }}
+          </NuxtLink>
+          <NuxtLink
             :to="localePath('/gio-hang')"
             class="site-mobile-link"
             @click="isMenuOpen = false"
@@ -246,7 +264,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             {{ t('cart.title') }}
             <span v-if="totalItems > 0" class="ml-2 text-[#e8d5a8]">({{ totalItems }})</span>
           </NuxtLink>
-          <div class="pt-4">
+          <div class="pt-4 flex flex-col gap-3">
+            <WidgetsLangSwitch variant="header" />
             <NuxtLink
               :to="localePath('/lien-he')"
               class="site-header-cta w-full justify-center"
@@ -293,24 +312,60 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 
 .site-header-logo {
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.site-header-actions {
+  height: 100%;
+}
+
+.site-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.site-nav-row {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
 }
 
 .site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
   font-size: 10px;
+  line-height: 1;
   text-transform: uppercase;
   letter-spacing: .12em;
   color: rgba(245, 240, 230, .88);
-  padding: .5rem .55rem;
+  padding: 0 .55rem;
   text-decoration: none;
   transition: color .2s ease;
   white-space: nowrap;
+  outline: none;
+  box-shadow: none;
+  border: 0;
+  background: transparent;
+  vertical-align: middle;
+}
+
+.site-nav-link:focus,
+.site-nav-link:focus-visible,
+.site-nav-link:active {
+  outline: none;
+  box-shadow: none;
 }
 
 @media (min-width: 1280px) {
   .site-nav-link {
     font-size: 11px;
     letter-spacing: .15em;
-    padding: .75rem .7rem;
+    padding: 0 .7rem;
   }
 }
 
@@ -322,17 +377,16 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   color: #e8d5a8 !important;
 }
 
-.site-nav-item {
-  position: relative;
-}
-
 .site-nav-caret {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
+  width: 28px;
+  height: 40px;
   margin-left: -4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: rgba(245, 240, 230, .6);
   transition: color .2s ease;
 }
@@ -343,7 +397,7 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 
 .site-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% - 8px);
   left: 0;
   min-width: 240px;
   padding: .4rem 0;
@@ -410,16 +464,22 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
+  width: 40px;
+  height: 40px;
   color: rgba(245, 240, 230, .88);
   text-decoration: none;
+  outline: none;
+}
+
+.site-cart-link:focus,
+.site-cart-link:focus-visible {
+  outline: none;
 }
 
 .site-cart-badge {
   position: absolute;
-  top: 4px;
-  right: 2px;
+  top: 2px;
+  right: 0;
   min-width: 18px;
   height: 18px;
   padding: 0 4px;
@@ -436,21 +496,29 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: .6rem 1.25rem;
+  height: 40px;
+  padding: 0 1.15rem;
   background: #64231e;
   color: #d5b176;
   font-size: 11px;
   font-weight: 700;
+  line-height: 1;
   text-transform: uppercase;
   letter-spacing: .15em;
   text-decoration: none;
   transition: background .2s ease, color .2s ease;
+  outline: none;
+  border: 0;
 }
 
 .site-header-cta:hover {
   background: #752b26;
   color: #d5b176;
+}
+
+.site-header-cta:focus,
+.site-header-cta:focus-visible {
+  outline: none;
 }
 
 .site-header-mobile {

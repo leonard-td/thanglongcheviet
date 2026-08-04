@@ -15,6 +15,7 @@ import os from "node:os"
 import path from "node:path"
 import { rejectBlockedAdminUser } from "./middlewares/reject-blocked-admin-user"
 import { migratePrivateExportsFromStaticSync } from "../lib/private-exports/migrate"
+import { inventoryGuardMiddleware } from "./middlewares/inventory-guard"
 
 migratePrivateExportsFromStaticSync()
 
@@ -237,6 +238,11 @@ export default defineMiddlewares({
       matcher: "/store/order-lookup",
       method: ["GET"],
       middlewares: [rateLimit("order-lookup", 30, 15 * 60_000)],
+    },
+    {
+      matcher: "/store/carts/*/complete",
+      method: ["POST"],
+      middlewares: [inventoryGuardMiddleware],
     },
     {
       matcher: "/admin/backup/restore",

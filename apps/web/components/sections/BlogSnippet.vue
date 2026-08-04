@@ -50,13 +50,11 @@ const posts = computed(() =>
         >
           <!-- Thumbnail + date badge overlay -->
           <div class="relative overflow-hidden aspect-[4/3] flex-shrink-0">
-            <NuxtImg
+            <img
               :src="post.thumbnail"
               :alt="post.title"
               class="w-full h-full object-cover transition-transform duration-500
                      group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              format="webp"
               loading="lazy"
             />
 

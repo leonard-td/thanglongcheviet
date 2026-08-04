@@ -19,23 +19,12 @@ export interface MedusaVariantOptionValue {
 export interface MedusaVariant {
   id: string
   title: string
-  manage_inventory?: boolean
-  allow_backorder?: boolean
-  inventory_quantity?: number | null
   calculated_price?: { calculated_amount: number | null, currency_code: string } | null
   options?: MedusaVariantOptionValue[]
-}
-
-/** True when a variant can be ordered per Medusa inventory rules. */
-export function isVariantInStock(variant: Pick<
-  MedusaVariant,
-  'manage_inventory' | 'allow_backorder' | 'inventory_quantity'
->): boolean {
-  if (variant.manage_inventory === false) return true
-  if (variant.allow_backorder === true) return true
-  // When the store API omits inventory_quantity, do not block checkout UI.
-  if (variant.inventory_quantity == null) return true
-  return variant.inventory_quantity > 0
+  manage_inventory?: boolean | null
+  allow_backorder?: boolean | null
+  /** Present when requested via Store API fields (+variants.inventory_quantity). */
+  inventory_quantity?: number | null
 }
 
 export interface MedusaCategory {
@@ -64,8 +53,18 @@ export interface MedusaProduct {
   images?: { url: string }[]
   categories?: MedusaCategory[]
   collection?: MedusaCollection | null
+  metadata?: Record<string, unknown> | null
   options?: MedusaOption[]
   variants?: MedusaVariant[]
+}
+
+function variantInStock(v: MedusaVariant): boolean {
+  // Inventory not managed → always orderable.
+  if (!v.manage_inventory) return true
+  if (v.allow_backorder) return true
+  // When quantity is exposed by the API, respect it; otherwise treat as unavailable.
+  if (typeof v.inventory_quantity === 'number') return v.inventory_quantity > 0
+  return false
 }
 
 export function transformMedusaCategory(c: MedusaCategory): ProductCategory {
@@ -87,7 +86,7 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
         .filter(o => o.option?.title)
         .map(o => [o.option!.title, o.value]),
     ),
-    inStock: isVariantInStock(v),
+    inStock: variantInStock(v),
   }))
   const firstVariant = variants[0]
 
@@ -114,7 +113,12 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     collectionId: p.collection?.id ?? null,
     collectionName: p.collection?.title ?? '',
     inStock: variants.some(v => v.inStock),
-    quickAddInStock: firstVariant?.inStock ?? false,
+    featured: p.metadata?.featured === true || p.metadata?.featured === 'true',
+    corporateGift:
+      p.metadata?.corporate_gift === true
+      || p.metadata?.corporate_gift === 'true'
+      || p.metadata?.gift === true
+      || p.metadata?.gift === 'true',
     variants,
     options,
     material: p.material ?? null,

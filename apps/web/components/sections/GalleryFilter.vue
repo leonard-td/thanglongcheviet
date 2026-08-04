@@ -4,11 +4,12 @@ const { items: galleryItems } = useGallery()
 const { t, locale } = useI18n()
 
 const filters = computed(() => [
-  { id: 'all', label: locale.value === 'vi' ? 'Tất cả' : 'All Images' },
-  { id: 'hair',  label: locale.value === 'vi' ? 'Cắt tóc' : 'Haircut' },
-  { id: 'color', label: locale.value === 'vi' ? 'Nhuộm tóc' : 'Hair Color' },
-  { id: 'nail',  label: locale.value === 'vi' ? 'Nail' : 'Nail' },
-  { id: 'spa',   label: locale.value === 'vi' ? 'Spa' : 'Spa' },
+  { id: 'all', label: locale.value === 'vi' ? 'Tất cả' : 'All' },
+  { id: 'tea', label: locale.value === 'vi' ? 'Trà Việt' : 'Vietnamese Tea' },
+  { id: 'oolong', label: locale.value === 'vi' ? 'Ô long' : 'Oolong' },
+  { id: 'herbal', label: locale.value === 'vi' ? 'Thảo mộc' : 'Herbal' },
+  { id: 'gift', label: locale.value === 'vi' ? 'Quà tặng' : 'Gifts' },
+  { id: 'space', label: locale.value === 'vi' ? 'Không gian' : 'Space' },
 ])
 
 const activeFilter = ref('all')

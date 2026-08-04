@@ -7,6 +7,17 @@
 // Bố cục cũ vẫn nằm ở `components/home/HomePillarList.vue` (hiện không dùng).
 definePageMeta({ layout: false })
 
+const { t } = useI18n()
+const { site } = useSettings()
+
+useSeoMeta({
+  title: () => site.value.name,
+  description: () => site.value.tagline || t('site.tagline'),
+  ogTitle: () => site.value.name,
+  ogDescription: () => site.value.tagline || t('site.tagline'),
+  ogType: 'website',
+})
+
 // Nền đặt trên lớp fixed riêng (không dùng body background-attachment:fixed)
 // để backdrop-filter của widget blur hoạt động đúng trên trang chủ.
 useHead({

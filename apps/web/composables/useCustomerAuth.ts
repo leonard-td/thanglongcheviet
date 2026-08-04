@@ -42,7 +42,7 @@ const authEmailFor = (phone: string) =>
   `kh${phone.replace(/\D/g, '')}@customer.thanglongcheviet.vn`
 
 export function useCustomerAuth() {
-  const { fetchMedusa, customerToken: token } = useMedusaApi()
+  const { fetchMedusa, customerToken: token, authBaseUrl } = useMedusaApi()
   const { t } = useAppI18n()
 
   const customer = useState<CustomerProfile | null>('customer_profile', () => null)
@@ -60,7 +60,7 @@ export function useCustomerAuth() {
     try {
       const authEmail = authEmailFor(data.phone)
       const { token: registrationToken } = await $fetch<{ token: string }>(
-        `${useRuntimeConfig().public.medusaBackendUrl}/auth/customer/emailpass/register`,
+        `${authBaseUrl}/auth/customer/emailpass/register`,
         { method: 'POST', body: { email: authEmail, password: data.password } },
       )
 
@@ -79,12 +79,15 @@ export function useCustomerAuth() {
 
       // Exchange the registration token for a login session token.
       const { token: loginToken } = await $fetch<{ token: string }>(
-        `${useRuntimeConfig().public.medusaBackendUrl}/auth/customer/emailpass`,
+        `${authBaseUrl}/auth/customer/emailpass`,
         { method: 'POST', body: { email: authEmail, password: data.password } },
       )
 
       token.value = loginToken
       customer.value = mapCustomer(res.customer)
+      try {
+        await useCart().transferCartToCustomer()
+      } catch { /* non-fatal */ }
       return { success: true }
     } catch (err) {
       return { success: false, message: parseApiError(err, t('account.registerError')) }
@@ -94,11 +97,14 @@ export function useCustomerAuth() {
   const login = async (phone: string, password: string) => {
     try {
       const { token: loginToken } = await $fetch<{ token: string }>(
-        `${useRuntimeConfig().public.medusaBackendUrl}/auth/customer/emailpass`,
+        `${authBaseUrl}/auth/customer/emailpass`,
         { method: 'POST', body: { email: authEmailFor(phone), password } },
       )
       token.value = loginToken
       await fetchProfile()
+      try {
+        await useCart().transferCartToCustomer()
+      } catch { /* non-fatal */ }
       return { success: true }
     } catch (err) {
       return { success: false, message: parseApiError(err, t('account.loginError')) }

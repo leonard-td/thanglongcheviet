@@ -9,7 +9,7 @@ const promos = computed(() => [
     badge: t('promo.badgeLabel'),
     heading: locale.value === 'vi' ? 'Ưu đãi tháng này' : 'This Month\'s Offer',
     desc: site.value.description,
-    image: '/images/gallery/hair-2.jpg',
+    image: '/images/tea/tlcv_san_pham.jpg',
     cta: t('nav.bookNow'),
   },
   {
@@ -17,7 +17,7 @@ const promos = computed(() => [
     badge: promo.value.badge,
     heading: promo.value.heading,
     desc: promo.value.subheading,
-    image: '/images/promo-bg.jpg',
+    image: '/images/tea/tlcv_nep_che_viet.jpg',
     cta: t('promo.cta'),
     discount: promo.value.discount,
   },
@@ -78,7 +78,7 @@ const promos = computed(() => [
             </p>
 
             <NuxtLink
-              :to="localePath('/lien-he')"
+              :to="localePath('/san-pham-list')"
               class="btn-primary px-8 py-3.5 text-xs uppercase tracking-wider
                      group-hover:bg-primary-400 transition-colors"
             >

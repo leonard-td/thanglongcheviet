@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "Thăng Long Chè Việt",
-    "tagline": "The Art of Traditional Beauty"
+    "tagline": "The essence of Vietnamese tea — from craft village to cup"
   },
   "about": {
     "title": "About us",
@@ -32,27 +32,29 @@
     },
     "library": "Vietnamese Culture Library",
     "contact": "Contact",
-    "bookNow": "Book Now"
+    "bookNow": "Order Now",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
-    "cta": "Book Now",
+    "cta": "Explore products",
     "learnMore": "Explore More",
     "openingTimes": "Opening Times",
     "ourLocation": "Our Location"
   },
   "services": {
     "title": "Our Services",
-    "subtitle": "Experience premium beauty services with our team of leading experts",
+    "subtitle": "Premium teas, gift sets and brewing workshops with craft-village artisans",
     "fullServices": "Full Services",
     "viewAll": "View All Services",
     "from": "From",
     "duration": "Duration",
     "minutes": "min",
-    "bookService": "Book This Service"
+    "bookService": "Contact to book"
   },
   "team": {
     "title": "Meet Our Experts",
-    "subtitle": "Talented artisans with years of experience in the beauty industry",
+    "subtitle": "Artisans preserving and developing traditional Vietnamese tea craft",
     "viewAll": "View Full Team",
     "specialist": "Specialist"
   },
@@ -99,7 +101,7 @@
       "submitting": "Sending...",
       "success": "Thank you! We will contact you shortly.",
       "error": "An error occurred. Please try again or call us directly.",
-      "bookingHint": "Sign up with the same phone on the Account page to track your booking."
+      "bookingHint": "Sign up with the same phone on the Account page to track your tea tasting visit."
     }
   },
   "orderLookup": {
@@ -203,6 +205,7 @@
     "total": "Total",
     "checkoutTitle": "Shipping information",
     "address": "Shipping address",
+    "city": "City / Province",
     "emailOptional": "Email (order confirmation)",
     "paymentMethod": "Payment method",
     "submit": "Place order",
@@ -210,6 +213,8 @@
     "formRequired": "Please fill in all shipping details.",
     "orderSuccess": "Order placed successfully! Order ID: {number}",
     "addError": "Could not add item to cart.",
+    "updateError": "Could not update cart.",
+    "removeError": "Could not remove item from cart.",
     "checkoutError": "Checkout failed. Please try again.",
     "lookupError": "Order not found.",
     "coupon": "Coupon code",
@@ -224,13 +229,13 @@
     "shipping": "Shipping"
   },
   "booking": {
-    "preferredDate": "Preferred date",
+    "preferredDate": "Preferred visit date",
     "preferredTime": "Preferred time",
     "selectTime": "Select time",
     "loadingSlots": "Loading time slots...",
     "noSlots": "No available slots on this date.",
-    "success": "Booking request sent! We will confirm shortly.",
-    "error": "Could not submit booking. Please call us directly."
+    "success": "Visit request sent! We will confirm shortly.",
+    "error": "Could not submit visit request. Please call us directly."
   },
   "account": {
     "title": "Account",
@@ -241,16 +246,16 @@
     "password": "Password",
     "submitting": "Processing...",
     "welcome": "Welcome",
-    "appointments": "My appointments",
-    "noAppointments": "No appointments yet.",
+    "appointments": "My tea visits",
+    "noAppointments": "No tea visits yet.",
     "orders": "My orders",
     "noOrders": "No orders yet.",
-    "generalBooking": "Service booking",
+    "generalBooking": "Tea tasting booking",
     "cancel": "Cancel",
-    "cancelled": "Appointment cancelled.",
+    "cancelled": "Visit cancelled.",
     "loginError": "Login failed.",
     "registerError": "Registration failed.",
-    "cancelError": "Could not cancel appointment.",
+    "cancelError": "Could not cancel visit.",
     "status": {
       "pending": "Pending",
       "confirmed": "Confirmed",
@@ -265,6 +270,10 @@
   "corporate": {
     "title": "Corporate Gifts",
     "subtitle": "Premium, elegant tea gift solutions to affirm your brand identity and express gratitude to partners.",
+    "heroAlt": "Thăng Long Chè Việt corporate tea gifts",
+    "featuredEyebrow": "Gift samples",
+    "featuredTitle": "Featured products",
+    "giftBoxFallback": "Gift box",
     "values": {
       "eyebrow": "Why Choose Us",
       "title": "The Ultimate Gift Solution",
@@ -336,7 +345,7 @@
     "eyebrow": "News",
     "title": "Latest Articles",
     "featured": "Featured",
-    "subtitle": "Beauty tips, trends and news from Thăng Long Chè Việt",
+    "subtitle": "Tea culture, brewing guides and news from Thăng Long Chè Việt",
     "viewAll": "View All Articles",
     "comingSoon": "Full article content is being updated.",
     "readMore": "Read more",
@@ -409,10 +418,16 @@
       "promotions": "Monthly Promotions"
     }
   },
+  "error": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for does not exist or has been moved.",
+    "genericTitle": "Something went wrong",
+    "genericBody": "Please try again later."
+  },
   "gallery": {
-    "eyebrow": "Our Works",
+    "eyebrow": "Photos",
     "title": "Gallery",
-    "subtitle": "Our space and works from our expert team",
+    "subtitle": "Products, craft villages and Vietnamese tea experiences",
     "comingSoon": "More photos will be added soon."
   }
 }

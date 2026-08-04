@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query"
 import { useEffect, useRef } from "react"
 import { useLocation } from "react-router-dom"
 import {
   SIDEBAR_BADGE_SECTIONS,
-  fetchAllBadgeCounts,
+  ensureBadgeCountPolling,
   findSidebarNavLink,
+  getCachedBadgeCounts,
   isBadgeMutation,
+  isOnSectionPath,
   paintSidebarBadge,
   setSeenCount,
   unreadCount,
@@ -21,14 +22,20 @@ let observer: MutationObserver | null = null
 let observerRefCount = 0
 let latestPaintState: PaintState | null = null
 
+function markSectionsSeen(pathname: string, counts: Record<string, number>) {
+  for (const section of SIDEBAR_BADGE_SECTIONS) {
+    if (isOnSectionPath(pathname, section.path)) {
+      setSeenCount(section.id, counts[section.id] ?? 0)
+    }
+  }
+}
+
 function runPaint(state: PaintState) {
   for (const section of SIDEBAR_BADGE_SECTIONS) {
     const link = findSidebarNavLink(section.path)
     if (!link) continue
 
-    const onPage =
-      state.pathname === section.path ||
-      state.pathname.startsWith(`${section.path}/`)
+    const onPage = isOnSectionPath(state.pathname, section.path)
     const current = state.counts[section.id] ?? 0
     const unread = onPage ? 0 : unreadCount(section.id, current)
     paintSidebarBadge(link, unread)
@@ -81,17 +88,8 @@ function releaseObserver() {
  */
 const SidebarBadges = () => {
   const location = useLocation()
-  const countsRef = useRef<Record<string, number>>({})
-
-  const { data: counts = {} } = useQuery({
-    queryKey: ["sidebar-badge-counts"],
-    queryFn: fetchAllBadgeCounts,
-    refetchInterval: 30_000,
-    refetchOnWindowFocus: true,
-    staleTime: 10_000,
-  })
-
-  countsRef.current = counts
+  const pathnameRef = useRef(location.pathname)
+  pathnameRef.current = location.pathname
 
   useEffect(() => {
     retainObserver()
@@ -99,20 +97,21 @@ const SidebarBadges = () => {
   }, [])
 
   useEffect(() => {
-    for (const section of SIDEBAR_BADGE_SECTIONS) {
-      if (
-        location.pathname === section.path ||
-        location.pathname.startsWith(`${section.path}/`)
-      ) {
-        const current = countsRef.current[section.id] ?? 0
-        setSeenCount(section.id, current)
-      }
+    const refresh = () => {
+      const counts = getCachedBadgeCounts()
+      const pathname = pathnameRef.current
+      markSectionsSeen(pathname, counts)
+      schedulePaint({ counts, pathname })
     }
-  }, [location.pathname, counts])
+
+    ensureBadgeCountPolling(refresh)
+  }, [])
 
   useEffect(() => {
+    const counts = getCachedBadgeCounts()
+    markSectionsSeen(location.pathname, counts)
     schedulePaint({ counts, pathname: location.pathname })
-  }, [counts, location.pathname])
+  }, [location.pathname])
 
   return null
 }
