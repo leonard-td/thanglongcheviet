@@ -16,8 +16,7 @@ import { MedusaError, isObject } from "@medusajs/framework/utils"
  * fighting those exact internal shapes.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Issue = any
+type Issue = Record<string, unknown>
 
 function isInvalidTypeIssue(issue: Issue): boolean {
   return (
@@ -50,7 +49,10 @@ function isInvalidValueIssue(issue: Issue): boolean {
   )
 }
 
-const formatPath = (issue: Issue) => issue.path.join(", ")
+const formatPath = (issue: Issue) => {
+  const path = issue.path
+  return Array.isArray(path) ? path.join(", ") : ""
+}
 
 function getValueFromBody(issue: Issue, body: unknown): unknown {
   if (!isObject(body)) return undefined

@@ -9,11 +9,15 @@ import {
   Textarea,
 } from "@medusajs/ui"
 import { useTranslation } from "react-i18next"
+import { isRedactedSecret } from "../../../lib/care-channel-secrets"
 import type {
   CareChannel,
   CareChannelConfig,
   CareChannelProvider,
 } from "../../types/care-channel"
+
+const secretFieldValue = (value?: string) =>
+  !value || isRedactedSecret(value) ? "" : value
 
 export type CareChannelFormValues = {
   name: string
@@ -58,13 +62,13 @@ export const channelToFormValues = (
     notifyOrders: channel.notify_orders,
     receiveMessages: channel.receive_messages,
     isActive: channel.is_active,
-    botToken: config.bot_token ?? "",
+    botToken: secretFieldValue(config.bot_token),
     chatId: config.chat_id ?? "",
     appId: config.app_id ?? "",
-    secretKey: config.secret_key ?? "",
+    secretKey: secretFieldValue(config.secret_key),
     oaId: config.oa_id ?? "",
-    accessToken: config.access_token ?? "",
-    refreshToken: config.refresh_token ?? "",
+    accessToken: secretFieldValue(config.access_token),
+    refreshToken: secretFieldValue(config.refresh_token),
     notifyUserIds: (config.notify_user_ids ?? []).join(", "),
   }
 }

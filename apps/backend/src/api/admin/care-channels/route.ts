@@ -5,7 +5,7 @@ import { zodValidator } from "../../utils/zod-validator"
 import { CARE_CHANNEL_MODULE } from "../../../modules/care-channel"
 import type CareChannelModuleService from "../../../modules/care-channel/service"
 import { parsePagination } from "../../utils/pagination"
-import { redactCareChannel } from "./redact"
+import { isRedactedSecret, redactCareChannel } from "./redact"
 
 export const ChannelConfigSchema = z.object({
   // telegram
@@ -38,7 +38,11 @@ export function cleanChannelConfig(
 ): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(config).filter(
-      ([, value]) => value !== "" && value !== undefined && value !== null
+      ([, value]) =>
+        value !== "" &&
+        value !== undefined &&
+        value !== null &&
+        !isRedactedSecret(value)
     )
   )
 }
@@ -81,5 +85,5 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     webhook_secret: randomBytes(24).toString("hex"),
   })
 
-  res.status(201).json({ care_channel })
+  res.status(201).json({ care_channel: redactCareChannel(care_channel) })
 }

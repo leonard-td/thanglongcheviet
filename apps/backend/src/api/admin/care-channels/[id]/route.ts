@@ -3,6 +3,7 @@ import { z } from "zod"
 import { zodValidator } from "../../../utils/zod-validator"
 import { CARE_CHANNEL_MODULE } from "../../../../modules/care-channel"
 import type CareChannelModuleService from "../../../../modules/care-channel/service"
+import { redactCareChannel } from "../redact"
 import { ChannelConfigSchema, cleanChannelConfig } from "../route"
 
 const UpdateCareChannelSchema = z.object({
@@ -22,7 +23,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const care_channel = await service.retrieveCareChannel(id)
 
-  res.json({ care_channel })
+  res.json({ care_channel: redactCareChannel(care_channel) })
 }
 
 export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
@@ -51,7 +52,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     config,
   })
 
-  res.json({ care_channel })
+  res.json({ care_channel: redactCareChannel(care_channel) })
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
