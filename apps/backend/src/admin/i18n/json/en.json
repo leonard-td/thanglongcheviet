@@ -8,6 +8,7 @@
     "eventRegistrations": "Event Registrations",
     "careChannels": "Care Channels",
     "careMessages": "Care Messages",
+    "inquiries": "Customer Inquiries",
     "backup": "Backup & Restore",
     "storeInfo": "Store Information",
     "employees": "Employees",
@@ -364,6 +365,61 @@
       "deleteConfirmDesc": "Are you sure you want to delete \"{{name}}\"'s registration?",
       "confirmDelete": "Delete",
       "cancelDelete": "Cancel"
+    }
+  },
+  "inquiries": {
+    "title": "Customer Inquiries",
+    "subtitle": "Contact requests and booking inquiries from the storefront",
+    "detail": "Inquiry",
+    "newBadge": "{{count}} new",
+    "columns": {
+      "name": "Customer",
+      "phone": "Phone",
+      "type": "Type",
+      "status": "Status",
+      "source": "Source",
+      "createdAt": "Submitted at"
+    },
+    "filters": {
+      "type": "Filter by type",
+      "allTypes": "All types",
+      "status": "Filter by status",
+      "allStatuses": "All statuses"
+    },
+    "type": {
+      "contact": "Contact",
+      "booking": "Booking"
+    },
+    "status": {
+      "new": "New",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "sections": {
+      "customer": "Customer details",
+      "handling": "Handle this inquiry",
+      "handlingHint": "Review the message, contact the customer, and update the status when done."
+    },
+    "fields": {
+      "name": "Full name",
+      "phone": "Phone",
+      "email": "Email",
+      "service": "Service",
+      "message": "Message",
+      "preferredDate": "Preferred date",
+      "preferredTime": "Preferred time",
+      "source": "Source",
+      "createdAt": "Submitted at",
+      "status": "Status"
+    },
+    "actions": {
+      "save": "Save changes",
+      "backToList": "Back to list"
+    },
+    "messages": {
+      "updated": "Inquiry updated successfully",
+      "updateFailed": "Failed to update inquiry"
     }
   },
   "campaign-posts": {
