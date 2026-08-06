@@ -343,6 +343,16 @@ export default defineMiddlewares({
       middlewares: [guard("inquiry", "read")],
     },
     {
+      matcher: "/admin/inquiries/stats",
+      method: "GET",
+      middlewares: [guard("inquiry", "read")],
+    },
+    {
+      matcher: "/admin/inquiries/*",
+      method: "GET",
+      middlewares: [guard("inquiry", "read")],
+    },
+    {
       matcher: "/admin/inquiries/*",
       method: ["PATCH"],
       middlewares: [guard("inquiry", "update")],

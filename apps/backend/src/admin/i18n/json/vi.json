@@ -8,6 +8,7 @@
     "eventRegistrations": "Đăng ký sự kiện",
     "careChannels": "Kênh CSKH",
     "careMessages": "Tin nhắn CSKH",
+    "inquiries": "Liên hệ khách hàng",
     "backup": "Sao lưu & Phục hồi",
     "storeInfo": "Thông tin cửa hàng",
     "employees": "Nhân viên",
@@ -364,6 +365,61 @@
       "deleteConfirmDesc": "Bạn có chắc muốn xóa phiếu đăng ký của \"{{name}}\" không?",
       "confirmDelete": "Xóa",
       "cancelDelete": "Hủy"
+    }
+  },
+  "inquiries": {
+    "title": "Liên hệ khách hàng",
+    "subtitle": "Yêu cầu liên hệ và đặt lịch từ website",
+    "detail": "Phiếu liên hệ",
+    "newBadge": "{{count}} mới",
+    "columns": {
+      "name": "Khách hàng",
+      "phone": "Số điện thoại",
+      "type": "Loại",
+      "status": "Trạng thái",
+      "source": "Nguồn",
+      "createdAt": "Gửi lúc"
+    },
+    "filters": {
+      "type": "Lọc theo loại",
+      "allTypes": "Tất cả loại",
+      "status": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái"
+    },
+    "type": {
+      "contact": "Liên hệ",
+      "booking": "Đặt lịch"
+    },
+    "status": {
+      "new": "Mới",
+      "confirmed": "Đã xác nhận",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy"
+    },
+    "sections": {
+      "customer": "Thông tin khách hàng",
+      "handling": "Xử lý phiếu liên hệ",
+      "handlingHint": "Xem nội dung, liên hệ khách hàng và cập nhật trạng thái khi xong."
+    },
+    "fields": {
+      "name": "Họ và tên",
+      "phone": "Số điện thoại",
+      "email": "Email",
+      "service": "Dịch vụ",
+      "message": "Nội dung",
+      "preferredDate": "Ngày mong muốn",
+      "preferredTime": "Giờ mong muốn",
+      "source": "Nguồn",
+      "createdAt": "Gửi lúc",
+      "status": "Trạng thái"
+    },
+    "actions": {
+      "save": "Lưu thay đổi",
+      "backToList": "Quay lại danh sách"
+    },
+    "messages": {
+      "updated": "Cập nhật phiếu liên hệ thành công",
+      "updateFailed": "Cập nhật phiếu liên hệ thất bại"
     }
   },
   "campaign-posts": {
