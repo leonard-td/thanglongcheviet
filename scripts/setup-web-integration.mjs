@@ -323,94 +323,154 @@ async function ensurePublishableKey(token, salesChannel) {
 }
 
 /**
- * Ensures the storefront navigation menu exists via the medusa-navigation-menu
- * plugin REST API (/store/navigation). Creates a default Vietnamese menu if
- * none named "storefront-header" exists yet, then returns the navigation id.
+ * Ensures a storefront navigation menu template exists (Active).
+ * Uses /admin/navigation-menus + /admin/navigations (TLCV module).
  * Safe to re-run — idempotent.
  */
 async function ensureNavigation(token) {
-  const NAV_NAME = "storefront-header"
-  const NAV_API_BASE = "/admin/navigations"  // plugin registers: /admin/navigations
+  const NAV_SLUG = "storefront-header"
+  const MENUS_API = "/admin/navigation-menus"
+  const ITEMS_API = "/admin/navigations"
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  }
 
-  // Step 1: Check if navigation already exists
+  let menuId = null
+
   try {
-    const res = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const res = await fetch(`${BACKEND_URL}${MENUS_API}?limit=50`, { headers })
     if (res.ok) {
       const data = await res.json()
-      // Plugin returns { navigations: [...] }
-      const list = Array.isArray(data) ? data : (data.navigations || [])
-      const existing = list.find((n) => n.name === NAV_NAME)
+      const existing = (data.menus || []).find((m) => m.slug === NAV_SLUG)
       if (existing) {
-        log(`Navigation "${NAV_NAME}" already exists (id: ${existing.id}).`)
-        return existing.id
-      }
-    }
-  } catch (e) {
-    log(`Could not list navigations: ${e.message}`)
-  }
-
-  // Step 2: Create with correct Vietnamese menu structure
-  const DEFAULT_ITEMS = [
-    { name: "Trang ch\u1ee7",         url: "/",                      index: 0 },
-    { name: "S\u1ea3n ph\u1ea9m",          url: "/san-pham-list",          index: 1, children: [
-      { name: "Tr\u00e0 Vi\u1ec7t",             url: "/san-pham-list",          index: 0 },
-      { name: "An Quang Caff\u00e9",       url: "/an-quang-caffe",         index: 1 },
-      { name: "Qu\u00e0 t\u1eb7ng doanh nghi\u1ec7p", url: "/qua-tang-doanh-nghiep", index: 2 },
-    ]},
-    { name: "D\u1ef1 \u00e1n & \u0110\u1ed1i t\u00e1c",   url: "/du-an-doi-tac",          index: 2 },
-    { name: "S\u1ef1 ki\u1ec7n",           url: "/trai-nghiem",             index: 3 },
-    { name: "Tin t\u1ee9c",           url: "/tin-tuc",                 index: 4, children: [
-      { name: "N\u1ebfp Tr\u00e0 Vi\u1ec7t",         url: "/nep-tra-viet",           index: 0 },
-      { name: "V\u0103n ho\u00e1 Vi\u1ec7t",         url: "/van-hoa-viet",           index: 1 },
-      { name: "Di s\u1ea3n tr\u00e0 c\u0169",        url: "/di-san-tra-cu",          index: 2 },
-      { name: "V\u01b0\u1eddn An Quang",        url: "/vuon-an-quang",          index: 3 },
-    ]},
-    { name: "Th\u01b0 vi\u1ec7n v\u0103n ho\u00e1",  url: "/thu-vien-van-hoa",       index: 5 },
-    { name: "Li\u00ean h\u1ec7",           url: "/lien-he",                 index: 6 },
-  ]
-
-  try {
-    const res = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name: NAV_NAME, items: DEFAULT_ITEMS }),
-    })
-    // Plugin POST returns the string 'ok', not a navigation object.
-    // We need to re-fetch to get the ID.
-    if (res.ok) {
-      const listRes = await fetch(`${BACKEND_URL}${NAV_API_BASE}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (listRes.ok) {
-        const data = await listRes.json()
-        const list = Array.isArray(data) ? data : (data.navigations || [])
-        const created = list.find((n) => n.name === NAV_NAME)
-        if (created) {
-          log(`Created navigation "${NAV_NAME}" (id: ${created.id}).`)
-          return created.id
+        menuId = existing.id
+        log(`Navigation menu "${NAV_SLUG}" already exists (id: ${menuId}).`)
+        if (!existing.is_active) {
+          await fetch(`${BACKEND_URL}${MENUS_API}/${menuId}/activate`, {
+            method: "POST",
+            headers,
+            body: "{}",
+          })
+          log(`Activated menu "${NAV_SLUG}".`)
         }
       }
-    } else {
-      const text = await res.text()
-      log(`Warning: Could not create navigation (${res.status}): ${text}`)
     }
   } catch (e) {
-    log(`Warning: Navigation API error: ${e.message}`)
+    log(`Could not list navigation menus: ${e.message}`)
   }
 
-  log("Skipping navigation. Run manually: docker exec tlcv_backend npx medusa exec ./src/scripts/seed-navigation.ts")
-  return null
+  if (!menuId) {
+    try {
+      const res = await fetch(`${BACKEND_URL}${MENUS_API}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          name: "Storefront Header",
+          slug: NAV_SLUG,
+          activate: true,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        menuId = data.menu?.id
+        log(`Created navigation menu "${NAV_SLUG}" (id: ${menuId}).`)
+      } else {
+        const text = await res.text()
+        log(`Warning: Could not create menu (${res.status}): ${text}`)
+      }
+    } catch (e) {
+      log(`Warning: Navigation menu API error: ${e.message}`)
+    }
+  }
+
+  if (!menuId) {
+    log("Skipping navigation. Run manually: docker exec tlcv_backend npx medusa exec ./src/scripts/seed-navigation.ts")
+    return null
+  }
+
+  // Seed items if empty
+  try {
+    const treeRes = await fetch(
+      `${BACKEND_URL}${ITEMS_API}?menu_id=${encodeURIComponent(menuId)}`,
+      { headers }
+    )
+    if (treeRes.ok) {
+      const treeData = await treeRes.json()
+      const roots = treeData.navigations || treeData.tree || []
+      if (roots.length > 0) {
+        return menuId
+      }
+    }
+
+    const DEFAULT_TREE = [
+      { label: "Trang chủ", url: "/" },
+      {
+        label: "Sản phẩm",
+        url: "/san-pham-list",
+        children: [
+          { label: "Trà Việt", url: "/san-pham-list" },
+          { label: "An Quang Caffé", url: "/an-quang-caffe" },
+          { label: "Quà tặng doanh nghiệp", url: "/qua-tang-doanh-nghiep" },
+        ],
+      },
+      { label: "Dự án & Đối tác", url: "/du-an-doi-tac" },
+      { label: "Sự kiện", url: "/trai-nghiem" },
+      {
+        label: "Tin tức",
+        url: "/tin-tuc",
+        children: [
+          { label: "Nếp Trà Việt", url: "/nep-tra-viet" },
+          { label: "Văn hoá Việt", url: "/van-hoa-viet" },
+          { label: "Di sản trà cũ", url: "/di-san-tra-cu" },
+          { label: "Vườn An Quang", url: "/vuon-an-quang" },
+        ],
+      },
+      { label: "Thư viện văn hóa", url: "/thu-vien-van-hoa" },
+      { label: "Liên hệ", url: "/lien-he" },
+    ]
+
+    for (let order = 0; order < DEFAULT_TREE.length; order++) {
+      const node = DEFAULT_TREE[order]
+      const createRes = await fetch(`${BACKEND_URL}${ITEMS_API}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          menu_id: menuId,
+          label: node.label,
+          url: node.url,
+          order,
+          parent_id: null,
+          is_active: true,
+        }),
+      })
+      if (!createRes.ok) continue
+      const created = await createRes.json()
+      const rootId = created.navigation?.id
+      if (!rootId || !node.children) continue
+
+      for (let childOrder = 0; childOrder < node.children.length; childOrder++) {
+        const child = node.children[childOrder]
+        await fetch(`${BACKEND_URL}${ITEMS_API}`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            menu_id: menuId,
+            label: child.label,
+            url: child.url,
+            order: childOrder,
+            parent_id: rootId,
+            is_active: true,
+          }),
+        })
+      }
+    }
+    log(`Seeded default items into menu "${NAV_SLUG}".`)
+  } catch (e) {
+    log(`Warning: Could not seed navigation items: ${e.message}`)
+  }
+
+  return menuId
 }
 
 

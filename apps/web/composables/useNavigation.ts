@@ -6,6 +6,7 @@ export interface NavigationTreeItem {
   url: string
   order: number
   parent_id?: string | null
+  openInNewTab?: boolean
   children: NavigationTreeItem[]
 }
 
@@ -13,21 +14,35 @@ export interface NavLink {
   key: string
   path: string
   label?: string
-  children?: { key: string; path: string; label?: string }[]
+  openInNewTab?: boolean
+  children?: {
+    key: string
+    path: string
+    label?: string
+    openInNewTab?: boolean
+  }[]
 }
 
+/**
+ * Loads the storefront header menu from Medusa.
+ * The backend resolves the currently Active menu template — no client menu id needed.
+ * `NUXT_PUBLIC_MEDUSA_NAVIGATION_ID` is legacy and unused.
+ */
 export function useNavigation() {
   const { fetchMedusa } = useMedusaApi()
 
   const getStoreNavigation = async (): Promise<NavigationTreeItem[]> => {
     try {
-      const data = await fetchMedusa<{ navigations: NavigationTreeItem[] }>(`/store/navigations`, {
-        method: 'GET',
-      })
+      const data = await fetchMedusa<{ navigations: NavigationTreeItem[] }>(
+        `/store/navigations`,
+        {
+          method: "GET",
+        }
+      )
       return data?.navigations || []
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[navigation] Failed to load menu from Medusa:', error)
+      if (process.env.NODE_ENV === "development") {
+        console.warn("[navigation] Failed to load menu from Medusa:", error)
       }
       return []
     }
@@ -41,6 +56,7 @@ export function useNavigation() {
           key: item.id,
           path: item.url,
           label: item.label || item.title || item.name,
+          openInNewTab: !!item.openInNewTab,
         }
 
         if (item.children && item.children.length > 0) {
@@ -50,6 +66,7 @@ export function useNavigation() {
               key: child.id,
               path: child.url,
               label: child.label || child.title || child.name,
+              openInNewTab: !!child.openInNewTab,
             }))
         }
 
