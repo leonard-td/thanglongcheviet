@@ -35,6 +35,7 @@ type SiteSettings = {
   about_thumbnail: string | null
   about_content: JSONContent | null
   about_collection_id: string | null
+  home_video_url: string | null
 }
 
 type SiteSettingsResponse = { site_settings: SiteSettings }
@@ -78,6 +79,7 @@ const StoreInfoPage = () => {
   const [aboutThumbnail, setAboutThumbnail] = useState("")
   const [aboutContent, setAboutContent] = useState<JSONContent | null>(null)
   const [aboutCollectionId, setAboutCollectionId] = useState("")
+  const [homeVideoUrl, setHomeVideoUrl] = useState("")
   const [loadedId, setLoadedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -100,6 +102,7 @@ const StoreInfoPage = () => {
     setAboutThumbnail(settings.about_thumbnail ?? "")
     setAboutContent(settings.about_content ?? null)
     setAboutCollectionId(settings.about_collection_id ?? "")
+    setHomeVideoUrl(settings.home_video_url ?? "")
     setLoadedId(settings.id)
   }, [data, loadedId])
 
@@ -130,6 +133,7 @@ const StoreInfoPage = () => {
         about_thumbnail: aboutThumbnail || null,
         about_content: aboutContent,
         about_collection_id: aboutCollectionId || null,
+        home_video_url: homeVideoUrl || null,
       })
       toast.success(t("storeInfo.messages.saved"))
     } catch (error) {
@@ -274,6 +278,27 @@ const StoreInfoPage = () => {
             <Label>{t("storeInfo.fields.heroImage2")}</Label>
             <ImagePicker value={heroImage2} onChange={setHeroImage2} />
           </div>
+        </div>
+
+        <div className="border-t border-ui-border-base" />
+        <Heading level="h2">{t("storeInfo.sections.homeVideo")}</Heading>
+        <Text className="text-ui-fg-subtle" size="small">
+          {t("storeInfo.sections.homeVideoHint")}
+        </Text>
+
+        <div className="flex flex-col gap-y-2">
+          <Label htmlFor="home-video-url">
+            {t("storeInfo.fields.homeVideoUrl")}
+          </Label>
+          <Input
+            id="home-video-url"
+            placeholder={t("storeInfo.fields.homeVideoUrlPlaceholder")}
+            value={homeVideoUrl}
+            onChange={(e) => setHomeVideoUrl(e.target.value)}
+          />
+          <Text className="text-ui-fg-subtle" size="xsmall">
+            {t("storeInfo.fields.homeVideoUrlHint")}
+          </Text>
         </div>
 
         <div className="border-t border-ui-border-base" />

@@ -3,7 +3,10 @@ import { z } from "zod"
 import { zodValidator } from "../../../utils/zod-validator"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
+import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
+import type CampaignModuleService from "../../../../modules/campaign/service"
 import { toRelativeMediaUrl } from "../../../utils/media-url"
+import { resolveCardPaths } from "../../../utils/resolve-card-path"
 
 const ImportRowSchema = z.object({
   id: z.string().optional(),
@@ -31,6 +34,7 @@ const ImportSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
+  const campaignModuleService: CampaignModuleService = req.scope.resolve(CAMPAIGN_MODULE)
   const { items } = await zodValidator(ImportSchema, req.body)
 
   const existingCards = await cardModuleService.listCards({})
@@ -87,5 +91,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const cards = await cardModuleService.listCards({}, { order: { rank: "ASC" } })
 
-  res.json({ created, updated, skipped, errors, cards })
+  res.json({
+    created,
+    updated,
+    skipped,
+    errors,
+    cards: await resolveCardPaths(cards, campaignModuleService),
+  })
 }

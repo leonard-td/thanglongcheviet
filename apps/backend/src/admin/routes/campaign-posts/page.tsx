@@ -1,9 +1,10 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { DocumentText, SquareTwoStack } from "@medusajs/icons"
+import { DocumentText, EllipsisHorizontal, Link, SquareTwoStack } from "@medusajs/icons"
 import {
   Badge,
   Button,
   DataTable,
+  DropdownMenu,
   Heading,
   IconButton,
   createDataTableColumnHelper,
@@ -85,6 +86,15 @@ const CampaignPostsPage = () => {
     },
   })
 
+  const copyPostPath = async (slug: string) => {
+    try {
+      await navigator.clipboard.writeText(`/tin-tuc/${slug}`)
+      toast.success(t("campaign-posts.messages.pathCopied"))
+    } catch {
+      toast.error(t("campaign-posts.messages.pathCopyFailed"))
+    }
+  }
+
   const columnHelper = createDataTableColumnHelper<CampaignPost>()
 
   const columns = [
@@ -133,15 +143,26 @@ const CampaignPostsPage = () => {
       header: t("campaign-posts.columns.actions"),
       cell: ({ row }) => (
         <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-          <IconButton
-            size="small"
-            variant="transparent"
-            aria-label={t("campaign-posts.actions.duplicate")}
-            disabled={isDuplicating}
-            onClick={() => duplicatePost(row.original.id)}
-          >
-            <SquareTwoStack />
-          </IconButton>
+          <DropdownMenu>
+            <DropdownMenu.Trigger asChild>
+              <IconButton size="small" variant="transparent">
+                <EllipsisHorizontal />
+              </IconButton>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end">
+              <DropdownMenu.Item
+                disabled={isDuplicating}
+                onClick={() => duplicatePost(row.original.id)}
+              >
+                <SquareTwoStack className="mr-1" />
+                {t("campaign-posts.actions.duplicate")}
+              </DropdownMenu.Item>
+              <DropdownMenu.Item onClick={() => copyPostPath(row.original.slug)}>
+                <Link className="mr-1" />
+                {t("campaign-posts.actions.copyPath")}
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu>
         </div>
       ),
     }),

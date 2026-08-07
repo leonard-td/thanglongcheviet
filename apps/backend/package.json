@@ -25,7 +25,8 @@
     "seed:campaign-posts": "medusa exec ./src/scripts/seed-campaign-posts.ts",
     "seed:navigation": "medusa exec ./src/scripts/seed-navigation.ts",
     "seed:tea-products": "medusa exec ./src/scripts/seed-tea-products.ts",
-    "seed:care-channel-telegram": "medusa exec ./src/scripts/seed-care-channel-telegram.ts"
+    "seed:care-channel-telegram": "medusa exec ./src/scripts/seed-care-channel-telegram.ts",
+    "import:products-excel": "medusa exec ./src/scripts/import-products-excel.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -37,8 +38,8 @@
     "@medusajs/cli": "2.17.0",
     "@medusajs/dashboard": "2.17.0",
     "@medusajs/draft-order": "2.17.0",
-    "@medusajs/file": "^2.17.0",
-    "@medusajs/file-local": "^2.17.0",
+    "@medusajs/file": "2.17.0",
+    "@medusajs/file-local": "2.17.0",
     "@medusajs/framework": "2.17.0",
     "@medusajs/medusa": "2.17.0",
     "@medusajs/ui": "4.1.15",
@@ -71,6 +72,7 @@
     "pg-copy-streams": "^6.0.6",
     "react-i18next": "13.5.0",
     "unzipper": "^0.12.3",
+    "xlsx": "^0.18.5",
     "zod": "4.2.0"
   },
   "devDependencies": {

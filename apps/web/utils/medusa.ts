@@ -51,6 +51,8 @@ export interface MedusaProduct {
   collection?: MedusaCollection | null
   options?: MedusaOption[]
   variants?: MedusaVariant[]
+  // metadata.topic_id: campaign_topic (content_type="product") gắn trong admin
+  metadata?: Record<string, unknown> | null
 }
 
 export function transformMedusaCategory(c: MedusaCategory): ProductCategory {
@@ -100,6 +102,7 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     categoryIds: (p.categories ?? []).map(c => c.id),
     collectionId: p.collection?.id ?? null,
     collectionName: p.collection?.title ?? '',
+    topicId: typeof p.metadata?.topic_id === 'string' ? p.metadata.topic_id : null,
     inStock: true,
     variants,
     options,

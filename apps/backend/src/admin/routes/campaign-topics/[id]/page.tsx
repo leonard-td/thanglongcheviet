@@ -52,6 +52,7 @@ const EditCampaignTopicPage = () => {
     campaign_topic.description ?? ""
   )
   const [image, setImage] = useState(campaign_topic.image ?? "")
+  const [contentType, setContentType] = useState(campaign_topic.content_type)
   const [isActive, setIsActive] = useState(campaign_topic.is_active)
   const [rank, setRank] = useState(campaign_topic.rank ?? 0)
 
@@ -87,6 +88,7 @@ const EditCampaignTopicPage = () => {
         slug,
         description: description || null,
         image: image || null,
+        content_type: contentType,
         is_active: isActive,
         rank,
       })
@@ -156,6 +158,7 @@ const EditCampaignTopicPage = () => {
         slug={slug}
         description={description}
         image={image}
+        contentType={contentType}
         isActive={isActive}
         rank={rank}
         isSubmitting={isPending}
@@ -164,6 +167,7 @@ const EditCampaignTopicPage = () => {
         onSlugChange={setSlug}
         onDescriptionChange={setDescription}
         onImageChange={setImage}
+        onContentTypeChange={setContentType}
         onIsActiveChange={setIsActive}
         onRankChange={setRank}
         onSubmit={handleSubmit}

@@ -112,7 +112,15 @@ export async function createBackup(
     setStep("zip")
     const fileName = `${name}.zip`
     const filePath = path.join(BACKUP_DIR, fileName)
-    const output = fs.createWriteStream(filePath)
+    // Viết ra file tạm TRONG staging (nằm dưới BACKUP_DIR/.tmp, không lọt vào
+    // readdir không-đệ-quy của GET /admin/backup) rồi mới rename atomically
+    // vào filePath ở bước cuối. Nếu viết thẳng vào filePath ngay từ đầu, file
+    // sẽ xuất hiện trong danh sách backup (và tải xuống được) ngay khi vừa mở
+    // write stream — trong lúc archiver còn đang ghi dở — nên một request tải
+    // về đúng lúc đó luôn nhận một file zip cụt, mở lại báo lỗi FILE_ENDED dù
+    // bản thân quá trình tạo backup vẫn đang chạy bình thường.
+    const tmpFilePath = path.join(staging, fileName)
+    const output = fs.createWriteStream(tmpFilePath)
     const archive = archiver("zip", { zlib: { level: 6 } })
     const finished = new Promise<void>((resolve, reject) => {
       output.on("close", () => resolve())
@@ -129,6 +137,7 @@ export async function createBackup(
     archive.append(JSON.stringify(manifest, null, 2), { name: "manifest.json" })
     await archive.finalize()
     await finished
+    await fsp.rename(tmpFilePath, filePath)
 
     return { fileName, filePath, manifest }
   } finally {

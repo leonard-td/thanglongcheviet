@@ -16,6 +16,7 @@ const CreateCardPage = () => {
   const [titleEn, setTitleEn] = useState("")
   const [image, setImage] = useState("")
   const [path, setPath] = useState("")
+  const [topicId, setTopicId] = useState("")
   const [isActive, setIsActive] = useState(true)
 
   const { mutateAsync, isPending } = useMutation({
@@ -34,6 +35,7 @@ const CreateCardPage = () => {
         title: { vi: titleVi, en: titleEn || titleVi },
         image: image || null,
         path: path || null,
+        topic_id: topicId || null,
         is_active: isActive,
       })) as CardResponse
 
@@ -72,6 +74,7 @@ const CreateCardPage = () => {
         titleEn={titleEn}
         image={image}
         path={path}
+        topicId={topicId}
         isActive={isActive}
         isSubmitting={isPending}
         submitLabel={t("cards.actions.create")}
@@ -79,6 +82,7 @@ const CreateCardPage = () => {
         onTitleEnChange={setTitleEn}
         onImageChange={setImage}
         onPathChange={setPath}
+        onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}
         onSubmit={handleSubmit}
       />

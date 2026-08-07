@@ -10,6 +10,7 @@ import EventRegistration from "./models/event-registration"
 type EventFilters = {
   id?: string | string[]
   slug?: string | string[]
+  topic_id?: string | string[]
   is_active?: boolean
 }
 

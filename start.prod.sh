@@ -32,3 +32,4 @@ if [ "${SKIP_BUILD:-0}" != "1" ]; then
 fi
 
 bash ./run-prod-stack.sh
+ 

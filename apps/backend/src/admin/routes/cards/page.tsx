@@ -51,6 +51,12 @@ const CardRow = ({ card, onNavigate, onToggleActive, togglingId, selected, onTog
     id: card.id,
   })
 
+  // CardRow stays mounted across image changes (its key is card.id), so this
+  // must reset on card.image itself or a stale load-error from the previous
+  // URL would keep the fallback showing after picking a valid image.
+  const [imageFailed, setImageFailed] = useState(false)
+  useEffect(() => setImageFailed(false), [card.image])
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -87,10 +93,10 @@ const CardRow = ({ card, onNavigate, onToggleActive, togglingId, selected, onTog
       </button>
 
       <div className="h-12 w-16 flex-shrink-0 overflow-hidden rounded bg-ui-bg-subtle flex items-center justify-center">
-        {card.image ? (
+        {card.image && !imageFailed ? (
           // key={card.image} forces a fresh <img> mount whenever the URL
-          // changes, so a stale load-error's inline `display: none` never
-          // carries over onto a newly-picked (valid) image.
+          // changes, so a stale load-error never carries over onto a
+          // newly-picked (valid) image.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={card.image}
@@ -99,9 +105,7 @@ const CardRow = ({ card, onNavigate, onToggleActive, togglingId, selected, onTog
             className="h-full w-full object-cover"
             loading="lazy"
             referrerPolicy="no-referrer"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none"
-            }}
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <Text size="xsmall" className="text-ui-fg-muted text-center px-1">

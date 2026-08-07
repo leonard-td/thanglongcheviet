@@ -9,6 +9,7 @@ const localePath = useLocalePath()
 const { hours, contact } = useSettings()
 const { cards } = useCards()
 const { posts } = useBlog()
+const { homeVideoId } = useSiteSettings()
 
 const imgModules = import.meta.glob('~/assets/images/*.jpg', {
   eager: true,
@@ -17,12 +18,12 @@ const imgModules = import.meta.glob('~/assets/images/*.jpg', {
 const imgUrl = (name: string) =>
   Object.entries(imgModules).find(([k]) => k.endsWith(`/${name}`))?.[1] ?? ''
 
-// Card ảnh có thể là tên file trong assets/images (card mặc định/seed) hoặc
-// một URL tuyệt đối (admin dán link ảnh ngoài) — thử URL trước, rồi mới
-// glob-lookup theo tên file.
+// Card ảnh có thể là một URL tuyệt đối hoặc đường dẫn gốc /... (admin dán
+// link ảnh ngoài, hoặc card seed trỏ vào apps/web/public) — dùng thẳng — hoặc
+// tên file trần trong assets/images (card seed cũ), cần glob-lookup.
 const resolveCardImage = (image: string | null) => {
   if (!image) return ''
-  if (/^https?:\/\//.test(image)) return image
+  if (/^https?:\/\//.test(image) || image.startsWith('/')) return image
   return imgUrl(image)
 }
 
@@ -51,13 +52,19 @@ const directionsUrl = computed(() => {
 // Video giới thiệu: dùng "facade" (ảnh poster + nút play) thay vì nhúng iframe
 // autoplay ngay từ đầu. Vừa bớt một khối chuyển động tự chạy, vừa không kéo
 // ~1MB JS của YouTube vào lần render đầu.
-const reviewVideoId = '7igBpDPreSU'
-const reviewUrl = `https://youtu.be/${reviewVideoId}`
-const videoPoster = ref(`https://i.ytimg.com/vi/${reviewVideoId}/maxresdefault.jpg`)
+// ID mặc định dùng khi admin chưa cấu hình (Settings → Thông tin cửa hàng → Video giới thiệu).
+const DEFAULT_VIDEO_ID = '7igBpDPreSU'
+const reviewVideoId = computed(() => homeVideoId.value || DEFAULT_VIDEO_ID)
+const reviewUrl = computed(() => `https://youtu.be/${reviewVideoId.value}`)
 const videoPlaying = ref(false)
 // maxresdefault không tồn tại với mọi video -> lùi về hqdefault (luôn có).
+const posterFallback = ref(false)
+watch(reviewVideoId, () => { posterFallback.value = false })
+const videoPoster = computed(
+  () => `https://i.ytimg.com/vi/${reviewVideoId.value}/${posterFallback.value ? 'hqdefault' : 'maxresdefault'}.jpg`,
+)
 const onPosterError = () => {
-  videoPoster.value = `https://i.ytimg.com/vi/${reviewVideoId}/hqdefault.jpg`
+  posterFallback.value = true
 }
 
 const featuredPosts = computed(() => posts.value.slice(0, 5))

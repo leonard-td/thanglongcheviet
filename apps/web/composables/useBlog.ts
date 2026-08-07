@@ -143,7 +143,7 @@ export function useBlogTopics() {
     async () => {
       try {
         const res = await fetchMedusa<{ campaign_topics: CampaignTopic[] }>(
-          '/store/campaign-topics',
+          '/store/campaign-topics?content_type=post',
         )
         return res.campaign_topics ?? []
       } catch (e) {

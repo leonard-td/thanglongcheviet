@@ -1,6 +1,6 @@
 import { Button, FocusModal, Input, Text, toast } from "@medusajs/ui"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { sdk } from "../../lib/sdk"
 
@@ -23,6 +23,12 @@ const ImagePicker = ({ value, onChange }: ImagePickerProps) => {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
+
+  // ImagePicker stays mounted across value changes, so this must reset on
+  // value itself or a stale load-error from the previous URL would keep the
+  // fallback showing after picking a valid image.
+  const [imageFailed, setImageFailed] = useState(false)
+  useEffect(() => setImageFailed(false), [value])
 
   const { data, isLoading } = useQuery<{ media: CardMediaItem[] }>({
     queryFn: () => sdk.client.fetch("/admin/cards/media"),
@@ -69,21 +75,23 @@ const ImagePicker = ({ value, onChange }: ImagePickerProps) => {
   return (
     <div className="flex items-center gap-x-4">
       <div className="h-16 w-24 flex-shrink-0 overflow-hidden rounded border border-ui-border-base bg-ui-bg-subtle flex items-center justify-center">
-        {value ? (
+        {value && !imageFailed ? (
           // key={value} forces a fresh <img> mount on every URL change, so a
-          // previous load failure's inline `display: none` never carries over
-          // onto the next (valid) image — without it the broken-image state
-          // stuck around until a full page reload.
+          // previous load failure never carries over onto the next (valid)
+          // image — without it the broken-image state stuck around until a
+          // full page reload.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={value}
             src={value}
             alt=""
             className="h-full w-full object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
+            onError={() => setImageFailed(true)}
           />
         ) : (
-          <Text size="xsmall" className="text-ui-fg-muted">—</Text>
+          <Text size="xsmall" className="text-ui-fg-muted text-center px-1">
+            {value ? t("cards.media.loadFailed") : "—"}
+          </Text>
         )}
       </div>
 

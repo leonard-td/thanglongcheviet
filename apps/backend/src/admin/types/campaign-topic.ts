@@ -1,9 +1,13 @@
+export type { CampaignTopicContentType } from "../../utils/topic-path"
+import type { CampaignTopicContentType } from "../../utils/topic-path"
+
 export type CampaignTopic = {
   id: string
   name: string
   slug: string
   description: string | null
   image: string | null
+  content_type: CampaignTopicContentType
   is_active: boolean
   rank: number
   created_at?: string

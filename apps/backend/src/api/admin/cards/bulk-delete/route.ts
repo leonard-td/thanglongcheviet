@@ -3,6 +3,9 @@ import { z } from "zod"
 import { zodValidator } from "../../../utils/zod-validator"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
+import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
+import type CampaignModuleService from "../../../../modules/campaign/service"
+import { resolveCardPaths } from "../../../utils/resolve-card-path"
 
 const BulkDeleteSchema = z.object({
   ids: z.array(z.string()).min(1).max(500),
@@ -17,6 +20,7 @@ const BulkDeleteSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
+  const campaignModuleService: CampaignModuleService = req.scope.resolve(CAMPAIGN_MODULE)
   const { ids } = await zodValidator(BulkDeleteSchema, req.body)
 
   const cards = await cardModuleService.listCards({ id: ids })
@@ -31,5 +35,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const remaining = await cardModuleService.listCards({}, { order: { rank: "ASC" } })
 
-  res.json({ deleted: deletableIds.length, skipped, cards: remaining })
+  res.json({
+    deleted: deletableIds.length,
+    skipped,
+    cards: await resolveCardPaths(remaining, campaignModuleService),
+  })
 }

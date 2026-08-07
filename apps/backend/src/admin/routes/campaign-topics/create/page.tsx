@@ -8,7 +8,7 @@ import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { slugify } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
-import type { CampaignTopicResponse } from "../../../types/campaign-topic"
+import type { CampaignTopicContentType, CampaignTopicResponse } from "../../../types/campaign-topic"
 
 const CreateCampaignTopicPage = () => {
   const navigate = useNavigate()
@@ -18,6 +18,7 @@ const CreateCampaignTopicPage = () => {
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
   const [image, setImage] = useState("")
+  const [contentType, setContentType] = useState<CampaignTopicContentType>("post")
   const [isActive, setIsActive] = useState(true)
   const [rank, setRank] = useState(0)
 
@@ -41,6 +42,7 @@ const CreateCampaignTopicPage = () => {
         slug: slug || slugify(name),
         description: description || null,
         image: image || null,
+        content_type: contentType,
         is_active: isActive,
         rank,
       })) as CampaignTopicResponse
@@ -85,6 +87,7 @@ const CreateCampaignTopicPage = () => {
         slug={slug}
         description={description}
         image={image}
+        contentType={contentType}
         isActive={isActive}
         rank={rank}
         isSubmitting={isPending}
@@ -93,6 +96,7 @@ const CreateCampaignTopicPage = () => {
         onSlugChange={setSlug}
         onDescriptionChange={setDescription}
         onImageChange={setImage}
+        onContentTypeChange={setContentType}
         onIsActiveChange={setIsActive}
         onRankChange={setRank}
         onSubmit={handleSubmit}

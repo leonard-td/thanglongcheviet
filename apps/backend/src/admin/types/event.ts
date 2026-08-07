@@ -13,6 +13,7 @@ export type AppEvent = {
   end_at: string | null
   capacity: number | null
   registration_open: boolean
+  topic_id: string | null
   is_active: boolean
   seo_title: string | null
   seo_description: string | null

@@ -4,12 +4,16 @@ import { z } from "zod"
 import { zodValidator } from "../../../utils/zod-validator"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
+import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
+import type CampaignModuleService from "../../../../modules/campaign/service"
 import { toRelativeMediaUrl } from "../../../utils/media-url"
+import { resolveCardPaths } from "../../../utils/resolve-card-path"
 
 const UpdateCardSchema = z.object({
   title: z.record(z.string(), z.string()).optional(),
   image: z.string().nullable().optional(),
   path: z.string().nullable().optional(),
+  topic_id: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
   rank: z.number().int().optional(),
 })
@@ -17,10 +21,12 @@ const UpdateCardSchema = z.object({
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
+  const campaignModuleService: CampaignModuleService = req.scope.resolve(CAMPAIGN_MODULE)
 
   const card = await cardModuleService.retrieveCard(id)
+  const [resolved] = await resolveCardPaths([card], campaignModuleService)
 
-  res.json({ card })
+  res.json({ card: resolved })
 }
 
 /**
@@ -34,6 +40,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
+  const campaignModuleService: CampaignModuleService = req.scope.resolve(CAMPAIGN_MODULE)
 
   const existing = await cardModuleService.retrieveCard(id)
   const body = await zodValidator(UpdateCardSchema, req.body)
@@ -43,7 +50,7 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   // everything except rank/is_active regardless of what was sent.
   const allowedKeys = existing.locked
     ? (["rank", "is_active"] as const)
-    : (["title", "image", "path", "is_active", "rank"] as const)
+    : (["title", "image", "path", "topic_id", "is_active", "rank"] as const)
 
   const patch: Record<string, unknown> = {}
   for (const key of allowedKeys) {
@@ -54,8 +61,9 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const card = await cardModuleService.updateCards({ id, ...patch })
+  const [resolved] = await resolveCardPaths([card], campaignModuleService)
 
-  res.json({ card })
+  res.json({ card: resolved })
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {

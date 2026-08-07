@@ -10,6 +10,7 @@ const UpdateCampaignTopicSchema = z.object({
   slug: z.string().min(1).optional(),
   description: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
+  content_type: z.enum(["post", "product", "event"]).optional(),
   is_active: z.boolean().optional(),
   rank: z.number().int().optional(),
 })

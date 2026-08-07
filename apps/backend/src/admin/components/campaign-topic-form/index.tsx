@@ -3,18 +3,24 @@ import {
   Copy,
   Input,
   Label,
+  Select,
   Switch,
   Textarea,
 } from "@medusajs/ui"
 import { useTranslation } from "react-i18next"
 import ImagePicker from "../image-picker"
 import { slugify } from "../../lib/campaign-post"
+import { topicPath } from "../../../utils/topic-path"
+import type { CampaignTopicContentType } from "../../types/campaign-topic"
+
+const CONTENT_TYPES: CampaignTopicContentType[] = ["post", "product", "event"]
 
 type CampaignTopicFormProps = {
   name: string
   slug: string
   description: string
   image: string
+  contentType: CampaignTopicContentType
   isActive: boolean
   rank: number
   isSubmitting?: boolean
@@ -25,6 +31,7 @@ type CampaignTopicFormProps = {
   onSlugChange: (value: string) => void
   onDescriptionChange: (value: string) => void
   onImageChange: (value: string) => void
+  onContentTypeChange: (value: CampaignTopicContentType) => void
   onIsActiveChange: (value: boolean) => void
   onRankChange: (value: number) => void
   onSubmit: (event: React.FormEvent) => void
@@ -35,6 +42,7 @@ const CampaignTopicForm = ({
   slug,
   description,
   image,
+  contentType,
   isActive,
   rank,
   isSubmitting = false,
@@ -45,6 +53,7 @@ const CampaignTopicForm = ({
   onSlugChange,
   onDescriptionChange,
   onImageChange,
+  onContentTypeChange,
   onIsActiveChange,
   onRankChange,
   onSubmit,
@@ -64,6 +73,25 @@ const CampaignTopicForm = ({
       </div>
 
       <div className="flex flex-col gap-y-2">
+        <Label htmlFor="topic-content-type">{t("campaign-topics.fields.contentType")}</Label>
+        <Select value={contentType} onValueChange={onContentTypeChange}>
+          <Select.Trigger id="topic-content-type">
+            <Select.Value />
+          </Select.Trigger>
+          <Select.Content>
+            {CONTENT_TYPES.map((type) => (
+              <Select.Item key={type} value={type}>
+                {t(`campaign-topics.contentType.${type}`)}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+        <span className="text-ui-fg-subtle text-xs">
+          {t("campaign-topics.fields.contentTypeHint")}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-y-2">
         <Label htmlFor="topic-slug">{t("campaign-topics.fields.slug")}</Label>
         <div className="flex items-center gap-x-2">
           <Input
@@ -73,7 +101,7 @@ const CampaignTopicForm = ({
             onChange={(e) => onSlugChange(e.target.value)}
           />
           {(slug || slugify(name)) && (
-            <Copy content={`/tin-tuc/chu-de/${slug || slugify(name)}`} />
+            <Copy content={topicPath({ content_type: contentType, slug: slug || slugify(name) })} />
           )}
         </div>
         <span className="text-ui-fg-subtle text-xs">

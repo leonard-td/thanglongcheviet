@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import PageLayout from "../../components/page-layout"
 import { sdk } from "../../lib/sdk"
+import { topicPath } from "../../../utils/topic-path"
 import type {
   CampaignTopic,
   CampaignTopicsResponse,
@@ -72,6 +73,14 @@ const CampaignTopicsPage = () => {
     columnHelper.accessor("slug", {
       header: t("campaign-topics.columns.slug"),
     }),
+    columnHelper.accessor("content_type", {
+      header: t("campaign-topics.columns.contentType"),
+      cell: ({ getValue }) => (
+        <Badge size="2xsmall" color="blue">
+          {t(`campaign-topics.contentType.${getValue()}`)}
+        </Badge>
+      ),
+    }),
     columnHelper.accessor("rank", {
       header: t("campaign-topics.columns.rank"),
     }),
@@ -93,7 +102,7 @@ const CampaignTopicsPage = () => {
           className="flex justify-end"
           onClick={(e) => e.stopPropagation()}
         >
-          <Copy content={`/tin-tuc/chu-de/${row.original.slug}`} />
+          <Copy content={topicPath(row.original)} />
         </div>
       ),
     }),

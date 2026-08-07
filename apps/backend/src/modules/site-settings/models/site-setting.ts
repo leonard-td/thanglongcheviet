@@ -21,6 +21,8 @@ const SiteSetting = model.define("site_setting", {
   about_content: model.json().nullable(),
   // Collection whose products accompany the about page sidebar
   about_collection_id: model.text().nullable(),
+  // YouTube URL/ID for the "video giới thiệu" facade on the homepage pillar list
+  home_video_url: model.text().nullable(),
 })
 
 export default SiteSetting

@@ -12,7 +12,7 @@ export interface ProductGroup {
   thumbnail: string | null
 }
 
-const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,*images,*categories,'
+const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
   + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price'
 
 export function useProducts() {
@@ -120,6 +120,11 @@ export function useProducts() {
     return products.value.filter(p => p.collectionId === collectionId)
   }
 
+  const byTopic = (topicId: string | null) => {
+    if (!topicId) return []
+    return products.value.filter(p => p.topicId === topicId)
+  }
+
   /** Bộ sưu tập gắn với danh mục (admin đặt qua metadata.related_collection_id) */
   const relatedCollectionIdByCategory = (categoryId: string | null) => {
     if (!categoryId) return null
@@ -138,6 +143,7 @@ export function useProducts() {
     related,
     byCategory,
     byCollection,
+    byTopic,
     relatedCollectionIdByCategory,
   }
 }

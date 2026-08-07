@@ -3,6 +3,7 @@ import { Calendar } from "@medusajs/icons"
 import {
   Badge,
   Button,
+  Copy,
   DataTable,
   Heading,
   createDataTableColumnHelper,
@@ -16,6 +17,7 @@ import { useTranslation } from "react-i18next"
 import PageLayout from "../../components/page-layout"
 import { sdk } from "../../lib/sdk"
 import type { AppEvent, EventsResponse } from "../../types/event"
+import type { CampaignTopicsResponse } from "../../types/campaign-topic"
 
 const EventsPage = () => {
   const navigate = useNavigate()
@@ -41,6 +43,22 @@ const EventsPage = () => {
     queryKey: [["events", limit, offset]],
   })
 
+  const { data: topicsData } = useQuery<CampaignTopicsResponse>({
+    queryFn: () =>
+      sdk.client.fetch("/admin/campaign-topics", {
+        query: { limit: 100, content_type: "event" },
+      }),
+    queryKey: [["campaign-topics", "event-list"]],
+  })
+
+  const topicNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const topic of topicsData?.campaign_topics ?? []) {
+      map.set(topic.id, topic.name)
+    }
+    return map
+  }, [topicsData])
+
   const columnHelper = createDataTableColumnHelper<AppEvent>()
 
   const columns = [
@@ -49,6 +67,17 @@ const EventsPage = () => {
       cell: ({ getValue }) => (
         <span className="text-ui-fg-interactive">{getValue()}</span>
       ),
+    }),
+    columnHelper.accessor("topic_id", {
+      header: t("events.columns.topic"),
+      cell: ({ getValue }) => {
+        const topicId = getValue()
+        return topicId ? (
+          topicNameById.get(topicId) ?? "—"
+        ) : (
+          <span className="text-ui-fg-muted">—</span>
+        )
+      },
     }),
     columnHelper.accessor("start_at", {
       header: t("events.columns.startAt"),
@@ -84,6 +113,15 @@ const EventsPage = () => {
         <Badge color={getValue() ? "green" : "grey"}>
           {getValue() ? t("events.status.active") : t("events.status.inactive")}
         </Badge>
+      ),
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: t("events.columns.actions"),
+      cell: ({ row }) => (
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+          <Copy content={`/trai-nghiem/${row.original.slug}`} />
+        </div>
       ),
     }),
   ]

@@ -44,6 +44,8 @@ export interface Product {
   categoryIds: string[]
   collectionId: string | null
   collectionName: string
+  /** Chủ đề (campaign_topic) gắn qua metadata.topic_id trong admin — dùng để lọc theo chủ đề. */
+  topicId: string | null
   inStock: boolean
   variants: ProductVariant[]
   options: ProductOption[]

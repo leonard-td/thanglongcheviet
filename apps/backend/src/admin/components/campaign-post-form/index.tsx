@@ -1,5 +1,6 @@
 import {
   Button,
+  Copy,
   Heading,
   Input,
   Label,
@@ -93,9 +94,9 @@ const CampaignPostForm = ({
   const { data: topicsData } = useQuery<CampaignTopicsResponse>({
     queryFn: () =>
       sdk.client.fetch("/admin/campaign-topics", {
-        query: { limit: 100 },
+        query: { limit: 100, content_type: "post" },
       }),
-    queryKey: [["campaign-topics", "select-options"]],
+    queryKey: [["campaign-topics", "select-options", "post"]],
   })
 
   const topics = topicsData?.campaign_topics ?? []
@@ -114,13 +115,21 @@ const CampaignPostForm = ({
 
       <div className="flex flex-col gap-y-2">
         <Label htmlFor="slug">{t("campaign-posts.fields.slug")}</Label>
-        <Input
-          id="slug"
-          required={!!slug}
-          placeholder={slugify(title) || t("campaign-posts.fields.slugPlaceholder")}
-          value={slug}
-          onChange={(e) => onSlugChange(e.target.value)}
-        />
+        <div className="flex items-center gap-x-2">
+          <Input
+            id="slug"
+            required={!!slug}
+            placeholder={slugify(title) || t("campaign-posts.fields.slugPlaceholder")}
+            value={slug}
+            onChange={(e) => onSlugChange(e.target.value)}
+          />
+          {(slug || slugify(title)) && (
+            <Copy content={`/tin-tuc/${slug || slugify(title)}`} />
+          )}
+        </div>
+        <span className="text-ui-fg-subtle text-xs">
+          {t("campaign-posts.fields.slugCopyHint")}
+        </span>
       </div>
 
       <div className="flex flex-col gap-y-2">

@@ -65,6 +65,7 @@ function mapLineItem(item: MedusaLineItem): CartItem {
       categoryIds: [],
       collectionId: null,
       collectionName: '',
+      topicId: null,
       inStock: true,
       variants: [],
       options: [],

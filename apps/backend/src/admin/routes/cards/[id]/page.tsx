@@ -38,6 +38,7 @@ const EditCardPage = () => {
   const [titleEn, setTitleEn] = useState(card.title?.en ?? "")
   const [image, setImage] = useState(card.image ?? "")
   const [path, setPath] = useState(card.path ?? "")
+  const [topicId, setTopicId] = useState(card.topic_id ?? "")
   const [isActive, setIsActive] = useState(card.is_active)
 
   const { mutateAsync, isPending } = useMutation({
@@ -68,6 +69,7 @@ const EditCardPage = () => {
         title: { vi: titleVi, en: titleEn || titleVi },
         image: image || null,
         path: path || null,
+        topic_id: topicId || null,
         is_active: isActive,
       })
       toast.success(t("cards.messages.updated"))
@@ -127,6 +129,7 @@ const EditCardPage = () => {
         titleEn={titleEn}
         image={image}
         path={path}
+        topicId={topicId}
         isActive={isActive}
         isSubmitting={isPending}
         submitLabel={t("cards.actions.save")}
@@ -134,6 +137,7 @@ const EditCardPage = () => {
         onTitleEnChange={setTitleEn}
         onImageChange={setImage}
         onPathChange={setPath}
+        onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}
         onSubmit={handleSubmit}
       />

@@ -16,6 +16,28 @@ export interface SiteSettingsDto {
   about_thumbnail: string | null
   about_content: unknown
   about_collection_id: string | null
+  home_video_url: string | null
+}
+
+/** Accepts a full YouTube URL (youtu.be/ID, watch?v=ID, /embed/ID) or a bare video ID. */
+function extractYoutubeId(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  if (/^[\w-]{11}$/.test(trimmed)) return trimmed
+
+  try {
+    const url = new URL(trimmed)
+    if (url.hostname.includes('youtu.be')) {
+      return url.pathname.slice(1) || null
+    }
+    if (url.pathname.startsWith('/embed/')) {
+      return url.pathname.replace('/embed/', '') || null
+    }
+    return url.searchParams.get('v')
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -63,6 +85,8 @@ export function useSiteSettings() {
     () => data.value?.about_collection_id || null,
   )
 
+  const homeVideoId = computed(() => extractYoutubeId(data.value?.home_video_url))
+
   return {
     settings,
     pending,
@@ -71,5 +95,6 @@ export function useSiteSettings() {
     aboutThumbnail,
     aboutHtml,
     aboutCollectionId,
+    homeVideoId,
   }
 }

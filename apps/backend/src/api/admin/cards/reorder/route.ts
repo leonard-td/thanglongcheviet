@@ -3,6 +3,9 @@ import { z } from "zod"
 import { zodValidator } from "../../../utils/zod-validator"
 import { CARD_MODULE } from "../../../../modules/card"
 import type CardModuleService from "../../../../modules/card/service"
+import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
+import type CampaignModuleService from "../../../../modules/campaign/service"
+import { resolveCardPaths } from "../../../utils/resolve-card-path"
 
 const ReorderSchema = z.object({
   items: z.array(z.object({ id: z.string(), rank: z.number().int() })).min(1),
@@ -17,6 +20,7 @@ const ReorderSchema = z.object({
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const cardModuleService: CardModuleService = req.scope.resolve(CARD_MODULE)
+  const campaignModuleService: CampaignModuleService = req.scope.resolve(CAMPAIGN_MODULE)
 
   const { items } = await zodValidator(ReorderSchema, req.body)
 
@@ -26,5 +30,5 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const cards = await cardModuleService.listCards({}, { order: { rank: "ASC" } })
 
-  res.json({ cards })
+  res.json({ cards: await resolveCardPaths(cards, campaignModuleService) })
 }

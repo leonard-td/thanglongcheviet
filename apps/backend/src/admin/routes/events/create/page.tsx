@@ -26,6 +26,7 @@ const CreateEventPage = () => {
   const [endAt, setEndAt] = useState("")
   const [capacity, setCapacity] = useState("")
   const [registrationOpen, setRegistrationOpen] = useState(true)
+  const [topicId, setTopicId] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [seoTitle, setSeoTitle] = useState("")
   const [seoDescription, setSeoDescription] = useState("")
@@ -54,6 +55,7 @@ const CreateEventPage = () => {
         end_at: toIsoDateTime(endAt),
         capacity: capacity ? Number(capacity) : null,
         registration_open: registrationOpen,
+        topic_id: topicId || null,
         is_active: isActive,
         seo_title: seoTitle || null,
         seo_description: seoDescription || null,
@@ -102,6 +104,7 @@ const CreateEventPage = () => {
         endAt={endAt}
         capacity={capacity}
         registrationOpen={registrationOpen}
+        topicId={topicId}
         isActive={isActive}
         seoTitle={seoTitle}
         seoDescription={seoDescription}
@@ -117,6 +120,7 @@ const CreateEventPage = () => {
         onEndAtChange={setEndAt}
         onCapacityChange={setCapacity}
         onRegistrationOpenChange={setRegistrationOpen}
+        onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}
         onSeoTitleChange={setSeoTitle}
         onSeoDescriptionChange={setSeoDescription}

@@ -22,6 +22,7 @@ const UpdateSiteSettingsSchema = z.object({
   about_thumbnail: z.string().nullable().optional(),
   about_content: z.record(z.string(), z.unknown()).nullable().optional(),
   about_collection_id: z.string().nullable().optional(),
+  home_video_url: z.string().nullable().optional(),
 })
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {

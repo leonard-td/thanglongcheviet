@@ -10,6 +10,7 @@ const CreateCampaignTopicSchema = z.object({
   slug: z.string().min(1).optional(),
   description: z.string().nullable().optional(),
   image: z.string().nullable().optional(),
+  content_type: z.enum(["post", "product", "event"]).default("post"),
   is_active: z.boolean().default(true),
   rank: z.number().int().default(0),
 })
@@ -31,10 +32,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const limit = Math.min(Number(req.query.limit) || 50, 100)
   const offset = Number(req.query.offset) || 0
+  const contentType =
+    typeof req.query.content_type === "string" ? req.query.content_type : undefined
 
   const [topics, count] =
     await campaignModuleService.listAndCountCampaignTopics(
-      {},
+      contentType ? { content_type: contentType } : {},
       {
         take: limit,
         skip: offset,
@@ -61,6 +64,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     slug: body.slug || slugify(body.name),
     description: body.description ?? null,
     image: toRelativeMediaUrl(body.image),
+    content_type: body.content_type,
     is_active: body.is_active,
     rank: body.rank,
   })

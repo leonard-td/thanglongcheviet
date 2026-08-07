@@ -186,7 +186,13 @@
     "collectionsEyebrow": "Bộ sưu tập",
     "collectionsTitle": "Khám phá theo bộ sưu tập",
     "collectionsSubtitle": "Mỗi bộ sưu tập là một câu chuyện hương vị riêng của trà Việt",
-    "groupNotFound": "Không tìm thấy trang này"
+    "groupNotFound": "Không tìm thấy trang này",
+    "topics": {
+      "browse": "Chủ đề:",
+      "itemCount": "{count} sản phẩm",
+      "emptyTitle": "Chưa có sản phẩm trong chủ đề này",
+      "emptyDesc": "Nội dung đang được biên soạn — mời bạn quay lại sau hoặc xem các sản phẩm khác."
+    }
   },
   "cart": {
     "title": "Giỏ hàng",
@@ -367,6 +373,12 @@
     "comingSoon": "Nội dung đang được cập nhật.",
     "emptyTitle": "Chưa có sự kiện nào",
     "emptyDesc": "Các sự kiện mới đang được chuẩn bị — mời bạn quay lại sau.",
+    "topics": {
+      "browse": "Chủ đề:",
+      "itemCount": "{count} sự kiện",
+      "emptyTitle": "Chưa có sự kiện trong chủ đề này",
+      "emptyDesc": "Nội dung đang được biên soạn — mời bạn quay lại sau hoặc xem các sự kiện khác."
+    },
     "detail": {
       "until": "Đến {time}",
       "seatsLeft": "Còn {count} chỗ"

@@ -2,3 +2,7 @@
 # Linux/WSL report "required file not found" because it looks for an
 # interpreter literally named "bash\r".
 *.sh    text eol=lf
+
+# .env files get `. .env.prod` sourced by run-prod-stack.sh — a CRLF line
+# ending makes bash choke with "$'\r': command not found".
+.env*   text eol=lf

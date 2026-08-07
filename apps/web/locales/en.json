@@ -186,7 +186,13 @@
     "collectionsEyebrow": "Collections",
     "collectionsTitle": "Explore by collection",
     "collectionsSubtitle": "Each collection tells its own story of Vietnamese tea",
-    "groupNotFound": "Page not found"
+    "groupNotFound": "Page not found",
+    "topics": {
+      "browse": "Topics:",
+      "itemCount": "{count} products",
+      "emptyTitle": "No products in this topic yet",
+      "emptyDesc": "This topic is being curated — please check back soon or browse other products."
+    }
   },
   "cart": {
     "title": "Cart",
@@ -367,6 +373,12 @@
     "comingSoon": "Content is being updated.",
     "emptyTitle": "No events yet",
     "emptyDesc": "New events are being prepared — please check back soon.",
+    "topics": {
+      "browse": "Topics:",
+      "itemCount": "{count} events",
+      "emptyTitle": "No events in this topic yet",
+      "emptyDesc": "This topic is being curated — please check back soon or browse other events."
+    },
     "detail": {
       "until": "Until {time}",
       "seatsLeft": "{count} seats left"

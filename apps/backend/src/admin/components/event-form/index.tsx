@@ -1,17 +1,24 @@
 import {
   Button,
+  Copy,
   Heading,
   Input,
   Label,
+  Select,
   Switch,
   Text,
   Textarea,
 } from "@medusajs/ui"
 import type { JSONContent } from "@tiptap/core"
+import { useQuery } from "@tanstack/react-query"
 import TiptapEditor from "../tiptap-editor"
 import ImagePicker from "../image-picker"
 import { slugify } from "../../lib/campaign-post"
+import { sdk } from "../../lib/sdk"
 import { useTranslation } from "react-i18next"
+import type { CampaignTopicsResponse } from "../../types/campaign-topic"
+
+const NO_TOPIC = "__none__"
 
 type EventFormProps = {
   title: string
@@ -22,6 +29,7 @@ type EventFormProps = {
   endAt: string
   capacity: string
   registrationOpen: boolean
+  topicId: string
   isActive: boolean
   seoTitle: string
   seoDescription: string
@@ -40,6 +48,7 @@ type EventFormProps = {
   onEndAtChange: (value: string) => void
   onCapacityChange: (value: string) => void
   onRegistrationOpenChange: (value: boolean) => void
+  onTopicIdChange: (value: string) => void
   onIsActiveChange: (value: boolean) => void
   onSeoTitleChange: (value: string) => void
   onSeoDescriptionChange: (value: string) => void
@@ -57,6 +66,7 @@ const EventForm = ({
   endAt,
   capacity,
   registrationOpen,
+  topicId,
   isActive,
   seoTitle,
   seoDescription,
@@ -75,6 +85,7 @@ const EventForm = ({
   onEndAtChange,
   onCapacityChange,
   onRegistrationOpenChange,
+  onTopicIdChange,
   onIsActiveChange,
   onSeoTitleChange,
   onSeoDescriptionChange,
@@ -83,6 +94,16 @@ const EventForm = ({
   onSubmit,
 }: EventFormProps) => {
   const { t } = useTranslation()
+
+  const { data: topicsData } = useQuery<CampaignTopicsResponse>({
+    queryFn: () =>
+      sdk.client.fetch("/admin/campaign-topics", {
+        query: { limit: 100, content_type: "event" },
+      }),
+    queryKey: [["campaign-topics", "select-options", "event"]],
+  })
+
+  const topics = topicsData?.campaign_topics ?? []
 
   return (
     <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
@@ -98,13 +119,44 @@ const EventForm = ({
 
       <div className="flex flex-col gap-y-2">
         <Label htmlFor="slug">{t("events.fields.slug")}</Label>
-        <Input
-          id="slug"
-          required={!!slug}
-          placeholder={slugify(title) || t("events.fields.slugPlaceholder")}
-          value={slug}
-          onChange={(e) => onSlugChange(e.target.value)}
-        />
+        <div className="flex items-center gap-x-2">
+          <Input
+            id="slug"
+            required={!!slug}
+            placeholder={slugify(title) || t("events.fields.slugPlaceholder")}
+            value={slug}
+            onChange={(e) => onSlugChange(e.target.value)}
+          />
+          {(slug || slugify(title)) && (
+            <Copy content={`/trai-nghiem/${slug || slugify(title)}`} />
+          )}
+        </div>
+        <span className="text-ui-fg-subtle text-xs">
+          {t("events.fields.slugCopyHint")}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-y-2">
+        <Label>{t("events.fields.topic")}</Label>
+        <Select
+          value={topicId || NO_TOPIC}
+          onValueChange={(value) => onTopicIdChange(value === NO_TOPIC ? "" : value)}
+        >
+          <Select.Trigger>
+            <Select.Value placeholder={t("events.fields.topicPlaceholder")} />
+          </Select.Trigger>
+          <Select.Content>
+            <Select.Item value={NO_TOPIC}>{t("events.fields.noTopic")}</Select.Item>
+            {topics.map((topic) => (
+              <Select.Item key={topic.id} value={topic.id}>
+                {topic.name}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select>
+        <span className="text-ui-fg-subtle text-xs">
+          {t("events.fields.topicHint")}
+        </span>
       </div>
 
       <div className="flex flex-col gap-y-2">

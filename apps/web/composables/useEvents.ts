@@ -13,6 +13,7 @@ interface StoreEvent {
   end_at: string | null
   capacity: number | null
   registration_open: boolean
+  topic_id?: string | null
   registered_seats?: number
   seats_left?: number | null
   created_at?: string
@@ -34,6 +35,7 @@ export interface EventItem {
   capacity: number | null
   seatsLeft: number | null
   registrationOpen: boolean
+  topicId: string | null
   isPast: boolean
   seoTitle: string | null
   seoDescription: string | null
@@ -66,6 +68,7 @@ function transformStoreEvent(e: StoreEvent, resolveUrl: (url: string | null | un
     capacity: e.capacity,
     seatsLeft: e.seats_left ?? null,
     registrationOpen: e.registration_open,
+    topicId: e.topic_id ?? null,
     isPast: reference ? new Date(reference).getTime() < Date.now() : false,
     seoTitle: e.seo_title || null,
     seoDescription: e.seo_description || null,
@@ -108,6 +111,11 @@ export function useEvents() {
   )
   const pastEvents = computed<EventItem[]>(() => events.value.filter(e => e.isPast))
 
+  const byTopic = (topicId: string | null) => {
+    if (!topicId) return []
+    return events.value.filter(e => e.topicId === topicId)
+  }
+
   const getBySlug = async (slug: string): Promise<EventItem | null> => {
     try {
       const res = await fetchMedusa<{ event: StoreEvent }>(
@@ -145,5 +153,5 @@ export function useEvents() {
     return { success: false, message: t('events.register.error') }
   }
 
-  return { events, upcomingEvents, pastEvents, pending, getBySlug, registerForEvent }
+  return { events, upcomingEvents, pastEvents, pending, getBySlug, byTopic, registerForEvent }
 }

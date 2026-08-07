@@ -88,3 +88,80 @@ product category to a curated collection banner is done by admins setting
 `metadata.related_collection_id` on the **category** (read by the storefront's
 `useProducts().relatedCollectionIdByCategory`) — there's no dedicated UI field
 for it yet, it's a raw metadata key.
+
+# IN PROGRESS — Excel product import script (`src/scripts/import-products-excel.ts`)
+
+CLI-only, not wired to any admin UI. Run manually inside the backend
+container: `npm run import:products-excel -- ./path/to/file.xlsx` (script
+reads `args[0]` via Medusa's `ExecArgs`, so the path must come through after
+`--`). Matches spreadsheet rows to existing catalog items by **variant SKU**
+(`COLUMNS.sku`) and updates product title/description/status + variant VND
+price; rows with no SKU or an unmatched SKU are skipped and reported, never
+created as new products.
+
+**Blocked on:** the real Excel export from the client hasn't arrived yet.
+`COLUMNS` at the top of the file (`SKU`, `Tên sản phẩm`, `Mô tả`, `Giá (VND)`,
+`Trạng thái`) are placeholder header names guessed from the seed data shape —
+**do not assume they're correct**. Once a real sample file shows up, diff its
+actual headers against `COLUMNS` before running the script against it for
+real.
+
+**Known gaps to revisit when picking this back up:**
+- Update-only — never creates a product for an unmatched SKU. Confirm with
+  the client whether new-product creation from the sheet is actually needed;
+  if so this script needs a create path, not just skip-and-report.
+- `parsePrice()` strips all non-digit characters and assumes a single
+  integer VND amount — no decimals, no multi-currency support.
+- No dry-run/preview mode: the first real run against a client file will
+  mutate live product data directly. Consider adding a `--dry-run` flag (log
+  the diff instead of calling the update workflows) before running it against
+  anything client-provided.
+- No admin-dashboard trigger (upload button) exists — confirm whether the
+  client needs to run this themselves (would need a real UI + file upload
+  route) or whether CLI-only, dev-run-on-request is acceptable long-term.
+
+# FIXED — Backup restore failing with "FILE_ENDED" (`src/lib/backup/`)
+
+**Symptom reported:** creating a backup (Settings > Backup) produced a zip
+that looked fine in the list, but restoring from that same zip failed with
+`FILE_ENDED` (thrown by the `unzipper` lib while parsing the archive).
+
+**Root cause — confirmed by direct testing, not guessed:** `createBackup()`
+in `src/lib/backup/create.ts` used to open its `fs.createWriteStream()`
+**directly at the final path** (`BACKUP_DIR/<name>.zip`) at the *start* of
+the zip step, then streamed table CSVs + static media into it for tens of
+seconds before closing. `GET /admin/backup` (`src/api/admin/backup/route.ts`)
+lists **every** `.zip` file it finds via a plain `fs.readdir(BACKUP_DIR)` —
+it has no idea a backup job is still writing to one of them. The admin UI
+polls that endpoint every 1.5s while a job is `running`
+(`settings/backup/page.tsx`'s `refetchInterval`), so the in-progress file
+shows up in the table, complete with a working Download button, **before
+archiver has finished writing it**. Downloading (or restoring) it at that
+moment yields a truncated zip — no central directory yet — which is exactly
+what makes `unzipper`/any zip reader throw `FILE_ENDED`. Verified end-to-end
+by triggering a backup and polling `GET /admin/backup` during the `zip` step:
+before the fix the new filename appeared in the list mid-write; after the
+fix it only appears once the job reports `completed`. Backup creation and
+restore (both from an existing server file and via re-upload) were confirmed
+correct in isolation first — the bug was specifically the premature
+visibility window, not the archiver/unzipper logic itself.
+
+**Fix applied:** `create.ts` now writes the zip to a temp path *inside the
+per-job staging directory* (`TMP_DIR` = `BACKUP_DIR/.tmp/<name>/`, already
+excluded from `GET /admin/backup`'s non-recursive `.zip` scan) and only
+`fsp.rename()`s it into `BACKUP_DIR/<name>.zip` as the very last step, after
+`archive.finalize()` + the write stream's `close` event both resolve. Rename
+is same-volume (staging and `BACKUP_DIR` share the same mount) so it's an
+atomic, instant filesystem op — the file goes from "doesn't exist in
+`BACKUP_DIR`" to "fully present" with no visible partial state in between.
+
+**General lesson — applies beyond backups:** anywhere a long-running job
+writes an artifact that a *separate* list/status endpoint exposes by
+scanning a directory, **never give the in-progress file its final
+list-visible name/location**. Write to a temp/staging path the lister
+doesn't scan, then atomically move it into place only after the write is
+fully flushed and closed. A "finish, then rename into place" pattern is the
+fix, not "check file size didn't change" or other polling-based workarounds.
+Revisit this same class of bug if a similar directory-scanning list endpoint
+is ever added elsewhere (e.g. the media library, or the products-excel
+import CLI if it ever grows a progress/output file).

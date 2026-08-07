@@ -20,6 +20,15 @@
     "saved": "Đã lưu bộ sưu tập liên quan",
     "saveFailed": "Lưu thất bại"
   },
+  "productTopicLink": {
+    "title": "Chủ đề",
+    "hint": "Gắn sản phẩm này vào một chủ đề loại \"sản phẩm\" — sản phẩm sẽ xuất hiện ở trang danh sách của chủ đề đó trên website.",
+    "placeholder": "Chọn chủ đề",
+    "none": "Không thuộc chủ đề nào",
+    "save": "Lưu",
+    "saved": "Đã lưu chủ đề",
+    "saveFailed": "Lưu thất bại"
+  },
   "storeInfo": {
     "title": "Thông tin cửa hàng",
     "subtitle": "Thông tin liên hệ, ảnh nền trang chủ và bài giới thiệu",
@@ -27,6 +36,8 @@
       "contact": "Thông tin liên hệ",
       "heroImages": "Ảnh nền trang chủ",
       "heroImagesHint": "Hai ảnh nền hiển thị trên trang chủ của website.",
+      "homeVideo": "Video giới thiệu (trang chủ)",
+      "homeVideoHint": "Video YouTube hiển thị ở cột trái trang chủ (dạng ảnh bìa kèm nút phát).",
       "about": "Bài giới thiệu",
       "aboutHint": "Nội dung trang giới thiệu cửa hàng trên website."
     },
@@ -44,6 +55,9 @@
       "instagramUrl": "Link Instagram",
       "heroImage1": "Ảnh nền 1",
       "heroImage2": "Ảnh nền 2",
+      "homeVideoUrl": "Link video YouTube",
+      "homeVideoUrlPlaceholder": "VD: https://youtu.be/xxxxxxxxxxx",
+      "homeVideoUrlHint": "Dán link YouTube (hoặc chỉ mã video). Để trống sẽ dùng video mặc định.",
       "aboutTitle": "Tiêu đề bài giới thiệu",
       "aboutThumbnail": "Ảnh thumbnail",
       "aboutContent": "Nội dung bài viết",
@@ -247,11 +261,13 @@
     "registeredSeats": "Đã đăng ký {{count}} chỗ",
     "columns": {
       "title": "Tên sự kiện",
+      "topic": "Chủ đề",
       "startAt": "Thời gian tổ chức",
       "location": "Địa điểm",
       "registrations": "Đã đăng ký",
       "registrationOpen": "Đăng ký",
-      "status": "Trạng thái"
+      "status": "Trạng thái",
+      "actions": "Thao tác"
     },
     "status": {
       "active": "Đang hiển thị",
@@ -265,6 +281,11 @@
       "title": "Tên sự kiện",
       "slug": "Đường dẫn (slug)",
       "slugPlaceholder": "tự động tạo từ tên sự kiện",
+      "slugCopyHint": "Bấm nút bên cạnh để sao chép đường dẫn đầy đủ (không kèm domain) tới trang sự kiện trên website.",
+      "topic": "Chủ đề",
+      "topicPlaceholder": "Chọn chủ đề",
+      "noTopic": "Không thuộc chủ đề nào",
+      "topicHint": "Gắn sự kiện này vào một chủ đề loại \"sự kiện\" — sự kiện sẽ xuất hiện ở trang danh sách của chủ đề đó trên website.",
       "thumbnail": "Ảnh đại diện",
       "thumbnailHint": "Hiển thị trên thẻ sự kiện ở trang danh sách và đầu trang chi tiết.",
       "location": "Địa điểm tổ chức",
@@ -387,6 +408,7 @@
       "title": "Tiêu đề",
       "slug": "Đường dẫn (slug)",
       "slugPlaceholder": "tự động tạo từ tiêu đề",
+      "slugCopyHint": "Bấm nút bên cạnh để sao chép đường dẫn đầy đủ (không kèm domain) tới trang bài viết trên website.",
       "description": "Mô tả ngắn",
       "descriptionPlaceholder": "Tóm tắt ngắn gọn nội dung bài viết",
       "descriptionHint": "Hiển thị ở danh sách bài viết và dùng làm mô tả SEO mặc định nếu không đặt riêng ở mục SEO bên dưới.",
@@ -415,6 +437,7 @@
       "save": "Lưu thay đổi",
       "delete": "Xóa",
       "duplicate": "Nhân bản",
+      "copyPath": "Sao chép đường dẫn",
       "backToList": "Quay lại danh sách"
     },
     "messages": {
@@ -426,6 +449,8 @@
       "updateFailed": "Cập nhật bài viết thất bại",
       "deleteFailed": "Xóa bài viết thất bại",
       "duplicateFailed": "Nhân bản bài viết thất bại",
+      "pathCopied": "Đã sao chép đường dẫn",
+      "pathCopyFailed": "Sao chép đường dẫn thất bại",
       "deleteConfirmTitle": "Xóa bài viết",
       "deleteConfirmDesc": "Bạn có chắc muốn xóa \"{{title}}\" không?",
       "confirmDelete": "Xóa",
@@ -459,6 +484,7 @@
       "image": "Ảnh",
       "name": "Tên chủ đề",
       "slug": "Đường dẫn",
+      "contentType": "Loại nội dung",
       "rank": "Thứ tự",
       "status": "Trạng thái",
       "actions": "Thao tác"
@@ -466,6 +492,11 @@
     "status": {
       "active": "Đang hiển thị",
       "inactive": "Đã ẩn"
+    },
+    "contentType": {
+      "post": "Bài viết",
+      "product": "Sản phẩm",
+      "event": "Sự kiện"
     },
     "fields": {
       "name": "Tên chủ đề",
@@ -475,6 +506,8 @@
       "description": "Mô tả ngắn",
       "image": "Ảnh banner",
       "imageHint": "Ảnh nền lớn hiển thị đầu trang danh sách bài viết của chủ đề này.",
+      "contentType": "Loại nội dung",
+      "contentTypeHint": "Chủ đề này dùng để nhóm loại nội dung nào — quyết định trang danh sách nào trên website hiển thị chủ đề này (bài viết, sản phẩm, hoặc sự kiện).",
       "rank": "Thứ tự hiển thị",
       "active": "Hiển thị trên website"
     },
@@ -523,6 +556,10 @@
       "titleVi": "Tiêu đề (Tiếng Việt)",
       "titleEn": "Tiêu đề (English)",
       "image": "Ảnh thumbnail",
+      "topic": "Chủ đề liên kết",
+      "topicPlaceholder": "Chọn chủ đề",
+      "topicHint": "Chọn một chủ đề để tự động điền đường dẫn liên kết bên dưới tới trang danh sách của chủ đề đó (bài viết, sản phẩm, hoặc sự kiện).",
+      "noTopic": "Không liên kết chủ đề",
       "path": "Đường dẫn liên kết",
       "pathPlaceholder": "vd: /san-pham-list",
       "active": "Hiển thị trên trang chủ"
@@ -540,7 +577,8 @@
       "dropHint": "Kéo thả ảnh vào đây hoặc bấm để chọn file",
       "orPasteUrl": "hoặc dán URL ảnh có sẵn",
       "urlPlaceholder": "https://...",
-      "useUrl": "Dùng URL này"
+      "useUrl": "Dùng URL này",
+      "loadFailed": "Không tải được ảnh"
     },
     "actions": {
       "create": "Thêm card",
@@ -663,11 +701,16 @@
       "mediaTitle": "Ảnh thumbnail",
       "mediaHint": "Ảnh đại diện hiển thị trên các trang/thẻ sản phẩm theo bộ sưu tập này — chọn từ thư viện media."
     },
+    "product": {
+      "title": "Liên kết trên website",
+      "hint": "Đường dẫn (không kèm domain) tới trang chi tiết sản phẩm này."
+    },
     "mediaSaved": "Đã lưu ảnh thumbnail",
     "mediaSaveFailed": "Lưu ảnh thumbnail thất bại",
     "list": {
       "categoryTitle": "Liên kết trang danh mục trên website",
       "collectionTitle": "Liên kết trang bộ sưu tập trên website",
+      "productTitle": "Liên kết trang sản phẩm trên website",
       "hint": "Sao chép nhanh đường dẫn (không kèm domain) tới trang hiển thị sản phẩm — dùng để chia sẻ hoặc chèn vào nội dung khác.",
       "thumbnail": "Ảnh",
       "name": "Tên",

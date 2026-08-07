@@ -15,6 +15,7 @@ const UpdateEventSchema = z.object({
   end_at: z.string().datetime().nullable().optional(),
   capacity: z.number().int().positive().nullable().optional(),
   registration_open: z.boolean().optional(),
+  topic_id: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
   seo_title: z.string().nullable().optional(),
   seo_description: z.string().nullable().optional(),

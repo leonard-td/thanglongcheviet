@@ -14,6 +14,8 @@ const Event = model.define("event", {
   capacity: model.number().nullable(),
   // Master switch for accepting new registrations, independent of visibility
   registration_open: model.boolean().default(true),
+  // Plain-column reference to campaign_topic (resolved manually in API routes)
+  topic_id: model.text().nullable(),
   is_active: model.boolean().default(true),
   // SEO overrides for the storefront <title>/<meta description> — fall back to title/excerpt when empty
   seo_title: model.text().nullable(),
