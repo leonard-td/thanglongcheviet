@@ -1,3 +1,4 @@
+# Script-bk
 #!/usr/bin/env bash
 
 # Cách dùng
@@ -21,7 +22,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MODE="${1:-help}"
 ARCHIVE_PATH="${2:-}"
 
-LOCAL_DOCKER_COMPOSE_FILE="${LOCAL_DOCKER_COMPOSE_FILE:-infra/docker-compose.yml}"
+LOCAL_DOCKER_COMPOSE_FILE="${LOCAL_DOCKER_COMPOSE_FILE:-infra/docker-compose.prod.yml}"
 LOCAL_ENV_FILE="${LOCAL_ENV_FILE:-.env}"
 LOCAL_DB_NAME="${LOCAL_DB_NAME:-medusa}"
 LOCAL_DB_USER="${LOCAL_DB_USER:-postgres}"
@@ -29,6 +30,21 @@ LOCAL_DB_PASSWORD="${LOCAL_DB_PASSWORD:-postgres}"
 
 EXPORT_ARCHIVE_PATH="${EXPORT_ARCHIVE_PATH:-}"
 SYNC_PATHS="${SYNC_PATHS:-apps/backend/static apps/backend/.backups}"
+ALLOW_ACCOUNT_DATA="${ALLOW_ACCOUNT_DATA:-0}"
+ACCOUNT_EXCLUDED_TABLES=(
+  public.auth_users
+  public.auth_user
+  public.auth_provider
+  public.customer
+  public.customer_address
+  public.customer_group
+  public.customer_group_customer
+  public.user
+  public.users
+  public.user_password
+  public.user_token
+  public.user_auth
+)
 
 load_env_file() {
   local env_file="$1"
@@ -82,11 +98,13 @@ Examples:
   ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
   ./scripts/sync-prod-to-local.sh import /tmp/tlcv-prod-sync.tar.gz
   SYNC_PATHS='apps/backend/static apps/backend/.backups apps/backend/another-folder' ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
+  ALLOW_ACCOUNT_DATA=1 ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
 
 Notes:
   - Step 1 should be run on the production server where the prod stack is running.
   - Step 2 should be run on the local machine where the repo is checked out.
-  - The archive contains: database dump and any configured folders such as static, .backups, or custom directories.
+  - Account-related data is excluded by default for security.
+  - The archive contains: a sanitized database dump and any configured folders such as static, .backups, or custom directories.
 EOF
 }
 
@@ -112,7 +130,13 @@ export_data() {
   trap 'rm -rf "$tmp_dir"' RETURN
 
   echo "==> Step 1/2: exporting production database"
-  compose_prod exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner --no-privileges' > "$tmp_dir/db.sql"
+  local dump_cmd=(exec -T postgres pg_dump -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-medusa}" --no-owner --no-privileges)
+  if [[ "$ALLOW_ACCOUNT_DATA" != "1" ]]; then
+    for table in "${ACCOUNT_EXCLUDED_TABLES[@]}"; do
+      dump_cmd+=(--exclude-table-data="$table")
+    done
+  fi
+  compose_prod "${dump_cmd[@]}" > "$tmp_dir/db.sql"
 
   echo "==> Step 1/2: collecting configured folders"
   mkdir -p "$tmp_dir/files"
@@ -138,12 +162,20 @@ export_data() {
     cp -a "$abs_path" "$dest_path"
   done
 
+  local json_sync_paths=""
+  for rel_path in "${sync_paths[@]}"; do
+    if [[ -n "$json_sync_paths" ]]; then
+      json_sync_paths+=', '
+    fi
+    json_sync_paths+="\"$rel_path\""
+  done
+
   cat > "$tmp_dir/manifest.json" <<EOF
 {
   "exported_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "db_name": "${POSTGRES_DB:-medusa}",
-  "sync_paths": $(printf '%s
-' "${sync_paths[@]}" | jq -R . | jq -s .)
+  "sync_paths": [$json_sync_paths],
+  "account_data_excluded": "$( [[ "$ALLOW_ACCOUNT_DATA" == "1" ]] && echo false || echo true )"
 }
 EOF
 
