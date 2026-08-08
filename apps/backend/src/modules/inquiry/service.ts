@@ -1,5 +1,12 @@
-import { MedusaService } from "@medusajs/framework/utils"
+import {
+  MedusaError,
+  MedusaService,
+} from "@medusajs/framework/utils"
 import Inquiry from "./models/inquiry"
+import {
+  countActiveBookings,
+  withBookingSlotLock,
+} from "../utils/booking-slot-lock"
 
 export type BookingSlot = {
   time: string
@@ -19,6 +26,17 @@ const DAILY_SLOTS = [
 
 /** How many bookings a single slot can take before it closes. */
 const SLOT_CAPACITY = Number(process.env.BOOKING_SLOT_CAPACITY || 3)
+
+export type CreateBookingInput = {
+  name: string
+  phone: string
+  email?: string | null
+  service?: string | null
+  message?: string | null
+  source?: string | null
+  preferred_date: string
+  preferred_time: string
+}
 
 class InquiryModuleService extends MedusaService({
   Inquiry,
@@ -47,6 +65,44 @@ class InquiryModuleService extends MedusaService({
       time,
       available: (counts.get(time) ?? 0) < SLOT_CAPACITY,
     }))
+  }
+
+  /**
+   * Creates a booking after an atomic capacity check for the chosen slot.
+   * Session-level advisory locks serialize concurrent requests for the same
+   * date/time before the count-and-insert runs.
+   */
+  async createBookingIfAvailable(data: CreateBookingInput) {
+    return await withBookingSlotLock(
+      data.preferred_date,
+      data.preferred_time,
+      async () => {
+        const bookedCount = await countActiveBookings(
+          data.preferred_date,
+          data.preferred_time
+        )
+
+        if (bookedCount >= SLOT_CAPACITY) {
+          throw new MedusaError(
+            MedusaError.Types.NOT_ALLOWED,
+            "The selected time slot is no longer available"
+          )
+        }
+
+        return await this.createInquiries({
+          type: "booking",
+          name: data.name,
+          phone: data.phone,
+          email: data.email ?? null,
+          service: data.service ?? null,
+          message: data.message ?? null,
+          source: data.source ?? null,
+          preferred_date: data.preferred_date,
+          preferred_time: data.preferred_time,
+          status: "new",
+        })
+      }
+    )
   }
 }
 

@@ -19,9 +19,8 @@ type RegisterBody = {
 /**
  * POST /store/event-registrations
  *
- * Public endpoint for visitors to reserve seats at an event. Rejects when
- * the event is missing/inactive, registration is closed, or the remaining
- * capacity can't fit the requested quantity.
+ * Public endpoint for visitors to reserve seats at an event. Capacity is
+ * checked atomically so concurrent registrations cannot exceed limits.
  */
 export async function POST(req: MedusaRequest<RegisterBody>, res: MedusaResponse) {
   const { event_id, name, phone, email, quantity, message, source } =
@@ -44,41 +43,16 @@ export async function POST(req: MedusaRequest<RegisterBody>, res: MedusaResponse
 
   const eventModuleService: EventModuleService = req.scope.resolve(EVENT_MODULE)
 
-  const [event] = await eventModuleService.listActiveEvents(
-    { id: event_id },
-    { take: 1 }
-  )
-  if (!event) {
-    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Event not found")
-  }
-
-  if (!event.registration_open) {
-    throw new MedusaError(
-      MedusaError.Types.NOT_ALLOWED,
-      "Registration for this event is closed"
-    )
-  }
-
-  if (event.capacity !== null) {
-    const seatsByEvent = await eventModuleService.countRegisteredSeats([event.id])
-    const registered = seatsByEvent.get(event.id) ?? 0
-    if (registered + seats > event.capacity) {
-      throw new MedusaError(
-        MedusaError.Types.NOT_ALLOWED,
-        "Not enough seats left for this event"
-      )
-    }
-  }
-
-  const registration = await eventModuleService.createEventRegistrations({
-    event_id: event.id,
-    name: name.trim().slice(0, 200),
-    phone: phone.trim().slice(0, 30),
-    email: email?.trim().slice(0, 200) || null,
-    quantity: seats,
-    message: message?.trim().slice(0, 4000) || null,
-    source: source?.trim().slice(0, 100) || "website",
-  })
+  const { registration, event } =
+    await eventModuleService.registerForEventIfAvailable({
+      event_id: event_id.trim(),
+      name: name.trim().slice(0, 200),
+      phone: phone.trim().slice(0, 30),
+      email: email?.trim().slice(0, 200) || null,
+      quantity: seats,
+      message: message?.trim().slice(0, 4000) || null,
+      source: source?.trim().slice(0, 100) || "website",
+    })
 
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
   const careService: CareChannelModuleService =

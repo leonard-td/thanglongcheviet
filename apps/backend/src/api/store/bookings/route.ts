@@ -22,7 +22,8 @@ const TIME_RE = /^\d{2}:\d{2}$/
 /**
  * POST /store/bookings
  *
- * Creates a visit/tasting booking. Rejects slots that are already full.
+ * Creates a visit/tasting booking. Capacity is checked atomically so
+ * concurrent requests cannot oversubscribe the same slot.
  */
 export async function POST(
   req: MedusaRequest<BookingBody>,
@@ -60,15 +61,8 @@ export async function POST(
       "preferred_time is not a valid booking slot"
     )
   }
-  if (!slot.available) {
-    throw new MedusaError(
-      MedusaError.Types.NOT_ALLOWED,
-      "The selected time slot is no longer available"
-    )
-  }
 
-  const inquiry = await inquiryService.createInquiries({
-    type: "booking",
+  const inquiry = await inquiryService.createBookingIfAvailable({
     name: name.trim().slice(0, 200),
     phone: phone.trim().slice(0, 30),
     email: email?.trim().slice(0, 200) || null,
@@ -77,7 +71,6 @@ export async function POST(
     source: "booking-form",
     preferred_date,
     preferred_time,
-    status: "new",
   })
 
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
