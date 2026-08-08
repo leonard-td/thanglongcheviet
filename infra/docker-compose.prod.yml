@@ -145,8 +145,7 @@ services:
     # The seed scripts were compiled into .medusa/server by the local build.
     command: >
       sh -c "npx medusa db:migrate &&
-             (npx medusa exec ./src/scripts/seed-base.js || true) &&
-             (npx medusa exec ./src/scripts/seed-cards.js || true) &&
+             (npx medusa exec ./src/migration-scripts/initial-data-seed.js || true) &&
              (npx medusa exec ./src/scripts/seed-care-channel-telegram.js || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npm run start"

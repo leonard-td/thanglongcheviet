@@ -8,7 +8,7 @@ cd "$(dirname "$0")/.."
 
 npx medusa db:migrate
 npx medusa user -e "${ADMIN_EMAIL:-admin@medusa.local}" -p "${ADMIN_PASSWORD:-supersecret123}" 2>/dev/null || true
-npx medusa exec /workspace/apps/backend/src/migration-scripts/initial-data-seed.ts 2>/dev/null || true
+npx medusa exec /workspace/apps/backend/src/migration-scripts/initial-data-seed.js 2>/dev/null || true
 
 use_vite_admin=false
 if [ "${ENABLE_ADMIN_HMR}" = "true" ] && [ "${DISABLE_ADMIN_HMR}" != "true" ]; then

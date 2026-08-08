@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+cd "$(dirname "$0")"
 set -a
 . .env.dev
 set +a
@@ -13,9 +14,9 @@ set +a
 # stop all running containers and remove any orphaned ones, then clear volumes/networks in prod environment
 docker compose -f infra/docker-compose.prod.yml down --remove-orphans || true
 
-COMPOSE="docker compose -f infra/docker-compose.yml --env-file .env.dev"
+COMPOSE=(docker compose -f infra/docker-compose.yml --env-file .env.dev)
 
-$COMPOSE down
+"${COMPOSE[@]}" down
 
 if grep -q '^REBUILD_ALL=true' .env.dev; then
   echo "==> REBUILD_ALL: wiping ALL volumes (Postgres data included!)..."
@@ -24,21 +25,21 @@ if grep -q '^REBUILD_ALL=true' .env.dev; then
 fi
 
 # #docker remove all images
-# $COMPOSE down --rmi all
+# "${COMPOSE[@]}" down --rmi all
 # # remove all volumes
-# $COMPOSE down -v
+# "${COMPOSE[@]}" down -v
 
 # Source code inside the containers already hot-reloads (dev servers with
 # polling — see docker-compose.yml). docker-compose.yml itself and
 # medusa-config.ts don't: only `docker compose up -d` re-reads the former,
 # and the backend process only reads the latter once at startup. This
 # background watcher applies those two automatically; killed via the trap
-# below whenever `$COMPOSE up` exits (Ctrl+C included).
+# below whenever `"${COMPOSE[@]}" up` exits (Ctrl+C included).
 ./scripts/watch-config.sh &
 WATCH_PID=$!
 trap 'kill "$WATCH_PID" 2>/dev/null' EXIT
 
-$COMPOSE up -d
+"${COMPOSE[@]}" up -d
 
 # Keeps apps/web talking to the Store API: the publishable key + region id in
 # .env.dev only stay valid for the Postgres volume they were provisioned
@@ -53,9 +54,9 @@ node scripts/setup-web-integration.mjs || echo "WARN: setup-web-integration.mjs 
 
 # Re-attach in the foreground: containers are already up, so this only starts
 # streaming their logs (no recreate) and restores Ctrl+C -> stop-everything,
-# matching the plain `$COMPOSE up` behavior this replaces.
-$COMPOSE up
-# $COMPOSE --profile storefront up -d
+# matching the plain `"${COMPOSE[@]}" up` behavior this replaces.
+"${COMPOSE[@]}" up
+# "${COMPOSE[@]}" --profile storefront up -d
 
 # export COMPOSE_PROFILES=storefront
-# $COMPOSE up
+# "${COMPOSE[@]}" up
