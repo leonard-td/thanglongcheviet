@@ -62,16 +62,29 @@ services:
     image: node:20
     container_name: tlcv_deps_prod
     working_dir: /workspace
-    command: >
-      sh -c "cd /workspace/apps/backend/.medusa/server &&
-             (npm install --omit=dev --no-audit --no-fund ||
-              npm install --omit=dev --no-audit --no-fund --legacy-peer-deps) &&
-             cd /workspace/apps/web/.output/server &&
-             if [ -d node_modules/sharp ]; then
-               npm rebuild sharp --no-audit --no-fund || true;
-             fi"
+    environment:
+      # Bật log chi tiết để xem npm đang kẹt ở package nào
+      - NPM_CONFIG_LOGLEVEL=verbose
+      # Ép sharp không build từ source nếu thiếu libvips, giúp fail nhanh hoặc bỏ qua
+      - SHARP_IGNORE_GLOBAL_LIBVIPS=1 
+    command: |
+      sh -c '
+        echo "Bắt đầu cài đặt dependencies cho Backend..."
+        cd /workspace/apps/backend/.medusa/server
+        npm install --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund --legacy-peer-deps
+        
+        echo "Bắt đầu rebuild cho Web..."
+        cd /workspace/apps/web/.output/server
+        if [ -d node_modules/sharp ]; then
+          echo "Đang chạy rebuild sharp..."
+          npm rebuild sharp --no-audit --no-fund || true
+        fi
+        
+        echo "Hoàn thành!"
+      '
     volumes:
-      - ../:/workspace
+      # Thêm :cached hoặc :delegated để tăng tốc độ I/O cực lớn trên Mac/Windows
+      - ../:/workspace:cached 
       - backend_server_node_modules:/workspace/apps/backend/.medusa/server/node_modules
     restart: "no"
 
