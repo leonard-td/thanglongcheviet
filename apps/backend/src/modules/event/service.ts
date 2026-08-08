@@ -94,8 +94,8 @@ class EventModuleService extends MedusaService({
    * Uses a transaction-scoped advisory lock per event so concurrent
    * registrations cannot exceed capacity.
    */
-  @InjectManager()
   @InjectTransactionManager()
+  @InjectManager()
   async registerForEventIfAvailable(
     input: RegisterForEventInput,
     @MedusaContext() sharedContext: Context = {}

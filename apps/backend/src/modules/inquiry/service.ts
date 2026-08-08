@@ -1,13 +1,12 @@
 import {
-  InjectManager,
-  InjectTransactionManager,
-  MedusaContext,
   MedusaError,
   MedusaService,
 } from "@medusajs/framework/utils"
-import type { Context } from "@medusajs/framework/types"
 import Inquiry from "./models/inquiry"
-import { acquireAdvisoryXactLock } from "../utils/advisory-lock"
+import {
+  countActiveBookings,
+  withBookingSlotLock,
+} from "../utils/booking-slot-lock"
 
 export type BookingSlot = {
   time: string
@@ -70,52 +69,39 @@ class InquiryModuleService extends MedusaService({
 
   /**
    * Creates a booking after an atomic capacity check for the chosen slot.
-   * Uses a transaction-scoped advisory lock so concurrent requests cannot
-   * oversubscribe the same date/time.
+   * Session-level advisory locks serialize concurrent requests for the same
+   * date/time before the count-and-insert runs.
    */
-  @InjectManager()
-  @InjectTransactionManager()
-  async createBookingIfAvailable(
-    data: CreateBookingInput,
-    @MedusaContext() sharedContext: Context = {}
-  ) {
-    await acquireAdvisoryXactLock(
-      sharedContext,
-      `booking:${data.preferred_date}:${data.preferred_time}`
-    )
+  async createBookingIfAvailable(data: CreateBookingInput) {
+    return await withBookingSlotLock(
+      data.preferred_date,
+      data.preferred_time,
+      async () => {
+        const bookedCount = await countActiveBookings(
+          data.preferred_date,
+          data.preferred_time
+        )
 
-    const bookings = await this.listInquiries(
-      {
-        type: "booking",
-        preferred_date: data.preferred_date,
-        preferred_time: data.preferred_time,
-        status: ["new", "confirmed"],
-      },
-      { select: ["id"], take: SLOT_CAPACITY + 1 },
-      sharedContext
-    )
+        if (bookedCount >= SLOT_CAPACITY) {
+          throw new MedusaError(
+            MedusaError.Types.NOT_ALLOWED,
+            "The selected time slot is no longer available"
+          )
+        }
 
-    if (bookings.length >= SLOT_CAPACITY) {
-      throw new MedusaError(
-        MedusaError.Types.NOT_ALLOWED,
-        "The selected time slot is no longer available"
-      )
-    }
-
-    return await this.createInquiries(
-      {
-        type: "booking",
-        name: data.name,
-        phone: data.phone,
-        email: data.email ?? null,
-        service: data.service ?? null,
-        message: data.message ?? null,
-        source: data.source ?? null,
-        preferred_date: data.preferred_date,
-        preferred_time: data.preferred_time,
-        status: "new",
-      },
-      sharedContext
+        return await this.createInquiries({
+          type: "booking",
+          name: data.name,
+          phone: data.phone,
+          email: data.email ?? null,
+          service: data.service ?? null,
+          message: data.message ?? null,
+          source: data.source ?? null,
+          preferred_date: data.preferred_date,
+          preferred_time: data.preferred_time,
+          status: "new",
+        })
+      }
     )
   }
 }
