@@ -22,7 +22,8 @@ const TIME_RE = /^\d{2}:\d{2}$/
 /**
  * POST /store/bookings
  *
- * Creates a visit/tasting booking. Rejects slots that are already full.
+ * Creates a visit/tasting booking. Capacity is checked atomically so
+ * concurrent requests cannot oversubscribe the same slot.
  */
 export async function POST(
   req: MedusaRequest<BookingBody>,
@@ -43,28 +44,25 @@ export async function POST(
       "preferred_date must be YYYY-MM-DD"
     )
   }
-  if (preferred_time && !TIME_RE.test(preferred_time)) {
+  if (!preferred_time || !TIME_RE.test(preferred_time)) {
     throw new MedusaError(
       MedusaError.Types.INVALID_DATA,
-      "preferred_time must be HH:mm"
+      "preferred_time is required and must be HH:mm"
     )
   }
 
   const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
 
-  if (preferred_time) {
-    const slots = await inquiryService.getAvailability(preferred_date)
-    const slot = slots.find((s) => s.time === preferred_time)
-    if (!slot || !slot.available) {
-      throw new MedusaError(
-        MedusaError.Types.NOT_ALLOWED,
-        "The selected time slot is no longer available"
-      )
-    }
+  const slots = await inquiryService.getAvailability(preferred_date)
+  const slot = slots.find((s) => s.time === preferred_time)
+  if (!slot) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "preferred_time is not a valid booking slot"
+    )
   }
 
-  const inquiry = await inquiryService.createInquiries({
-    type: "booking",
+  const inquiry = await inquiryService.createBookingIfAvailable({
     name: name.trim().slice(0, 200),
     phone: phone.trim().slice(0, 30),
     email: email?.trim().slice(0, 200) || null,
@@ -72,8 +70,7 @@ export async function POST(
     message: note?.trim().slice(0, 4000) || null,
     source: "booking-form",
     preferred_date,
-    preferred_time: preferred_time || null,
-    status: "new",
+    preferred_time,
   })
 
   const logger = req.scope.resolve(ContainerRegistrationKeys.LOGGER)
