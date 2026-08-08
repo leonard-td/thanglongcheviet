@@ -147,8 +147,6 @@ services:
     # location + shipping, publishable key) that every /store request needs.
     command: >
       sh -c "npx medusa db:migrate &&
-             (npx medusa exec ./src/scripts/seed-base.ts || true) &&
-             (npx medusa exec ./src/scripts/seed-cards.ts || true) &&
              (npx medusa exec ./src/scripts/seed-care-channel-telegram.ts || true) &&
              (npx medusa user -e ${ADMIN_EMAIL:-admin@medusa.local} -p ${ADMIN_PASSWORD:-supersecret123} || true) &&
              npx medusa develop"
