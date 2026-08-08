@@ -390,6 +390,11 @@ export default defineMiddlewares({
       middlewares: [guard("media", "create")],
     },
     {
+      matcher: "/admin/media/scan",
+      method: ["POST"],
+      middlewares: [guard("media", "create")],
+    },
+    {
       matcher: "/admin/media/*",
       method: "GET",
       middlewares: [guard("media", "read")],

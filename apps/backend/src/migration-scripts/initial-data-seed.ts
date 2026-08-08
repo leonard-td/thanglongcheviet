@@ -21,7 +21,7 @@ import {
   createTaxRegionsWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
-} from "@medusajs/medusa/core-flows";
+} from "@medusajs/core-flows";
 import initialDataSeedJson from "./data/initial-data.json";
 import { CARD_MODULE } from "../modules/card";
 import { CAMPAIGN_MODULE } from "../modules/campaign";

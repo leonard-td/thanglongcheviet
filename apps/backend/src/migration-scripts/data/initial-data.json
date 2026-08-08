@@ -77,8 +77,8 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/che_tom.jpg" },
-          { "url": "/static/che_tom_ban_le.jpg" }
+          { "url": "/static/private-1785419114459-che_tom.jpg" },
+          { "url": "/static/private-1785419114464-che_tom_ban_le.jpg" }
         ],
         "options": ["Loại"],
         "variants": [
@@ -108,9 +108,9 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/che_uop_gao_sen.jpg" },
-          { "url": "/static/che_uop_gao_sen_ban_le.jpg" },
-          { "url": "/static/che_uop_gao_sen_ban_le (2).jpg" }
+          { "url": "/static/private-1785419115048-che_uop_gao_sen.jpg" },
+          { "url": "/static/private-1785419115050-che_uop_gao_sen_ban_le.jpg" },
+          { "url": "/static/private-1785419115051-che_uop_gao_sen_ban_le (2).jpg" }
         ],
         "options": ["Loại"],
         "variants": [
@@ -140,8 +140,8 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/che_uop_hoa_buoi.jpg" },
-          { "url": "/static/che_uop_hoa_buoi_ban_le.jpg" }
+          { "url": "/static/private-1785640918925-che_uop_hoa_buoi.jpg" },
+          { "url": "/static/private-1785640918932-che_uop_hoa_buoi_ban_le.jpg" }
         ],
         "options": ["Loại"],
         "variants": [
@@ -171,9 +171,9 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/che_uop_hoa_moc_huong.jpg" },
-          { "url": "/static/che_uop_hoa_moc_huong (2).jpg" },
-          { "url": "/static/che_uop_hoa_moc_huong_ban_le.jpg" }
+          { "url": "/static/private-1785419116274-che_uop_hoa_moc_huong.jpg" },
+          { "url": "/static/private-1785419116276-che_uop_hoa_moc_huong (2).jpg" },
+          { "url": "/static/private-1785419116283-che_uop_hoa_moc_huong_ban_le.jpg" }
         ],
         "options": ["Loại"],
         "variants": [
@@ -203,7 +203,7 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/che_uop_nhai.jpg" }
+          { "url": "/static/private-1785419116815-che_uop_nhai.jpg" }
         ],
         "options": ["Loại"],
         "variants": [
