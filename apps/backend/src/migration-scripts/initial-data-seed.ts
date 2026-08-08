@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { MedusaContainer } from "@medusajs/framework";
 import {
   ContainerRegistrationKeys,
@@ -7,7 +9,6 @@ import {
 } from "@medusajs/framework/utils";
 import {
   createApiKeysWorkflow,
-  createCollectionsWorkflow,
   createInventoryLevelsWorkflow,
   createProductCategoriesWorkflow,
   createProductOptionsWorkflow,
@@ -15,37 +16,174 @@ import {
   createRegionsWorkflow,
   createSalesChannelsWorkflow,
   createShippingOptionsWorkflow,
-  createShippingProfilesWorkflow,
   createStockLocationsWorkflow,
   createStoresWorkflow,
   createTaxRegionsWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
 } from "@medusajs/medusa/core-flows";
+import initialDataSeedJson from "./data/initial-data.json";
+import { CARD_MODULE } from "../modules/card";
+import { CAMPAIGN_MODULE } from "../modules/campaign";
+import { NAVIGATION_MODULE } from "../modules/navigation";
+import type CardModuleService from "../modules/card/service";
+import type CampaignModuleService from "../modules/campaign/service";
+import type NavigationModuleService from "../modules/navigation/service";
 
-export default async function initial_data_seed({
+type LoggerLike = {
+  info: (message: string) => void;
+};
+
+type SeedData = {
+  store: {
+    sales_channel: { name: string; description: string };
+    publishable_api_key: { title: string; type: string; created_by: string };
+    store: {
+      name: string;
+      supported_currencies: Array<{ currency_code: string; is_default: boolean }>;
+    };
+  };
+  region: {
+    name: string;
+    currency_code: string;
+    countries: string[];
+    payment_providers: string[];
+  };
+  stock_location: {
+    name: string;
+    address: { city: string; country_code: string; address_1: string };
+  };
+  fulfillment: {
+    name: string;
+    type: string;
+    service_zones: Array<{
+      name: string;
+      geo_zones: Array<{ country_code: string; type: string }>;
+    }>;
+    shipping_options: Array<{
+      name: string;
+      price_type: string;
+      provider_id: string;
+      type: { label: string; description: string; code: string };
+      prices: Array<{ currency_code?: string; region_id?: string; amount: number }>;
+      rules: Array<{ attribute: string; value: string; operator: string }>;
+    }>;
+  };
+  products: {
+    categories: Array<{ name: string; is_active: boolean }>;
+    options: Array<{ title: string; values: string[] }>;
+    items: Array<{
+      title: string;
+      category: string;
+      description: string;
+      handle: string;
+      weight: number;
+      status: string;
+      images: Array<{ url: string }>;
+      options: string[];
+      variants: Array<{
+        title: string;
+        sku: string;
+        options: Record<string, string>;
+        prices: Array<{ amount: number; currency_code: string }>;
+      }>;
+    }>;
+  };
+  content: {
+    cards: Array<{
+      title?: Record<string, string> | null;
+      path?: string | null;
+      image?: string | null;
+      type: string;
+      rank: number;
+      is_active: boolean;
+      locked: boolean;
+    }>;
+    campaign_topics: Array<{
+      name: string;
+      slug: string;
+      description?: string | null;
+      rank: number;
+      content_type?: string;
+    }>;
+    campaign_posts: Array<{
+      title: string;
+      slug: string;
+      description?: string | null;
+      is_active: boolean;
+      publish_at?: Date | null;
+      unpublish_at?: Date | null;
+      content: unknown;
+      topic_slug?: string;
+    }>;
+    navigation: {
+      menu: { id: string; name: string; slug: string };
+      tree: Array<{
+        label: string;
+        url: string;
+        children?: Array<{ label: string; url: string }>;
+      }>;
+    };
+  };
+};
+
+const defaultSeedData = initialDataSeedJson as SeedData;
+
+function assertSeedData(data: unknown): asserts data is SeedData {
+  if (!data || typeof data !== "object") {
+    throw new Error("Seed data must be a valid JSON object.");
+  }
+
+  const seedData = data as Partial<SeedData>;
+  if (!seedData.store || !seedData.region || !seedData.products || !seedData.content) {
+    throw new Error("Seed data is missing one of the required sections.");
+  }
+}
+
+export async function getDefaultSeedData(): Promise<SeedData> {
+  return structuredClone(defaultSeedData);
+}
+
+export async function loadSeedData(
+  source?: SeedData | string | null
+): Promise<SeedData> {
+  if (!source) {
+    return getDefaultSeedData();
+  }
+
+  if (typeof source === "string") {
+    const resolvedPath = path.isAbsolute(source)
+      ? source
+      : path.resolve(process.cwd(), source);
+    const raw = fs.readFileSync(resolvedPath, "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    assertSeedData(parsed);
+    return parsed;
+  }
+
+  assertSeedData(source);
+  return source;
+}
+
+async function seedStoreData({
   container,
+  logger,
+  seedData,
 }: {
   container: MedusaContainer;
+  logger: LoggerLike;
+  seedData: SeedData;
 }) {
-  const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
-  const link = container.resolve(ContainerRegistrationKeys.LINK);
-  const query = container.resolve(ContainerRegistrationKeys.QUERY);
-  const fulfillmentModuleService = container.resolve(
-    ModuleRegistrationName.FULFILLMENT
-  );
-
-  const countries = ["gb", "de", "dk", "se", "fr", "es", "it"];
-
   logger.info("Seeding store data...");
+
   const {
     result: [defaultSalesChannel],
   } = await createSalesChannelsWorkflow(container).run({
     input: {
       salesChannelsData: [
         {
-          name: "Default Sales Channel",
-          description: "Created by Medusa",
+          name: seedData.store.sales_channel.name,
+          description: seedData.store.sales_channel.description,
         },
       ],
     },
@@ -57,9 +195,9 @@ export default async function initial_data_seed({
     input: {
       api_keys: [
         {
-          title: "Default Publishable API Key",
-          type: "publishable",
-          created_by: "",
+          title: seedData.store.publishable_api_key.title,
+          type: seedData.store.publishable_api_key.type as "publishable",
+          created_by: seedData.store.publishable_api_key.created_by,
         },
       ],
     },
@@ -72,23 +210,12 @@ export default async function initial_data_seed({
     },
   });
 
-  const {
-    result: [store],
-  } = await createStoresWorkflow(container).run({
+  await createStoresWorkflow(container).run({
     input: {
       stores: [
         {
-          name: "Default Store",
-          supported_currencies: [
-            {
-              currency_code: "eur",
-              is_default: true,
-            },
-            {
-              currency_code: "usd",
-              is_default: false,
-            },
-          ],
+          name: seedData.store.store.name,
+          supported_currencies: seedData.store.store.supported_currencies,
           default_sales_channel_id: defaultSalesChannel.id,
         },
       ],
@@ -100,25 +227,23 @@ export default async function initial_data_seed({
     input: {
       regions: [
         {
-          name: "Europe",
-          currency_code: "eur",
-          countries,
-          payment_providers: ["pp_system_default"],
+          name: seedData.region.name,
+          currency_code: seedData.region.currency_code,
+          countries: seedData.region.countries,
+          payment_providers: seedData.region.payment_providers,
         },
       ],
     },
   });
   const region = regionResult[0];
-  logger.info("Finished seeding regions.");
 
   logger.info("Seeding tax regions...");
   await createTaxRegionsWorkflow(container).run({
-    input: countries.map((country_code) => ({
+    input: seedData.region.countries.map((country_code) => ({
       country_code,
       provider_id: "tp_system",
     })),
   });
-  logger.info("Finished seeding tax regions.");
 
   logger.info("Seeding stock location data...");
   const { result: stockLocationResult } = await createStockLocationsWorkflow(
@@ -127,18 +252,15 @@ export default async function initial_data_seed({
     input: {
       locations: [
         {
-          name: "European Warehouse",
-          address: {
-            city: "Copenhagen",
-            country_code: "DK",
-            address_1: "",
-          },
+          name: seedData.stock_location.name,
+          address: seedData.stock_location.address,
         },
       ],
     },
   });
   const stockLocation = stockLocationResult[0];
 
+  const link = container.resolve(ContainerRegistrationKeys.LINK);
   await link.create({
     [Modules.STOCK_LOCATION]: {
       stock_location_id: stockLocation.id,
@@ -149,51 +271,16 @@ export default async function initial_data_seed({
   });
 
   logger.info("Seeding fulfillment data...");
-  // This is created by a migration script in core.
-  const { data: shippingProfileResult } = await query.graph({
-    entity: "shipping_profile",
-    fields: ["id"],
-  });
-  const shippingProfile = shippingProfileResult[0];
+  const fulfillmentModuleService = container.resolve(
+    ModuleRegistrationName.FULFILLMENT
+  ) as {
+    createFulfillmentSets: (input: any) => Promise<{ id: string; service_zones: Array<{ id: string }> }>;
+  };
 
   const fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-    name: "European Warehouse delivery",
-    type: "shipping",
-    service_zones: [
-      {
-        name: "Europe",
-        geo_zones: [
-          {
-            country_code: "gb",
-            type: "country",
-          },
-          {
-            country_code: "de",
-            type: "country",
-          },
-          {
-            country_code: "dk",
-            type: "country",
-          },
-          {
-            country_code: "se",
-            type: "country",
-          },
-          {
-            country_code: "fr",
-            type: "country",
-          },
-          {
-            country_code: "es",
-            type: "country",
-          },
-          {
-            country_code: "it",
-            type: "country",
-          },
-        ],
-      },
-    ],
+    name: seedData.fulfillment.name,
+    type: seedData.fulfillment.type,
+    service_zones: seedData.fulfillment.service_zones,
   });
 
   await link.create({
@@ -205,87 +292,35 @@ export default async function initial_data_seed({
     },
   });
 
-  await createShippingOptionsWorkflow(container).run({
-    input: [
-      {
-        name: "Standard Shipping",
-        price_type: "flat",
-        provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
-        shipping_profile_id: shippingProfile.id,
-        type: {
-          label: "Standard",
-          description: "Ship in 2-3 days.",
-          code: "standard",
-        },
-        prices: [
-          {
-            currency_code: "usd",
-            amount: 10,
-          },
-          {
-            currency_code: "eur",
-            amount: 10,
-          },
-          {
-            region_id: region.id,
-            amount: 10,
-          },
-        ],
-        rules: [
-          {
-            attribute: "enabled_in_store",
-            value: "true",
-            operator: "eq",
-          },
-          {
-            attribute: "is_return",
-            value: "false",
-            operator: "eq",
-          },
-        ],
-      },
-      {
-        name: "Express Shipping",
-        price_type: "flat",
-        provider_id: "manual_manual",
-        service_zone_id: fulfillmentSet.service_zones[0].id,
-        shipping_profile_id: shippingProfile.id,
-        type: {
-          label: "Express",
-          description: "Ship in 24 hours.",
-          code: "express",
-        },
-        prices: [
-          {
-            currency_code: "usd",
-            amount: 10,
-          },
-          {
-            currency_code: "eur",
-            amount: 10,
-          },
-          {
-            region_id: region.id,
-            amount: 10,
-          },
-        ],
-        rules: [
-          {
-            attribute: "enabled_in_store",
-            value: "true",
-            operator: "eq",
-          },
-          {
-            attribute: "is_return",
-            value: "false",
-            operator: "eq",
-          },
-        ],
-      },
-    ],
+  const shippingOptions = seedData.fulfillment.shipping_options.map((option) => ({
+    ...option,
+    service_zone_id: fulfillmentSet.service_zones[0].id,
+    shipping_profile_id: undefined,
+    prices: option.prices.map((price) => ({
+      ...price,
+      ...(price.region_id === "__region__"
+        ? { region_id: region.id }
+        : {}),
+    })),
+    rules: option.rules.map((rule) => ({
+      ...rule,
+      operator: rule.operator as "eq" | "in",
+    })),
+  }));
+
+  const query = container.resolve(ContainerRegistrationKeys.QUERY);
+  const { data: shippingProfileResult } = await query.graph({
+    entity: "shipping_profile",
+    fields: ["id"],
   });
-  logger.info("Finished seeding fulfillment data.");
+  const shippingProfile = shippingProfileResult[0];
+
+  await createShippingOptionsWorkflow(container).run({
+    input: shippingOptions.map((option) => ({
+      ...option,
+      shipping_profile_id: shippingProfile.id,
+    })) as any,
+  });
 
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
@@ -293,32 +328,30 @@ export default async function initial_data_seed({
       add: [defaultSalesChannel.id],
     },
   });
-  logger.info("Finished seeding stock location data.");
 
+  return { defaultSalesChannel, region, stockLocation, shippingProfile };
+}
+
+async function seedProductData({
+  container,
+  logger,
+  seedData,
+  defaultSalesChannel,
+  shippingProfile,
+}: {
+  container: MedusaContainer;
+  logger: LoggerLike;
+  seedData: SeedData;
+  defaultSalesChannel: { id: string };
+  shippingProfile: { id: string };
+}) {
   logger.info("Seeding product data...");
 
   const { result: categoryResult } = await createProductCategoriesWorkflow(
     container
   ).run({
     input: {
-      product_categories: [
-        {
-          name: "Shirts",
-          is_active: true,
-        },
-        {
-          name: "Sweatshirts",
-          is_active: true,
-        },
-        {
-          name: "Pants",
-          is_active: true,
-        },
-        {
-          name: "Merch",
-          is_active: true,
-        },
-      ],
+      product_categories: seedData.products.categories,
     },
   });
 
@@ -326,514 +359,263 @@ export default async function initial_data_seed({
     container
   ).run({
     input: {
-      product_options: [
-        {
-          title: "Size",
-          values: ["S", "M", "L", "XL"],
-        },
-        {
-          title: "Color",
-          values: ["Black", "White"],
-        },
-      ],
+      product_options: seedData.products.options,
     },
   });
-  const sizeOption = productOptionsResult.find((o) => o.title === "Size")!;
-  const colorOption = productOptionsResult.find((o) => o.title === "Color")!;
+
+  const optionLookup = new Map<string, { id: string }>();
+  for (const option of productOptionsResult) {
+    optionLookup.set(option.title, option);
+  }
+
+  const categoryLookup = new Map<string, { id: string }>();
+  for (const category of categoryResult) {
+    categoryLookup.set(category.name, category);
+  }
+
+  const products = seedData.products.items.map((item) => ({
+    title: item.title,
+    category_ids: [categoryLookup.get(item.category)!.id],
+    description: item.description,
+    handle: item.handle,
+    weight: item.weight,
+    status: item.status === "published" ? ProductStatus.PUBLISHED : ProductStatus.DRAFT,
+    shipping_profile_id: shippingProfile.id,
+    images: item.images,
+    options: item.options.map((optionName) => ({ id: optionLookup.get(optionName)!.id })),
+    variants: item.variants.map((variant) => ({
+      title: variant.title,
+      sku: variant.sku,
+      options: variant.options,
+      prices: variant.prices.map((price) => ({
+        amount: price.amount,
+        currency_code: price.currency_code,
+      })),
+    })),
+    sales_channels: [{ id: defaultSalesChannel.id }],
+  }));
 
   await createProductsWorkflow(container).run({
     input: {
-      products: [
-        {
-          title: "Medusa T-Shirt",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Shirts")!.id,
-          ],
-          description:
-            "Reimagine the feeling of a classic T-shirt. With our cotton T-shirts, everyday essentials no longer have to be ordinary.",
-          handle: "t-shirt",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-black-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-black-back.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-white-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/tee-white-back.png",
-            },
-          ],
-          options: [
-            { id: sizeOption.id },
-            { id: colorOption.id },
-          ],
-          variants: [
-            {
-              title: "S / Black",
-              sku: "SHIRT-S-BLACK",
-              options: {
-                Size: "S",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "S / White",
-              sku: "SHIRT-S-WHITE",
-              options: {
-                Size: "S",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M / Black",
-              sku: "SHIRT-M-BLACK",
-              options: {
-                Size: "M",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M / White",
-              sku: "SHIRT-M-WHITE",
-              options: {
-                Size: "M",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L / Black",
-              sku: "SHIRT-L-BLACK",
-              options: {
-                Size: "L",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L / White",
-              sku: "SHIRT-L-WHITE",
-              options: {
-                Size: "L",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL / Black",
-              sku: "SHIRT-XL-BLACK",
-              options: {
-                Size: "XL",
-                Color: "Black",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL / White",
-              sku: "SHIRT-XL-WHITE",
-              options: {
-                Size: "XL",
-                Color: "White",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel.id,
-            },
-          ],
-        },
-        {
-          title: "Medusa Sweatshirt",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Sweatshirts")!.id,
-          ],
-          description:
-            "Reimagine the feeling of a classic sweatshirt. With our cotton sweatshirt, everyday essentials no longer have to be ordinary.",
-          handle: "sweatshirt",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatshirt-vintage-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatshirt-vintage-back.png",
-            },
-          ],
-          options: [{ id: sizeOption.id }],
-          variants: [
-            {
-              title: "S",
-              sku: "SWEATSHIRT-S",
-              options: {
-                Size: "S",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M",
-              sku: "SWEATSHIRT-M",
-              options: {
-                Size: "M",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L",
-              sku: "SWEATSHIRT-L",
-              options: {
-                Size: "L",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL",
-              sku: "SWEATSHIRT-XL",
-              options: {
-                Size: "XL",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel.id,
-            },
-          ],
-        },
-        {
-          title: "Medusa Sweatpants",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Pants")!.id,
-          ],
-          description:
-            "Reimagine the feeling of classic sweatpants. With our cotton sweatpants, everyday essentials no longer have to be ordinary.",
-          handle: "sweatpants",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/sweatpants-gray-back.png",
-            },
-          ],
-          options: [{ id: sizeOption.id }],
-          variants: [
-            {
-              title: "S",
-              sku: "SWEATPANTS-S",
-              options: {
-                Size: "S",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M",
-              sku: "SWEATPANTS-M",
-              options: {
-                Size: "M",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L",
-              sku: "SWEATPANTS-L",
-              options: {
-                Size: "L",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL",
-              sku: "SWEATPANTS-XL",
-              options: {
-                Size: "XL",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel.id,
-            },
-          ],
-        },
-        {
-          title: "Medusa Shorts",
-          category_ids: [
-            categoryResult.find((cat) => cat.name === "Merch")!.id,
-          ],
-          description:
-            "Reimagine the feeling of classic shorts. With our cotton shorts, everyday essentials no longer have to be ordinary.",
-          handle: "shorts",
-          weight: 400,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          images: [
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/shorts-vintage-front.png",
-            },
-            {
-              url: "https://medusa-public-images.s3.eu-west-1.amazonaws.com/shorts-vintage-back.png",
-            },
-          ],
-          options: [{ id: sizeOption.id }],
-          variants: [
-            {
-              title: "S",
-              sku: "SHORTS-S",
-              options: {
-                Size: "S",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "M",
-              sku: "SHORTS-M",
-              options: {
-                Size: "M",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "L",
-              sku: "SHORTS-L",
-              options: {
-                Size: "L",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-            {
-              title: "XL",
-              sku: "SHORTS-XL",
-              options: {
-                Size: "XL",
-              },
-              prices: [
-                {
-                  amount: 10,
-                  currency_code: "eur",
-                },
-                {
-                  amount: 15,
-                  currency_code: "usd",
-                },
-              ],
-            },
-          ],
-          sales_channels: [
-            {
-              id: defaultSalesChannel.id,
-            },
-          ],
-        },
-      ],
+      products,
     },
   });
-  logger.info("Finished seeding product data.");
+}
 
-  logger.info("Seeding inventory levels.");
+async function seedContentData({
+  container,
+  logger,
+  seedData,
+}: {
+  container: MedusaContainer;
+  logger: LoggerLike;
+  seedData: SeedData;
+}) {
+  logger.info("Seeding content data...");
 
-  const { data: inventoryItems } = await query.graph({
-    entity: "inventory_item",
-    fields: ["id"],
+  const cardModuleService = container.resolve(CARD_MODULE) as CardModuleService;
+  for (const card of seedData.content.cards) {
+    const cardType = card.type as "link" | "contact" | "map" | "promotions";
+    const existing = await cardModuleService.listCards({
+      ...(cardType === "link" && card.path ? { path: card.path } : { type: cardType }),
+    });
+    const match = existing[0];
+
+    if (match) {
+      await (cardModuleService as any).updateCards({
+        id: match.id,
+        type: cardType,
+        title: card.title ?? null,
+        image: card.image ?? null,
+        path: card.path ?? null,
+        rank: card.rank,
+        is_active: card.is_active,
+        locked: card.locked,
+      });
+    } else {
+      await (cardModuleService as any).createCards({
+        type: cardType,
+        title: card.title ?? null,
+        image: card.image ?? null,
+        path: card.path ?? null,
+        rank: card.rank,
+        is_active: card.is_active,
+        locked: card.locked,
+      });
+    }
+  }
+
+  const campaignModuleService = container.resolve(
+    CAMPAIGN_MODULE
+  ) as CampaignModuleService;
+  const topicMap = new Map<string, { id: string }>();
+
+  for (const topic of seedData.content.campaign_topics) {
+    const existingTopics = await campaignModuleService.listCampaignTopics({
+      slug: topic.slug,
+    });
+    const existingTopic = existingTopics[0];
+
+    if (existingTopic) {
+      const updated = await campaignModuleService.updateCampaignTopics({
+        id: existingTopic.id,
+        name: topic.name,
+        slug: topic.slug,
+        description: topic.description ?? null,
+        image: null,
+        content_type: (topic.content_type ?? "post") as "post" | "product" | "event",
+        is_active: true,
+        rank: topic.rank,
+      });
+      topicMap.set(topic.slug, updated);
+    } else {
+      const created = await campaignModuleService.createCampaignTopics({
+        name: topic.name,
+        slug: topic.slug,
+        description: topic.description ?? null,
+        image: null,
+        content_type: (topic.content_type ?? "post") as "post" | "product" | "event",
+        is_active: true,
+        rank: topic.rank,
+      });
+      topicMap.set(topic.slug, created);
+    }
+  }
+
+  for (const post of seedData.content.campaign_posts) {
+    const existingPosts = await campaignModuleService.listCampaignPosts({
+      slug: post.slug,
+    });
+    const existingPost = existingPosts[0];
+    const topicId = post.topic_slug
+      ? topicMap.get(post.topic_slug)?.id
+      : undefined;
+
+    if (existingPost) {
+      await (campaignModuleService as any).updateCampaignPosts({
+        id: existingPost.id,
+        title: post.title,
+        slug: post.slug,
+        content: post.content as Record<string, unknown>,
+        description: post.description ?? null,
+        thumbnail: null,
+        topic_id: topicId ?? null,
+        is_active: post.is_active,
+        publish_at: post.publish_at ?? null,
+        unpublish_at: post.unpublish_at ?? null,
+        source: null,
+      });
+    } else {
+      await (campaignModuleService as any).createCampaignPosts({
+        title: post.title,
+        slug: post.slug,
+        content: post.content as Record<string, unknown>,
+        description: post.description ?? null,
+        thumbnail: null,
+        topic_id: topicId ?? null,
+        is_active: post.is_active,
+        publish_at: post.publish_at ?? null,
+        unpublish_at: post.unpublish_at ?? null,
+        source: null,
+      });
+    }
+  }
+
+  const navigationModuleService = container.resolve(
+    NAVIGATION_MODULE
+  ) as NavigationModuleService;
+  const menuData = seedData.content.navigation.menu;
+  const [menus] = await navigationModuleService.listAndCountNavigationMenus(
+    { slug: menuData.slug },
+    { take: 1 }
+  );
+  let menu = menus[0];
+
+  if (!menu) {
+    menu = await navigationModuleService.createNavigationMenus({
+      id: menuData.id,
+      name: menuData.name,
+      slug: menuData.slug,
+      is_active: false,
+    });
+  } else {
+    await navigationModuleService.updateNavigationMenus({
+      id: menu.id,
+      name: menuData.name,
+      slug: menuData.slug,
+      is_active: menu.is_active,
+    });
+  }
+
+  await navigationModuleService.setActiveMenu(menu.id);
+
+  const existingItems = await navigationModuleService.listItemsByMenu(menu.id);
+  if (existingItems.length > 0) {
+    await navigationModuleService.deleteNavigationItems(
+      existingItems.map((item) => item.id)
+    );
+  }
+
+  for (const [index, node] of seedData.content.navigation.tree.entries()) {
+    const root = await navigationModuleService.createNavigationItems({
+      menu_id: menu.id,
+      label: node.label,
+      url: node.url,
+      order: index,
+      parent_id: null,
+      is_active: true,
+      openInNewTab: false,
+    });
+
+    for (const [childIndex, child] of (node.children ?? []).entries()) {
+      await navigationModuleService.createNavigationItems({
+        menu_id: menu.id,
+        label: child.label,
+        url: child.url,
+        order: childIndex,
+        parent_id: root.id,
+        is_active: true,
+        openInNewTab: false,
+      });
+    }
+  }
+}
+
+export default async function initial_data_seed({
+  container,
+  data,
+}: {
+  container: MedusaContainer;
+  data?: SeedData | string;
+}) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
+  const seedData = await loadSeedData(data ?? undefined);
+
+  const { defaultSalesChannel, region, shippingProfile } = await seedStoreData({
+    container,
+    logger,
+    seedData,
   });
 
-  await createInventoryLevelsWorkflow(container).run({
-    input: {
-      inventory_levels: inventoryItems.map((item) => ({
-        location_id: stockLocation.id,
-        stocked_quantity: 1000000,
-        inventory_item_id: item.id,
-      })),
-    },
+  await seedProductData({
+    container,
+    logger,
+    seedData,
+    defaultSalesChannel,
+    shippingProfile,
   });
 
-  logger.info("Finished seeding inventory levels data.");
+  await seedContentData({
+    container,
+    logger,
+    seedData,
+  });
+
+  logger.info("Finished seeding initial data from JSON.");
+  return {
+    seedData,
+    region,
+    defaultSalesChannel,
+    shippingProfile,
+  };
 }
