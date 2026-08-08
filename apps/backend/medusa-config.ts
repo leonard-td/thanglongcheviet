@@ -28,15 +28,33 @@ const disableAdminHmr =
 // The favicon file is served from /static (same static dir Medusa's local
 // file provider already serves uploads from), not from src/admin, since the
 // admin bundler treats src/admin as component source, not static assets.
+// Also injects a noindex meta tag: the dashboard is proxied on the same
+// public domain as the storefront (infra/nginx's `location /app/`) and
+// robots.txt alone is only a crawl hint, not a guarantee against indexing
+// a page linked from elsewhere — this makes the page self-declare
+// non-indexable regardless of how it was reached. Rounds out the rest of
+// the head (lang attribute, description, theme-color) to match the
+// storefront's baseline — charset/viewport already ship in the bundler's
+// base template, so those aren't duplicated here.
 const adminBrandingPlugin = {
   name: "tlcv-admin-branding",
   transformIndexHtml(html: string) {
     return html
+      .replace("<html>", '<html lang="vi">')
       .replace(
         '<link rel="icon" href="data:," data-placeholder-favicon />',
         '<link rel="icon" type="image/png" href="/static/branding-favicon.png" />'
       )
-      .replace("<head>", "<head>\n            <title>Thăng Long Chè Việt</title>")
+      .replace(
+        "<head>",
+        [
+          "<head>",
+          '            <meta name="robots" content="noindex, nofollow" />',
+          '            <meta name="description" content="Trang quản trị nội bộ Thăng Long Chè Việt — không dành cho công khai." />',
+          '            <meta name="theme-color" content="#c9a86c" />',
+          "            <title>Thăng Long Chè Việt</title>",
+        ].join("\n")
+      )
   },
 }
 

@@ -5,6 +5,7 @@ useScrollAnimation()
 
 useSeoMeta({
   title: () => t('nav.projectsPartners'),
+  description: () => `${t('nav.projectsPartners')} — ${t('blog.comingSoon')}`,
 })
 </script>
 

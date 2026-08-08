@@ -7,6 +7,12 @@ useScrollAnimation()
 useSeoMeta({
   title: () => t('products.title'),
   description: () => t('products.subtitle'),
+  ogTitle: () => t('products.title'),
+  ogDescription: () => t('products.subtitle'),
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => t('products.title'),
+  twitterDescription: () => t('products.subtitle'),
 })
 </script>
 

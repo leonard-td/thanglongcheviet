@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "Thăng Long Chè Việt",
-    "tagline": "The Art of Traditional Beauty"
+    "tagline": "The Essence of Vietnamese Tea"
   },
   "about": {
     "title": "About us",
@@ -42,7 +42,7 @@
   },
   "services": {
     "title": "Our Services",
-    "subtitle": "Experience premium beauty services with our team of leading experts",
+    "subtitle": "Experience premium tea services with our team of leading experts",
     "fullServices": "Full Services",
     "viewAll": "View All Services",
     "from": "From",
@@ -52,7 +52,7 @@
   },
   "team": {
     "title": "Meet Our Experts",
-    "subtitle": "Talented artisans with years of experience in the beauty industry",
+    "subtitle": "Talented artisans with years of experience in the tea industry",
     "viewAll": "View Full Team",
     "specialist": "Specialist"
   },

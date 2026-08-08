@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const route = useRoute()
-const { site } = useSettings()
 const {
   categories,
   collections,
@@ -36,10 +35,21 @@ watchEffect(() => {
   }
 })
 
+const seoTitle = computed(() => `${category.value?.label ?? ''} | ${t('products.title')}`)
+const seoDescription = computed(() => `${category.value?.label ?? ''} — ${t('products.subtitle')}`)
+const seoImage = computed(() => categoryProducts.value[0]?.image || undefined)
+
 useSeoMeta({
-  title: () => `${category.value?.label ?? ''} | ${t('products.title')} | ${site.value.name}`,
-  description: () => `${category.value?.label ?? ''} — ${t('products.subtitle')}`,
-  ogImage: () => categoryProducts.value[0]?.image || undefined,
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogImage: () => seoImage.value,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
 })
 </script>
 

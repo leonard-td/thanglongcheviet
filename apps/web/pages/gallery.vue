@@ -1,13 +1,12 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const { site } = useSettings()
 
 useScrollAnimation()
 
 const { imageUrls: galleryImages } = useGallery()
 
 useSeoMeta({
-  title: () => `${t('nav.gallery')} | ${site.value.name}`,
+  title: () => t('nav.gallery'),
   description: () => t('gallery.subtitle'),
 })
 </script>
