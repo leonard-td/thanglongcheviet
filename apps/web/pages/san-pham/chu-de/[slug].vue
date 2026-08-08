@@ -2,7 +2,6 @@
 const { t } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
-const { site } = useSettings()
 const { topics, getTopicBySlug } = useTopicsByType('product')
 const { byTopic, pending: productsPending } = useProducts()
 
@@ -35,10 +34,21 @@ const products = computed(() => (topic.value ? byTopic(topic.value.id) : []))
 const formatPrice = (price: number) =>
   `${price.toLocaleString('vi-VN')} ${t('common.currency')}`
 
+const seoTitle = computed(() => `${topic.value?.name ?? ''} | ${t('products.label')}`)
+const seoDescription = computed(() => topic.value?.description || t('products.subtitle'))
+const seoImage = computed(() => topic.value?.image || undefined)
+
 useSeoMeta({
-  title: () => `${topic.value?.name ?? ''} | ${t('products.label')} | ${site.value.name}`,
-  description: () => topic.value?.description || t('products.subtitle'),
-  ogImage: () => topic.value?.image || undefined,
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogImage: () => seoImage.value,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
 })
 </script>
 

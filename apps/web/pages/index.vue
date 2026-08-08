@@ -16,6 +16,21 @@ useHead({
 })
 
 const { paused } = useMotionPause()
+
+const { site, heroSlides } = useSettings()
+
+useSeoMeta({
+  title: () => site.value.tagline,
+  description: () => site.value.description,
+  ogTitle: () => site.value.tagline,
+  ogDescription: () => site.value.description,
+  ogImage: () => heroSlides.value[0]?.image,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => site.value.tagline,
+  twitterDescription: () => site.value.description,
+  twitterImage: () => heroSlides.value[0]?.image,
+})
 </script>
 
 <template>

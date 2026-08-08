@@ -49,7 +49,17 @@ export function useSiteSettings() {
   const { resolveMediaUrl } = useMediaUrl()
 
   const { data, pending } = useAsyncData(
-    'site-settings',
+    // Deliberately distinct from useSiteBundle.ts's 'site-settings' key —
+    // that composable fetches a different, incompatible shape (the full
+    // settings bundle vs. this flat SiteSettingsDto) from a different
+    // endpoint. Sharing the literal key made Nuxt's useAsyncData payload
+    // cache treat both as the *same* entry (a single shared `data` ref),
+    // so whichever handler resolved last silently overwrote the other's
+    // data with an incompatible shape wherever both composables were used
+    // on the same page (e.g. the homepage's HomeV3PillarList component,
+    // which calls both) — breaking whichever one lost the race, sometimes
+    // hard enough to throw during render and blank out that whole section.
+    'store-site-settings',
     async () => {
       try {
         const res = await fetchMedusa<{ site_settings: SiteSettingsDto }>(

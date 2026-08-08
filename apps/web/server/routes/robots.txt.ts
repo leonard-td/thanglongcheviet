@@ -6,7 +6,11 @@ export default defineEventHandler((event) => {
   const body = [
     'User-agent: *',
     'Allow: /',
+    // /app is the actual Medusa admin dashboard UI (see infra/nginx's
+    // location /app/); /admin is just the JSON API behind it. Both are
+    // proxied on this same public domain, so both need disallowing.
     'Disallow: /admin',
+    'Disallow: /app',
     '',
     `Sitemap: ${baseUrl}/sitemap.xml`,
     '',

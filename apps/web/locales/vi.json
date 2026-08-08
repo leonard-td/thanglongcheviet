@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "Thăng Long Chè Việt",
-    "tagline": "Nghệ thuật làm đẹp truyền thống"
+    "tagline": "Tinh hoa trà Việt"
   },
   "about": {
     "title": "Giới thiệu",
@@ -42,7 +42,7 @@
   },
   "services": {
     "title": "Dịch vụ của chúng tôi",
-    "subtitle": "Trải nghiệm dịch vụ làm đẹp đẳng cấp với đội ngũ chuyên gia hàng đầu",
+    "subtitle": "Trải nghiệm dịch vụ trà đẳng cấp với đội ngũ chuyên gia hàng đầu",
     "fullServices": "Dịch vụ toàn diện",
     "viewAll": "Xem tất cả dịch vụ",
     "from": "Từ",
@@ -52,7 +52,7 @@
   },
   "team": {
     "title": "Đội ngũ chuyên gia",
-    "subtitle": "Những nghệ nhân tài năng với nhiều năm kinh nghiệm trong ngành làm đẹp",
+    "subtitle": "Những nghệ nhân tài năng với nhiều năm kinh nghiệm trong ngành trà",
     "viewAll": "Xem toàn bộ đội ngũ",
     "specialist": "Chuyên gia"
   },

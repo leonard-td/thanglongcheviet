@@ -2,7 +2,6 @@
 import type { OrderLookup } from '~/composables/useOrder'
 
 const { t } = useI18n()
-const { site } = useSettings()
 const { lookupOrder } = useOrder()
 const { orderStatusLabel, paymentStatusLabel, paymentMethodLabel } = useOrderLabels()
 
@@ -31,7 +30,7 @@ const handleLookup = async () => {
 }
 
 useSeoMeta({
-  title: () => `${t('orderLookup.title')} | ${site.value.name}`,
+  title: () => t('orderLookup.title'),
 })
 </script>
 

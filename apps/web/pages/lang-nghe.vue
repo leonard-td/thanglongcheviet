@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const { site } = useSettings()
 const localePath = useLocalePath()
 
 useScrollAnimation()
@@ -8,7 +7,7 @@ useScrollAnimation()
 const valueKeys = ['heritage', 'craft', 'origin', 'community'] as const
 
 useSeoMeta({
-  title: () => `${t('nav.craftVillage')} | ${site.value.name}`,
+  title: () => t('nav.craftVillage'),
   description: () => t('craftVillage.subtitle'),
 })
 </script>

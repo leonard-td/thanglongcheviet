@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { formatMoney } from '~/utils/storefront'
+import { formatMoney, stripHtml } from '~/utils/storefront'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
 const {
-  settings,
   pending,
   aboutTitle,
   aboutThumbnail,
   aboutHtml,
   aboutCollectionId,
 } = useSiteSettings()
+const { site } = useSettings()
 const { byCollection } = useProducts()
 
 useScrollAnimation()
@@ -36,11 +36,19 @@ const sidebarItems = computed(() => {
     }))
 })
 
+const seoDescription = computed(() => stripHtml(aboutHtml.value).slice(0, 160) || site.value.description)
+
 useSeoMeta({
-  title: () => `${title.value} | ${settings.value?.store_name ?? ''}`,
-  description: () => title.value,
+  title: () => title.value,
+  description: () => seoDescription.value,
   ogTitle: () => title.value,
+  ogDescription: () => seoDescription.value,
   ogImage: () => aboutThumbnail.value || undefined,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => title.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => aboutThumbnail.value || undefined,
 })
 </script>
 

@@ -2,7 +2,6 @@
 const { t, locale } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
-const { site } = useSettings()
 const { topics, getTopicBySlug, getPostsByTopicSlug } = useBlogTopics()
 
 useScrollAnimation()
@@ -47,10 +46,21 @@ const posts = computed(() =>
   }),
 )
 
+const seoTitle = computed(() => `${topic.value?.name ?? ''} | ${t('nav.blog')}`)
+const seoDescription = computed(() => topic.value?.description || t('blog.subtitle'))
+const seoImage = computed(() => topic.value?.image || undefined)
+
 useSeoMeta({
-  title: () => `${topic.value?.name ?? ''} | ${t('nav.blog')} | ${site.value.name}`,
-  description: () => topic.value?.description || t('blog.subtitle'),
-  ogImage: () => topic.value?.image || undefined,
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogImage: () => seoImage.value,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
 })
 </script>
 

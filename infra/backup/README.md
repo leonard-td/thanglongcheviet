@@ -108,7 +108,7 @@ AWS_SECRET_ACCESS_KEY=
 #      0 */6 * * *   = mỗi 6 tiếng
 #      0 2 * * 1-5   = 2:00 AM thứ 2-6 (weekdays)
 #      */30 * * * *  = mỗi 30 phút (dev/testing)
-BACKUP_CRON=0 2 * * *
+BACKUP_CRON="0 2 * * *"
 
 # 5. Retention policy — giữ lại bao nhiêu snapshot
 BACKUP_KEEP_DAILY=7        # 7 ngày gần nhất

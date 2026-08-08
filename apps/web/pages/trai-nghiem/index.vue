@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
-const { site } = useSettings()
 const { upcomingEvents, pastEvents, pending } = useEvents()
 
 useScrollAnimation()
@@ -19,7 +18,7 @@ const formatDate = (value: string | null) => {
 }
 
 useSeoMeta({
-  title: () => `${t('events.title')} | ${site.value.name}`,
+  title: () => t('events.title'),
   description: () => t('events.subtitle'),
 })
 </script>

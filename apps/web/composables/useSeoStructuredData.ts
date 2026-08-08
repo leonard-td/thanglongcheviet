@@ -1,4 +1,5 @@
 import type { BlogPost, Product } from '~/utils/storefront'
+import type { EventItem } from '~/composables/useEvents'
 
 export function useProductStructuredData(product: Ref<Product | null>) {
   const route = useRoute()
@@ -59,6 +60,43 @@ export function useArticleStructuredData(post: Ref<BlogPost | null | undefined>)
             name: site.value.name,
           },
           mainEntityOfPage: pageUrl,
+        }),
+      }]
+    }),
+  })
+}
+
+export function useEventStructuredData(event: Ref<EventItem | null | undefined>) {
+  const route = useRoute()
+  const { site } = useSettings()
+  const baseUrl = useRequestURL().origin
+
+  useHead({
+    script: computed(() => {
+      if (!event.value || !event.value.startAt) return []
+
+      const pageUrl = `${baseUrl}${route.path}`
+
+      return [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Event',
+          name: event.value.seoTitle || event.value.title,
+          description: event.value.seoDescription || event.value.excerpt,
+          image: event.value.image || undefined,
+          startDate: event.value.startAt,
+          endDate: event.value.endAt || undefined,
+          eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+          eventStatus: 'https://schema.org/EventScheduled',
+          location: event.value.location
+            ? { '@type': 'Place', name: event.value.location }
+            : undefined,
+          organizer: {
+            '@type': 'Organization',
+            name: site.value.name,
+          },
+          url: pageUrl,
         }),
       }]
     }),

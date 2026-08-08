@@ -252,7 +252,14 @@ const specs = computed(() => {
 useSeoMeta({
   title: () => product.value?.title,
   description: () => product.value?.shortDesc,
+  ogTitle: () => product.value?.title,
+  ogDescription: () => product.value?.shortDesc,
   ogImage: () => product.value?.image,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => product.value?.title,
+  twitterDescription: () => product.value?.shortDesc,
+  twitterImage: () => product.value?.image,
 })
 
 useProductStructuredData(product)

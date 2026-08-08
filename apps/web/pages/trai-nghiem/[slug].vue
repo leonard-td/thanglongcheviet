@@ -94,11 +94,14 @@ useSeoMeta({
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
   ogImage: () => event.value?.image,
+  ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoTitle.value,
   twitterDescription: () => seoDescription.value,
   twitterImage: () => event.value?.image,
 })
+
+useEventStructuredData(event)
 </script>
 
 <template>

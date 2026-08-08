@@ -2,7 +2,6 @@
 const { t, locale } = useI18n()
 const route = useRoute()
 const localePath = useLocalePath()
-const { site } = useSettings()
 const { topics, getTopicBySlug } = useTopicsByType('event')
 const { byTopic, pending: eventsPending } = useEvents()
 
@@ -44,10 +43,21 @@ const formatDate = (value: string | null) => {
   })
 }
 
+const seoTitle = computed(() => `${topic.value?.name ?? ''} | ${t('events.title')}`)
+const seoDescription = computed(() => topic.value?.description || t('events.subtitle'))
+const seoImage = computed(() => topic.value?.image || undefined)
+
 useSeoMeta({
-  title: () => `${topic.value?.name ?? ''} | ${t('events.title')} | ${site.value.name}`,
-  description: () => topic.value?.description || t('events.subtitle'),
-  ogImage: () => topic.value?.image || undefined,
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogTitle: () => seoTitle.value,
+  ogDescription: () => seoDescription.value,
+  ogImage: () => seoImage.value,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => seoTitle.value,
+  twitterDescription: () => seoDescription.value,
+  twitterImage: () => seoImage.value,
 })
 </script>
 

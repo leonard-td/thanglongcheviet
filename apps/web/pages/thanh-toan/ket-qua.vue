@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const localePath = useLocalePath()
-const { site } = useSettings()
 const route = useRoute()
 
 const status = computed(() => String(route.query.status || ''))
@@ -10,7 +9,7 @@ const orderNumber = computed(() => String(route.query.order || ''))
 const isSuccess = computed(() => status.value === 'success')
 
 useSeoMeta({
-  title: () => `${t('paymentResult.title')} | ${site.value.name}`,
+  title: () => t('paymentResult.title'),
 })
 </script>
 
