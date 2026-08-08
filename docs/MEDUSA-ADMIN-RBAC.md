@@ -145,12 +145,25 @@ URL admin: http://localhost:9000/app (hoặc http://localhost:8800/app qua nginx
 3. Copy link invite / gửi cho người dùng  
 4. Họ mở `/app/invite?token=...` → nhập tên + password → kích hoạt  
 
-Không tạo sẵn password gửi qua chat. Muốn tạo user kèm password ngay (ops/CLI):
+### 6.1b Tạo employee trực tiếp (luồng nội bộ / “cổ”)
+
+Dùng khi admin muốn tạo tài khoản kèm mật khẩu ngay, không qua invite:
+
+1. http://localhost:9000/app/employees → **Tạo nhân viên**
+2. Nhập email + mật khẩu (+ tên, roles)
+3. Đưa mật khẩu cho nhân viên qua kênh nội bộ (không gửi email tự động)
+4. Vào chi tiết employee để: đổi tên, khóa/mở khóa, đổi roles, đặt lại mật khẩu, xóa
+
+API tương ứng: `POST /admin/employees`, `POST /admin/employees/:id`, `POST /admin/employees/:id/password`, `DELETE /admin/employees/:id` (guard resource `user`).
+
+User bị `metadata.blocked=true` bị middleware từ chối mọi `/admin*` (403).
+
+Ops/CLI vẫn dùng được:
 
 ```bash
 cd apps/backend
 npx medusa user -e someone@example.com -p 'StrongPass!'
-# Sau đó gán role trong Settings → Roles → Add users
+# Sau đó gán role trong Settings → Roles → Add users (hoặc trang Employees)
 ```
 
 ### 6.2 Tạo role & gán quyền
@@ -166,6 +179,7 @@ Ghi chú UI: user đã nằm trong role sẽ bị disable trên form Add users �
 
 | Việc | URL |
 |---|---|
+| Employees (tạo/sửa trực tiếp) | `/app/employees` |
 | Users | `/app/settings/users` |
 | Invite | `/app/settings/users/invite` |
 | Roles | `/app/settings/roles` |

@@ -110,6 +110,7 @@ export default defineNuxtConfig({
       medusaBackendUrl: process.env.NUXT_PUBLIC_MEDUSA_BACKEND_URL ?? 'http://localhost:9000',
       medusaPublishableKey: process.env.NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || '',
       medusaRegionId: process.env.NUXT_PUBLIC_MEDUSA_REGION_ID || '',
+      // Legacy — store resolves Active menu server-side; kept for env compat.
       medusaNavigationId: process.env.NUXT_PUBLIC_MEDUSA_NAVIGATION_ID || '',
     },
   },

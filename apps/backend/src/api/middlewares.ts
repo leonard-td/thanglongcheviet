@@ -11,6 +11,7 @@ import { createFindParams } from "@medusajs/medusa/api/utils/validators"
 import multer from "multer"
 import os from "node:os"
 import path from "node:path"
+import { rejectBlockedAdminUser } from "./middlewares/reject-blocked-admin-user"
 
 export const GetCampaignPostsSchema = createFindParams()
 export const GetEventsSchema = createFindParams()
@@ -35,6 +36,44 @@ const backupUpload = multer({
 
 export default defineMiddlewares({
   routes: [
+    // ── Blocked admin users (metadata.blocked) ──
+    {
+      matcher: "/admin",
+      middlewares: [rejectBlockedAdminUser],
+    },
+
+    // ── Employees (direct user create / manage — built-in `user` policies) ──
+    {
+      matcher: "/admin/employees",
+      method: "GET",
+      middlewares: [guard("user", "read")],
+    },
+    {
+      matcher: "/admin/employees/*",
+      method: "GET",
+      middlewares: [guard("user", "read")],
+    },
+    {
+      matcher: "/admin/employees",
+      method: ["POST"],
+      middlewares: [guard("user", "create")],
+    },
+    {
+      matcher: "/admin/employees/*",
+      method: ["POST"],
+      middlewares: [guard("user", "update")],
+    },
+    {
+      matcher: "/admin/employees/*/password",
+      method: ["POST"],
+      middlewares: [guard("user", "update")],
+    },
+    {
+      matcher: "/admin/employees/*",
+      method: ["DELETE"],
+      middlewares: [guard("user", "delete")],
+    },
+
     // ── Event guards ──
     {
       matcher: "/admin/events",
@@ -304,6 +343,16 @@ export default defineMiddlewares({
       middlewares: [guard("inquiry", "read")],
     },
     {
+      matcher: "/admin/inquiries/stats",
+      method: "GET",
+      middlewares: [guard("inquiry", "read")],
+    },
+    {
+      matcher: "/admin/inquiries/*",
+      method: "GET",
+      middlewares: [guard("inquiry", "read")],
+    },
+    {
       matcher: "/admin/inquiries/*",
       method: ["PATCH"],
       middlewares: [guard("inquiry", "update")],
@@ -358,6 +407,36 @@ export default defineMiddlewares({
 
     // ── Navigation guards (TLCV-only) ──
     {
+      matcher: "/admin/navigation-menus",
+      method: "GET",
+      middlewares: [guard("navigation", "read")],
+    },
+    {
+      matcher: "/admin/navigation-menus/*",
+      method: "GET",
+      middlewares: [guard("navigation", "read")],
+    },
+    {
+      matcher: "/admin/navigation-menus",
+      method: ["POST"],
+      middlewares: [guard("navigation", "create")],
+    },
+    {
+      matcher: "/admin/navigation-menus/*",
+      method: ["POST"],
+      middlewares: [guard("navigation", "update")],
+    },
+    {
+      matcher: "/admin/navigation-menus/*/activate",
+      method: ["POST"],
+      middlewares: [guard("navigation", "update")],
+    },
+    {
+      matcher: "/admin/navigation-menus/*",
+      method: ["DELETE"],
+      middlewares: [guard("navigation", "delete")],
+    },
+    {
       matcher: "/admin/navigations",
       method: "GET",
       middlewares: [guard("navigation", "read")],
@@ -371,6 +450,11 @@ export default defineMiddlewares({
       matcher: "/admin/navigations",
       method: ["POST"],
       middlewares: [guard("navigation", "create")],
+    },
+    {
+      matcher: "/admin/navigations/reorder",
+      method: ["POST"],
+      middlewares: [guard("navigation", "update")],
     },
     {
       matcher: "/admin/navigations/*",

@@ -6,6 +6,21 @@ import type InquiryModuleService from "../../../../modules/inquiry/service"
 const STATUSES = ["new", "confirmed", "completed", "cancelled"] as const
 
 /**
+ * GET /admin/inquiries/:id
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const { id } = req.params
+  const inquiryService: InquiryModuleService = req.scope.resolve(INQUIRY_MODULE)
+
+  const [inquiry] = await inquiryService.listInquiries({ id }, { take: 1 })
+  if (!inquiry) {
+    throw new MedusaError(MedusaError.Types.NOT_FOUND, "Inquiry not found")
+  }
+
+  res.json({ inquiry })
+}
+
+/**
  * PATCH /admin/inquiries/:id — update inquiry status.
  */
 export async function PATCH(
