@@ -1,6 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
   ArrowLeft,
+  ArrowDownTray,
   ArrowUpTray,
   EllipsisHorizontal,
   ExclamationCircle,
@@ -27,6 +28,17 @@ import { useTranslation } from "react-i18next"
 import PageLayout from "../../components/page-layout"
 import { sdk } from "../../lib/sdk"
 import type { MediaFolderItem, MediaItem, UsageEntry } from "../../types/media"
+
+type ScanImportResult = {
+  static_dir: string
+  scanned_files: number
+  scanned_images: number
+  existing_db: number
+  missing_db: number
+  imported: number
+  skipped_non_images: number
+  errors: string[]
+}
 
 const MediaPage = () => {
   const { t } = useTranslation()
@@ -105,6 +117,25 @@ const MediaPage = () => {
       setUploading(false)
     }
   }
+
+  // --- scan & import existing files -----------------------------------------
+  const { mutate: scanImport, isPending: scanning } = useMutation({
+    mutationFn: () =>
+      sdk.client.fetch<ScanImportResult>("/admin/media/scan", {
+        method: "POST",
+      }),
+    onSuccess: (r) => {
+      toast.success(
+        t("mediaLib.messages.scanImportDone", {
+          imported: r.imported,
+          missing: r.missing_db,
+          images: r.scanned_images,
+        })
+      )
+      refreshLibrary()
+    },
+    onError: () => toast.error(t("mediaLib.messages.scanImportFailed")),
+  })
 
   // --- folders ----------------------------------------------------------------
   const [newFolderName, setNewFolderName] = useState("")
@@ -225,6 +256,15 @@ const MediaPage = () => {
               className="hidden"
               onChange={handleUpload}
             />
+            <Button
+              size="small"
+              variant="secondary"
+              isLoading={scanning}
+              onClick={() => scanImport()}
+            >
+              <ArrowDownTray />
+              {t("mediaLib.scanImport")}
+            </Button>
             <Button
               size="small"
               variant="primary"

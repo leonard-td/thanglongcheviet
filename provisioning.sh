@@ -29,6 +29,11 @@ echo "==> Provisioning store base data + publishable key (idempotent)..."
   -e ADMIN_PASSWORD="${ADMIN_PASSWORD:-supersecret123}" \
   backend node /workspace/scripts/setup-web-integration.mjs
 
+# execute script to initialize data: npx medusa exec ./src/migration-scripts/initial-data-seed.ts
+echo "==> Executing initial data seed script..."
+"${COMPOSE[@]}" exec -T \
+  backend npx medusa exec /workspace/apps/backend/src/migration-scripts/initial-data-seed.ts
+
 "${COMPOSE[@]}" up -d --no-deps --force-recreate web 
 
 # env_after="$(md5sum .env.prod | awk '{print $1}')"

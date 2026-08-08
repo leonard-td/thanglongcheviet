@@ -691,6 +691,7 @@
   "mediaLib": {
     "title": "Thư viện ảnh",
     "hint": "Quản lý toàn bộ ảnh đã tải lên: sắp xếp vào thư mục, tải ảnh mới hoặc xóa ảnh không dùng. Trước khi xóa, hệ thống luôn kiểm tra ảnh có đang được sử dụng ở đâu không.",
+    "scanImport": "Quét & nhập ảnh có sẵn",
     "upload": "Tải ảnh lên",
     "allImages": "Tất cả",
     "rootFolder": "Chưa phân loại",
@@ -713,7 +714,9 @@
       "folderDeleted": "Đã xóa thư mục, ảnh bên trong được chuyển về Chưa phân loại",
       "folderDeleteFailed": "Xóa thư mục thất bại",
       "moved": "Đã di chuyển ảnh",
-      "moveFailed": "Di chuyển ảnh thất bại"
+      "moveFailed": "Di chuyển ảnh thất bại",
+      "scanImportDone": "Đã import {{imported}}/{{missing}} ảnh (đã quét {{images}} ảnh trong thư mục lưu trữ)",
+      "scanImportFailed": "Quét & nhập ảnh thất bại"
     },
     "delete": {
       "title": "Xóa ảnh",

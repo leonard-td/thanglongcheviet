@@ -691,6 +691,7 @@
   "mediaLib": {
     "title": "Image Library",
     "hint": "Manage all uploaded images: organize them into folders, upload new ones or delete unused images. Before deleting, the system always checks whether the image is in use anywhere.",
+    "scanImport": "Scan & import existing",
     "upload": "Upload images",
     "allImages": "All",
     "rootFolder": "Uncategorized",
@@ -713,7 +714,9 @@
       "folderDeleted": "Folder deleted, its images were moved to Uncategorized",
       "folderDeleteFailed": "Failed to delete folder",
       "moved": "Images moved",
-      "moveFailed": "Failed to move images"
+      "moveFailed": "Failed to move images",
+      "scanImportDone": "Imported {{imported}}/{{missing}} images (scanned {{images}} images in storage)",
+      "scanImportFailed": "Scan & import failed"
     },
     "delete": {
       "title": "Delete image",

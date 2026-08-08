@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+set -a
+. .env.dev
+set +a
 # --env-file loads `.env` from the repo root (see .env.example) without
 # touching how the compose file's own relative paths (../:/workspace,
 # ./nginx/...) resolve — those stay relative to infra/, where the file lives.
@@ -13,6 +16,12 @@ docker compose -f infra/docker-compose.prod.yml down --remove-orphans || true
 COMPOSE="docker compose -f infra/docker-compose.yml --env-file .env.dev"
 
 $COMPOSE down
+
+if grep -q '^REBUILD_ALL=true' .env.dev; then
+  echo "==> REBUILD_ALL: wiping ALL volumes (Postgres data included!)..."
+  "${COMPOSE[@]}" down -v --remove-orphans || true
+  echo "==> Volumes wiped — the database will be re-seeded from scratch."
+fi
 
 # #docker remove all images
 # $COMPOSE down --rmi all

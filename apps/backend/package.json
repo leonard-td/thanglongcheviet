@@ -22,9 +22,8 @@
     "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
     "test:telegram:live": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --runInBand --forceExit --testPathPattern=telegram.live",
-    "seed:campaign-posts": "medusa exec ./src/scripts/seed-campaign-posts.ts",
-    "seed:navigation": "medusa exec ./src/scripts/seed-navigation.ts",
-    "seed:tea-products": "medusa exec ./src/scripts/seed-tea-products.ts",
+    "seed:initial-data": "medusa exec ./src/migration-scripts/initial-data-seed.ts",
+    "export:initial-data": "medusa exec ./src/scripts/export-initial-data.ts",
     "seed:care-channel-telegram": "medusa exec ./src/scripts/seed-care-channel-telegram.ts",
     "import:products-excel": "medusa exec ./src/scripts/import-products-excel.ts"
   },
