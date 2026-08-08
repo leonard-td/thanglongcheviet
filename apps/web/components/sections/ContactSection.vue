@@ -39,6 +39,11 @@ watch(() => form.preferredDate, async (date) => {
 
 async function handleSubmit() {
   if (!form.name || !form.phone) return
+  if (form.preferredDate && !form.preferredTime) {
+    status.value = 'error'
+    feedbackMessage.value = t('booking.selectTime')
+    return
+  }
   status.value = 'submitting'
 
   const isBooking = Boolean(form.preferredDate)
@@ -50,7 +55,7 @@ async function handleSubmit() {
       email: form.email || undefined,
       service: form.service || undefined,
       preferred_date: form.preferredDate,
-      preferred_time: form.preferredTime || undefined,
+      preferred_time: form.preferredTime,
       note: form.message || undefined,
     })
     : await submitContact({
