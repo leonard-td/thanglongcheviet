@@ -60,6 +60,32 @@ sleep 1m
 # the publishable key/region.
 bash ./provisioning.sh
 
+# Soft smoke: Store + Ask need a valid publishable key after web recreate.
+echo "==> Smoke Store/Ask (publishable key)..."
+set -a
+. .env.prod
+set +a
+PK="${NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY:-}"
+PORT_SMOKE="${HTTP_PORT:-8800}"
+if [ -n "$PK" ]; then
+  code="$(curl -s -o /dev/null -w '%{http_code}' \
+    -H "x-publishable-api-key: ${PK}" \
+    "http://127.0.0.1:${PORT_SMOKE}/store/site-settings" || true)"
+  echo "    GET /store/site-settings → ${code}"
+  ask_code="$(curl -s -o /dev/null -w '%{http_code}' \
+    -H "content-type: application/json" \
+    -H "x-publishable-api-key: ${PK}" \
+    -d '{"message":"xin chào"}' \
+    "http://127.0.0.1:${PORT_SMOKE}/store/ask" || true)"
+  echo "    POST /store/ask → ${ask_code}"
+  if [ "$code" != "200" ] || [ "$ask_code" != "200" ]; then
+    echo "WARN: Store/Ask smoke failed — check NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY and backend Ask module." >&2
+  fi
+else
+  echo "WARN: NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY empty in .env.prod after provisioning." >&2
+fi
+
 "${COMPOSE[@]}" ps
 echo "==> Done. Stack is live on port ${HTTP_PORT:-8800}."
 echo "    First deploy only: ./create-admin.sh --prod to (re)create the Medusa admin user."
+echo "    Ask: set ASK_NLU_PROVIDER=rule and optionally COHERE_RERANK=1 + COHERE_API_KEY in .env.prod (see docs/ASK-MESSAGES.md)."

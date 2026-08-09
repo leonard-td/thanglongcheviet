@@ -122,6 +122,10 @@ services:
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
       TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
+      # Ask Messages — rule-engine + optional Cohere rerank (server-only)
+      ASK_NLU_PROVIDER: ${ASK_NLU_PROVIDER:-rule}
+      COHERE_API_KEY: ${COHERE_API_KEY:-}
+      COHERE_RERANK: ${COHERE_RERANK:-0}
       JWT_SECRET: ${JWT_SECRET:-supersecret}
       COOKIE_SECRET: ${COOKIE_SECRET:-supersecret}
       # LOCAL/HTTP ONLY: let the admin session cookie work over plain http

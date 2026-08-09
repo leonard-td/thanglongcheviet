@@ -336,3 +336,79 @@ Recorded in `.ai/DECISIONS.md` **014**.
 - [ ] `hàng bị hỏng` → escalate form; submit creates inquiry
 - [ ] Navigate home ↔ product page → transcript restored (`sessionStorage`)
 - [ ] With `COHERE_RERANK=1` + key: lexical answers still succeed if Cohere fails (fail-soft)
+
+---
+
+## 9. Production go-live (best quality)
+
+Goal: Ask works on first page load (publishable key present), answers are tea-relevant, escalate reaches CSKH, Cohere improves ranking without breaking when offline.
+
+### 9.1 Required before traffic
+
+1. **Merge** `feat/ask-messages` (or release branch that includes it) into the branch you deploy.
+2. **`.env.prod`** (never commit secrets):
+
+```bash
+ASK_NLU_PROVIDER=rule
+COHERE_API_KEY=<server-only key>
+COHERE_RERANK=1          # recommended for best product ranking
+JWT_SECRET=<strong>
+COOKIE_SECRET=<strong>
+POSTGRES_PASSWORD=<strong>
+# HTTPS real domain: leave COOKIE_SECURE unset (do not set false)
+MEDUSA_BACKEND_URL=https://your.domain
+TELEGRAM_BOT_TOKEN=...   # care-channel for escalate
+TELEGRAM_CHAT_ID=...
+```
+
+3. **Prod compose** must pass Ask env into backend (`infra/docker-compose.prod.yml` — `ASK_NLU_PROVIDER`, `COHERE_API_KEY`, `COHERE_RERANK`).
+4. Deploy:
+
+```bash
+# remote
+PUSH_ENV=1 DEPLOY_DOMAIN=your.domain ./deploy.sh user@server
+
+# or on the host
+./start.prod.sh
+```
+
+`run-prod-stack.sh` → `provisioning.sh` already:
+- runs `setup-web-integration.mjs`
+- **force-recreates `web`** so Nuxt loads `NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`
+- smokes `GET /store/site-settings` + `POST /store/ask`
+
+### 9.2 Catalog / CSKH quality gates
+
+| Gate | Why |
+|------|-----|
+| Products **published**, VND prices, good titles/descriptions (chè / sen / nhài…) | Keyword Ask ranks on these fields |
+| Product images present | Ask cards look complete |
+| Care-channel Telegram seeded + tested | Escalate form → inquiry → notify |
+| Admin watches inquiries `source: ask-messages` | Human follow-up SoT |
+
+### 9.3 Honest production limits (do not over-promise)
+
+| Topic | Behavior |
+|-------|----------|
+| Session history | In-memory; **lost on Medusa restart** — escalate/inquiry is durable |
+| “Bán chạy / top-rated” | Featured catalog order, not real sales ranking |
+| Stock | Ask mapper currently treats items as in stock |
+| Typesense / LLM NLU | Not on this stack |
+| Cohere down | Fail-soft — keyword order still returned |
+
+### 9.4 Post-deploy smoke (5 minutes)
+
+```bash
+PK=...  # from .env.prod
+curl -s -o /dev/null -w '%{http_code}\n' -H "x-publishable-api-key: $PK" https://your.domain/store/site-settings
+curl -s https://your.domain/store/ask -H "content-type: application/json" \
+  -H "x-publishable-api-key: $PK" -d '{"message":"chè tôm"}'
+```
+
+Browser: hard-refresh homepage → Ask FAB → chào / ship / sản phẩm / escalate with phone.
+
+### 9.5 Ops weekly
+
+- Skim Ask escalate inquiries + care-channel delivery failures in backend logs.
+- Spot-check 5 real product queries after catalog edits (titles matter more than new regex).
+- Keep `COHERE_API_KEY` rotated/server-only; never in `NUXT_PUBLIC_*`.
