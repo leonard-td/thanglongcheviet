@@ -121,6 +121,10 @@ services:
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TELEGRAM_CHANNEL_NAME: ${TELEGRAM_CHANNEL_NAME:-}
       TELEGRAM_SEED_SEND_TEST: ${TELEGRAM_SEED_SEND_TEST:-}
+      # Ask Messages — rule-engine + optional Cohere rerank (server-only)
+      ASK_NLU_PROVIDER: ${ASK_NLU_PROVIDER:-rule}
+      COHERE_API_KEY: ${COHERE_API_KEY:-}
+      COHERE_RERANK: ${COHERE_RERANK:-0}
       # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
       # host check (only matters when DOMAIN != localhost).
       DOMAIN: ${DOMAIN:-localhost}

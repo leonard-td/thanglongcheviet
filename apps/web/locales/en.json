@@ -267,6 +267,30 @@
     "leaveInfo": "Leave your info",
     "leaveInfoSubtitle": "Send us your info and we'll get back to you shortly"
   },
+  "ask": {
+    "greeting": "Hello! Ask about shipping, tea gifts, booking, or products.",
+    "conversationLabel": "Ask conversation",
+    "suggestionsLabel": "Suggested products",
+    "relatedLabel": "Related questions",
+    "ui": {
+      "title": "Ask — Messages",
+      "close": "Close",
+      "placeholder": "Type a question…",
+      "send": "Send",
+      "thinking": "Looking up an answer…",
+      "error": "Could not send message. Please try again."
+    },
+    "escalate": {
+      "hint": "Leave your details and our team will follow up.",
+      "namePlaceholder": "Name (optional)",
+      "phonePlaceholder": "Phone",
+      "emailPlaceholder": "Email",
+      "submit": "Contact us",
+      "sending": "Sending…",
+      "success": "Sent — we will get back to you soon.",
+      "error": "Could not send. Try again or use the Contact form."
+    }
+  },
   "corporate": {
     "title": "Corporate Gifts",
     "subtitle": "Premium, elegant tea gift solutions to affirm your brand identity and express gratitude to partners.",

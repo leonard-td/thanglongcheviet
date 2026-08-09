@@ -65,6 +65,7 @@
     "@tiptap/react": "^3.27.1",
     "@tiptap/starter-kit": "^3.27.1",
     "archiver": "^7.0.1",
+    "cohere-ai": "^8.0.0",
     "lucide-react": "^1.23.0",
     "multer": "^2.0.1",
     "pg": "^8.16.0",

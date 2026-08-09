@@ -17,6 +17,7 @@ Short prompt → files. Start with `AI_START_HERE.md` + `PROJECT_MEMORY.md`.
 | Homepage news / marquee / cards | `pages/index.vue`, `HomeNewsMarquee`, `HomeNewsTicker`, `HomePillarList` |
 | Header/nav | `AppHeader`, `useNavigation`, `modules/navigation` |
 | Booking/contact | `useBooking`, `useContact`, `modules/inquiry` |
+| Ask Messages (storefront chat) | `docs/ASK-MESSAGES.md`, `WidgetsAskMessages`, `modules/ask`, `POST /store/ask` |
 | Admin | `CLAUDE.md`, `src/admin/routes/**`, `/app` |
 | Deploy | `build-local.sh`, `deploy.sh`, `copy-to-server.sh` (payload/rsync), `.github/workflows/deploy.yml` |
 | NestJS/theme editor | Docs only — do **not** implement |

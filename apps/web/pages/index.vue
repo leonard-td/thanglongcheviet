@@ -46,6 +46,8 @@ useSeoMeta({
         <HomeV3PillarList />
       </div>
     </div>
+
+    <WidgetsAskMessages />
   </div>
 </template>
 
