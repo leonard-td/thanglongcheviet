@@ -12,6 +12,7 @@ import {
   sortProducts,
   type SearchCatalogInput,
 } from "./catalog-query"
+import { getTypesenseSearchEngine } from "./typesense/search"
 
 function applyKeywordThenSort(
   hits: SearchHit[],
@@ -26,6 +27,8 @@ export type SearchEngine = {
   name: string
   search: (input: string | SearchCatalogInput) => Promise<SearchHit[]>
 }
+
+export type SearchSource = "lib" | "typesense"
 
 export const libSearchEngine: SearchEngine = {
   name: "lib",
@@ -61,10 +64,13 @@ export const libSearchEngine: SearchEngine = {
   },
 }
 
-export function getSearchEngine(): SearchEngine {
-  return libSearchEngine
+export function getSearchSource(): SearchSource {
+  const raw = process.env.SEARCH_SOURCE?.trim().toLowerCase()
+  return raw === "typesense" ? "typesense" : "lib"
 }
 
-export function getSearchSource(): "lib" {
-  return "lib"
+export function getSearchEngine(): SearchEngine {
+  return getSearchSource() === "typesense"
+    ? getTypesenseSearchEngine()
+    : libSearchEngine
 }

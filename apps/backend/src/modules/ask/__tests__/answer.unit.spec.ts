@@ -45,7 +45,9 @@ const catalog = [
 
 beforeEach(() => {
   setAskCatalog(catalog)
+  process.env.SEARCH_SOURCE = "lib"
   process.env.COHERE_RERANK = "0"
+  process.env.TYPESENSE_HYBRID = "0"
   delete process.env.COHERE_API_KEY
 })
 

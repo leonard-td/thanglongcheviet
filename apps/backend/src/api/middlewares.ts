@@ -36,6 +36,17 @@ const backupUpload = multer({
 
 export default defineMiddlewares({
   routes: [
+    // ── Ask Typesense reindex: token OR optional admin session ──
+    {
+      matcher: "/admin/ask/reindex",
+      method: "POST",
+      middlewares: [
+        authenticate("user", ["session", "bearer", "api-key"], {
+          allowUnauthenticated: true,
+        }),
+      ],
+    },
+
     // ── Blocked admin users (metadata.blocked) ──
     {
       matcher: "/admin",

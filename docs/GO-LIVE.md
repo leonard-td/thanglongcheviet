@@ -16,10 +16,10 @@ Chi tiết Ask riêng: [`docs/ASK-MESSAGES.md`](./ASK-MESSAGES.md).
 | Bước | Việc |
 |------|------|
 | 1 | Merge code (Ask + hotfix) vào nhánh deploy |
-| 2 | Chuẩn bị `.env.prod` (secret, domain, Ask/Cohere, Telegram) |
+| 2 | Chuẩn bị `.env.prod` (secret, domain, Ask/Typesense/Cohere, Telegram) |
 | 3 | Server: Docker + Compose v2 + SSH key |
 | 4 | `./deploy.sh` (build local → ship → `run-prod-stack.sh`) |
-| 5 | Admin user + care-channel + catalog published |
+| 5 | Admin user + care-channel + catalog published + **`ask:reindex`** |
 | 6 | Smoke Store/Ask/escalate + hard-refresh browser |
 | 7 | HTTPS front + backup Restic |
 
@@ -41,13 +41,15 @@ tlcv_nginx_prod          ← entry duy nhất của stack
   ├─ /store|/auth|/admin|/app|/static → Medusa (backend :9000)
   └─ /health     → backend health
       │
-      ├── tlcv_web_prod     Nitro .output (prebuilt)
-      ├── tlcv_backend_prod Medusa .medusa/server (prebuilt + runtime npm)
+      ├── tlcv_web_prod        Nitro .output (prebuilt)
+      ├── tlcv_backend_prod    Medusa .medusa/server (prebuilt + runtime npm)
+      ├── tlcv_typesense_prod  Ask catalog BM25 (:8108 internal)
       └── postgres
 ```
 
-- **Build chỉ chạy trên máy dev** (`build-local.sh`). Server **không** compile source.
+- **Build chỉ chạy trên máy build (local)** (`build-local.sh`). Server **không** compile source.
 - Payload ship: `.medusa/server`, `.output`, `infra/`, script ops — **không** ship `node_modules` / `src/`.
+- Sau deploy / import catalog: **`ask:reindex`** (xem [`ASK-MESSAGES.md`](./ASK-MESSAGES.md) §5). Typesense data nằm volume `typesense_data`.
 
 ---
 
@@ -76,9 +78,9 @@ git pull
 
 Xác nhận có:
 
-- `apps/backend/src/modules/ask/`
-- `infra/docker-compose.prod.yml` có `ASK_NLU_PROVIDER` / `COHERE_*`
-- `docs/ASK-MESSAGES.md`
+- `apps/backend/src/modules/ask/` (+ `search/typesense/`)
+- `infra/docker-compose.prod.yml` có service `typesense` + `ASK_*` / `TYPESENSE_*` / `COHERE_*`
+- `docs/ASK-MESSAGES.md` (SSOT Ask)
 
 ---
 
@@ -112,16 +114,27 @@ cp .env.example .env.prod
 | `NUXT_PUBLIC_MEDUSA_REGION_ID` | Tương tự |
 | `NUXT_PUBLIC_MEDUSA_NAVIGATION_ID` | Menu header (seed navigation) |
 
-### 3.3 Ask Messages (nên bật cho chất lượng tốt)
+### 3.3 Ask Messages + Typesense (nên bật cho chất lượng tốt)
 
 ```bash
 ASK_NLU_PROVIDER=rule
+SEARCH_SOURCE=typesense
+TYPESENSE_HOST=typesense
+TYPESENSE_PORT=8108
+TYPESENSE_PROTOCOL=http
+TYPESENSE_API_KEY=<strong-key>
+TYPESENSE_HYBRID=0
+SEARCH_REINDEX_TOKEN=<ops-token>
 COHERE_API_KEY=<key server-only>
 COHERE_RERANK=1
 ```
 
+- Compose prod/dev đã có service `typesense` + env trên backend.
+- **Sau** seed/import catalog (hoặc volume Typesense mới): `npm run ask:reindex` (trong container backend hoặc host với cùng env).
 - **Không** đưa `COHERE_API_KEY` vào `NUXT_PUBLIC_*`.
-- Không có key → vẫn chạy keyword; có key + `COHERE_RERANK=1` → xếp sản phẩm tốt hơn (fail-soft nếu Cohere lỗi).
+- Không có Cohere key → BM25 vẫn chạy; `COHERE_RERANK=1` + key → xếp sản phẩm tốt hơn (fail-soft).
+- `TYPESENSE_HYBRID=1` chỉ bật sau khi smoke BM25 PASS (tốn embed cost).
+- Typesense down → Ask vẫn trả lời qua lib keyword (fail-soft).
 
 ### 3.4 Care-channel (escalate Ask / liên hệ)
 
@@ -260,7 +273,10 @@ Stack Docker publish **HTTP** trên `HTTP_PORT`. TLS nên để **reverse proxy 
 
 - [ ] `ASK_NLU_PROVIDER=rule` trong env backend container  
   (`docker exec tlcv_backend_prod printenv ASK_NLU_PROVIDER`)
+- [ ] Typesense service healthy + `SEARCH_SOURCE=typesense`
+- [ ] Đã chạy `npm run ask:reindex` sau seed/import catalog
 - [ ] `COHERE_RERANK=1` + key nếu muốn chất lượng ranking tốt nhất
+- [ ] `TYPESENSE_HYBRID=0` cho đến khi BM25 smoke PASS
 - [ ] FAQ copy trong `modules/ask/config/knowledge-base.ts` khớp chính sách thật (ship / đổi trả / bảo hành)
 
 ### 7.3 Escalate / CSKH
@@ -327,8 +343,8 @@ Kỳ vọng trả lời: [`ASK-MESSAGES.md` §8–§9](./ASK-MESSAGES.md).
 | Đổi secret/Ask key | Theo nhu cầu | Sửa `.env.prod` → `run-prod-stack.sh` |
 | Backup DB/media | Daily cron | Restic — xem `infra/backup/README.md` |
 | Xem escalate Ask | Daily | Inquiry `ask-messages` + Telegram |
-| Catalog edit | Liên tục | Title/mô tả ảnh hưởng trực tiếp Ask keyword |
-| Restart Medusa | Ít | **Xóa session Ask in-memory** — inquiry vẫn còn |
+| Catalog edit | Liên tục | Title/mô tả → subscriber upsert Typesense; full heal = `ask:reindex` |
+| Restart Medusa | Ít | **Xóa session Ask in-memory** — inquiry vẫn còn; Typesense data giữ trong volume |
 
 ### Lệnh hữu ích trên server
 
@@ -336,7 +352,11 @@ Kỳ vọng trả lời: [`ASK-MESSAGES.md` §8–§9](./ASK-MESSAGES.md).
 cd www/thanglongcheviet
 docker compose -f infra/docker-compose.prod.yml --env-file .env.prod ps
 docker compose -f infra/docker-compose.prod.yml --env-file .env.prod logs -f backend web nginx
-docker exec tlcv_backend_prod printenv ASK_NLU_PROVIDER COHERE_RERANK
+docker exec tlcv_backend_prod printenv ASK_NLU_PROVIDER COHERE_RERANK SEARCH_SOURCE TYPESENSE_HYBRID
+# Full reindex after catalog import / empty Typesense:
+docker exec -w /workspace/apps/backend/.medusa/server tlcv_backend_prod \
+  npx medusa exec ./src/scripts/ask-reindex.js
+# (dev compose: npm run ask:reindex -w @dtc/backend inside tlcv_backend)
 docker exec tlcv_web_prod printenv NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY | cut -c1-20
 ```
 
@@ -357,6 +377,7 @@ docker exec tlcv_web_prod printenv NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY | cut -c1-
 |-------------|------------------------|------------|
 | *A valid publishable key is required* | Web chưa recreate sau khi ghi key | `provisioning.sh` hoặc recreate `web` với `--env-file .env.prod` |
 | Ask 404 | Module ask chưa có trong build đang chạy | Deploy lại nhánh có `modules/ask` |
+| Ask không product / rỗng | Typesense chưa reindex hoặc `SEARCH_SOURCE` sai | `ask:reindex` + `printenv SEARCH_SOURCE` |
 | Ask không rerank | Thiếu `COHERE_*` trên **prod** compose/env | Kiểm tra `docker-compose.prod.yml` + `printenv` trong backend |
 | Escalate không về Telegram | Chưa seed / sai chat id | Admin Kênh CSKH + seed script |
 | Admin cookie / 401 trên HTTPS | `COOKIE_SECURE=false` còn sót hoặc URL sai | Xóa `COOKIE_SECURE`, set `MEDUSA_BACKEND_URL=https://...` |
@@ -369,8 +390,9 @@ docker exec tlcv_web_prod printenv NUXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY | cut -c1-
 
 **Trước**
 
-- [ ] Code Ask (+ hotfix key) đã merge / có trên artifact
-- [ ] `.env.prod` đủ secret, domain, Ask, Telegram, backup
+- [ ] Code Ask (+ Typesense) đã merge / có trên artifact
+- [ ] `.env.prod` đủ secret, domain, Ask/Typesense/Cohere, Telegram, backup
+- [ ] Service `typesense` healthy + đã `ask:reindex`
 - [ ] `REBUILD_ALL=false`
 - [ ] Server Docker OK, SSH OK
 

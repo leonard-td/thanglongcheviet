@@ -16,5 +16,6 @@
 | 012 | Product description TipTap saves HTML string (not TipTap JSON) | `product-description` widget + storefront `v-html` |
 | 013 | Homepage pillar hover = red border only | `HomePillarList` `.preview-link` |
 | 014 | Ask Messages = Medusa `/store/ask` + Nuxt FAB (not care-messages) | `modules/ask`, `WidgetsAskMessages` |
+| 015 | Ask catalog search = Typesense BM25 primary; lib keyword fail-soft | `SEARCH_SOURCE`, `modules/ask/search/typesense`, subscribers + `ask:reindex` |
 
 **Superseded proposals:** Nest/Prisma, Lunar, Laravel, Next storefront, theme registry — docs only.

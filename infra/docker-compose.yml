@@ -71,6 +71,32 @@ services:
       timeout: 5s
       retries: 12
 
+  # --- Typesense (Ask / catalog BM25; hybrid optional via Cohere embed) ------
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: tlcv_typesense
+    restart: unless-stopped
+    command: >
+      --data-dir /data
+      --api-key=${TYPESENSE_API_KEY:-tlcv_typesense_dev_key}
+      --enable-cors
+    environment:
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-tlcv_typesense_dev_key}
+    ports:
+      - "${TYPESENSE_PORT:-8108}:8108"
+    volumes:
+      - typesense_data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8108 && echo -e \"GET /health HTTP/1.0\\r\\n\\r\\n\" >&3 && cat <&3 | grep -q ok'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
   # --- One-shot dependency install (whole npm workspace, populates volumes) --
   install:
     image: node:20
@@ -99,6 +125,8 @@ services:
         condition: service_healthy
       install:
         condition: service_completed_successfully
+      typesense:
+        condition: service_healthy
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
@@ -125,6 +153,14 @@ services:
       ASK_NLU_PROVIDER: ${ASK_NLU_PROVIDER:-rule}
       COHERE_API_KEY: ${COHERE_API_KEY:-}
       COHERE_RERANK: ${COHERE_RERANK:-0}
+      # Typesense Ask search (BM25; hybrid opt-in)
+      SEARCH_SOURCE: ${SEARCH_SOURCE:-typesense}
+      TYPESENSE_HOST: ${TYPESENSE_HOST:-typesense}
+      TYPESENSE_PORT: ${TYPESENSE_PORT:-8108}
+      TYPESENSE_PROTOCOL: ${TYPESENSE_PROTOCOL:-http}
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-tlcv_typesense_dev_key}
+      TYPESENSE_HYBRID: ${TYPESENSE_HYBRID:-0}
+      SEARCH_REINDEX_TOKEN: ${SEARCH_REINDEX_TOKEN:-}
       # Lets medusa-config.ts whitelist the public domain in Vite's dev-server
       # host check (only matters when DOMAIN != localhost).
       DOMAIN: ${DOMAIN:-localhost}
@@ -224,6 +260,7 @@ services:
 
 volumes:
   postgres_data:
+  typesense_data:
   root_node_modules:
   backend_node_modules:
   backend_medusa:

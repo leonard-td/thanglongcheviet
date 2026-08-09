@@ -56,6 +56,20 @@ export function readCohereApiKey(): string | undefined {
   return key || undefined
 }
 
+/** Cohere Embed model for Typesense hybrid. */
+export const COHERE_EMBED_MODEL = "embed-multilingual-v3.0"
+
+/** Vector weight in Typesense hybrid fusion (0 = keyword-only, 1 = vector-only). */
+export const TYPESENSE_HYBRID_ALPHA = 0.5
+
+/** Neighbor pool for vector leg. */
+export const TYPESENSE_HYBRID_K = 40
+
+/**
+ * Hybrid ON only when TYPESENSE_HYBRID=1|true|on **and** COHERE_API_KEY is set.
+ */
 export function isTypesenseHybridEnabled(): boolean {
-  return false
+  const flag = process.env.TYPESENSE_HYBRID?.trim().toLowerCase()
+  if (flag !== "1" && flag !== "true" && flag !== "on") return false
+  return Boolean(readCohereApiKey())
 }

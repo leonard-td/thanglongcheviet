@@ -1,13 +1,8 @@
-import {
-  ContainerRegistrationKeys,
-  Modules,
-  QueryContext,
-} from "@medusajs/framework/utils"
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { answerQuestion } from "./answer"
+import { loadAskCatalog } from "./catalog-loader"
 import {
   setAskCatalog,
-  toAskCatalogProduct,
   type AskCatalogProduct,
 } from "./catalog-context"
 import { relatedQuestionsFor } from "./config/related-questions"
@@ -28,122 +23,6 @@ function identifier(prefix: "sess" | "msg"): string {
 /** Escalate sentinel for chat UI — language matches the user turn. */
 function escalateContentFor(q: string): string {
   return detectLanguage(q) === "en" ? ESCALATE_MESSAGE_EN : ESCALATE_MESSAGE
-}
-
-function mapRawProducts(
-  products: Array<Record<string, unknown>>,
-  currencyCode: string
-): AskCatalogProduct[] {
-  return products.map((p) => {
-    const variants = (p.variants as Array<Record<string, unknown>>) ?? []
-    const first = variants[0]
-    const calc = first?.calculated_price as
-      | { calculated_amount?: number | null; currency_code?: string }
-      | undefined
-    const images = (p.images as Array<{ url?: string }>) ?? []
-    const categories = (p.categories as Array<{ name?: string }>) ?? []
-    const optionsRaw =
-      (p.options as Array<{
-        title?: string
-        values?: Array<{ value?: string }>
-      }>) ?? []
-    const options: Array<{ name: string; value: string }> = []
-    for (const opt of optionsRaw) {
-      const name = opt.title ?? ""
-      for (const v of opt.values ?? []) {
-        if (name && v.value) options.push({ name, value: v.value })
-      }
-    }
-
-    return toAskCatalogProduct({
-      id: String(p.id),
-      title: String(p.title ?? ""),
-      handle: String(p.handle ?? ""),
-      description: (p.description as string | null) ?? null,
-      thumbnail: (p.thumbnail as string | null) ?? null,
-      imageUrl: images[0]?.url ?? null,
-      categoryNames: categories.map((c) => c.name ?? "").filter(Boolean),
-      price: Number(calc?.calculated_amount ?? 0),
-      currencyCode: (calc?.currency_code || currencyCode).toLowerCase(),
-      options,
-    })
-  })
-}
-
-async function loadCatalog(
-  container: MedusaContainer
-): Promise<AskCatalogProduct[]> {
-  const query = container.resolve(ContainerRegistrationKeys.QUERY)
-  const regionModule = container.resolve(Modules.REGION)
-  const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
-
-  const regions = await regionModule.listRegions({}, { take: 1 })
-  const region = regions[0]
-  const currencyCode = (
-    region?.currency_code ||
-    process.env.ASK_CURRENCY_CODE ||
-    "vnd"
-  ).toLowerCase()
-
-  const baseFields = [
-    "id",
-    "title",
-    "handle",
-    "description",
-    "thumbnail",
-    "status",
-    "images.url",
-    "categories.name",
-    "options.title",
-    "options.values.value",
-    "variants.id",
-  ]
-
-  const pricedFields = [
-    ...baseFields,
-    "variants.calculated_price.calculated_amount",
-    "variants.calculated_price.currency_code",
-  ]
-
-  try {
-    const graph: Record<string, unknown> = {
-      entity: "product",
-      fields: pricedFields,
-      filters: { status: "published" },
-    }
-
-    if (region?.id) {
-      graph.context = {
-        variants: {
-          calculated_price: QueryContext({
-            region_id: region.id,
-            currency_code: currencyCode,
-          }),
-        },
-      }
-    }
-
-    const { data: products } = await query.graph(graph as never)
-    return mapRawProducts(
-      (products as Array<Record<string, unknown>>) ?? [],
-      currencyCode
-    )
-  } catch (error) {
-    logger.warn(
-      `ask: priced catalog query failed, falling back without prices: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    )
-    const { data: products } = await query.graph({
-      entity: "product",
-      fields: baseFields,
-      filters: { status: "published" },
-    } as never)
-    return mapRawProducts(
-      (products as Array<Record<string, unknown>>) ?? [],
-      currencyCode
-    )
-  }
 }
 
 function historyFromSession(sessionId?: string) {
@@ -234,7 +113,7 @@ class AskModuleService {
 
     const sessionId = input.sessionId?.trim() || identifier("sess")
     const createdAt = new Date().toISOString()
-    const catalog = await loadCatalog(container)
+    const catalog = await loadAskCatalog(container)
     setAskCatalog(catalog)
 
     const answer = await answerQuestion({
