@@ -341,6 +341,8 @@ Recorded in `.ai/DECISIONS.md` **014**.
 
 ## 9. Production go-live (best quality)
 
+> **Full checklist (site + Ask + HTTPS + backup + rollback):** see [`docs/GO-LIVE.md`](./GO-LIVE.md).
+
 Goal: Ask works on first page load (publishable key present), answers are tea-relevant, escalate reaches CSKH, Cohere improves ranking without breaking when offline.
 
 ### 9.1 Required before traffic
