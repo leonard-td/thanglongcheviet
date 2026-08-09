@@ -40,6 +40,11 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
+
+docker compose -f infra/docker-compose.prod.yml down --remove-orphans || true
+docker compose -f infra/docker-compose.yml down --remove-orphans || true
+
+
 # main server: 192.168.1.108
 # test server:  192.168.1.207
 DEPLOY_SERVER="${DEPLOY_SERVER:-d@192.168.1.108}"

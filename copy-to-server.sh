@@ -135,6 +135,8 @@ PAYLOAD=(
 EXCLUDES=(
   'apps/backend/.medusa/server/node_modules'
   'apps/backend/.medusa/server/static'
+  'apps/backend/.medusa/server/.backups'
+  'apps/backend/.medusa/server/.tmp'
   '.env*'
 )
 
