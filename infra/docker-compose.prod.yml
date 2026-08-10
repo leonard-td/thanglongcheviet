@@ -58,34 +58,84 @@ services:
   #    binary is platform-specific — if the build machine wasn't linux-x64,
   #    `npm rebuild sharp` re-downloads the right prebuilt binary (a fetch,
   #    not a compile — node:20 has the toolchain anyway as a fallback).
+  
   deps:
     image: node:20
     container_name: tlcv_deps_prod
     working_dir: /workspace
     environment:
-      # Bật log chi tiết để xem npm đang kẹt ở package nào
-      - NPM_CONFIG_LOGLEVEL=verbose
-      # Ép sharp không build từ source nếu thiếu libvips, giúp fail nhanh hoặc bỏ qua
-      - SHARP_IGNORE_GLOBAL_LIBVIPS=1 
-    command: |
-      sh -c '
-        echo "Bắt đầu cài đặt dependencies cho Backend..."
-        cd /workspace/apps/backend/.medusa/server
-        npm install --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund --legacy-peer-deps
-        
-        echo "Bắt đầu rebuild cho Web..."
-        cd /workspace/apps/web/.output/server
-        if [ -d node_modules/sharp ]; then
-          echo "Đang chạy rebuild sharp..."
-          npm rebuild sharp --no-audit --no-fund || true
-        fi
-        
-        echo "Hoàn thành!"
-      '
+      # Keep logs readable; override in prod if you need deep debug.
+      - NPM_CONFIG_LOGLEVEL=${NPM_CONFIG_LOGLEVEL:-info}
+      # Make installs faster + less flaky on prod hosts.
+      - NPM_CONFIG_UPDATE_NOTIFIER=false
+      - NPM_CONFIG_FUND=false
+      - NPM_CONFIG_AUDIT=false
+      - NPM_CONFIG_FETCH_RETRIES=3
+      - NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=5000
+      - NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=60000
+      # Avoid npm v10 peer-deps ERESOLVE in Medusa runtime output.
+      - NPM_CONFIG_LEGACY_PEER_DEPS=true
+      # Optional: provide an npm token to avoid registry rate limits (E429).
+      - NPM_TOKEN=${NPM_TOKEN:-}
+      # sharp: avoid using any host-installed libvips; prefer its own binaries.
+      - SHARP_IGNORE_GLOBAL_LIBVIPS=1
+    command:
+      - sh
+      - -c
+      - |
+          set -e
+          if [ -n "$$NPM_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=$$NPM_TOKEN" > /root/.npmrc
+          fi
+          echo "Bắt đầu cài đặt dependencies cho Backend (runtime only)..."
+          cd /workspace/apps/backend/.medusa/server
+
+          lock_hash=""
+          stamp_file="node_modules/.tlcv_package_lock.sha256"
+          if [ -f package-lock.json ]; then
+            lock_hash="$(sha256sum package-lock.json | cut -d " " -f1)"
+          fi
+
+          if [ -n "$$lock_hash" ] && [ -f "$$stamp_file" ] && [ "$$(cat "$$stamp_file")" = "$$lock_hash" ]; then
+            echo "Backend deps đã sẵn (lockfile không đổi) — bỏ qua npm install."
+          else
+            npm install --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund --legacy-peer-deps
+            if [ -n "$$lock_hash" ]; then
+              echo "$$lock_hash" > "$$stamp_file"
+            fi
+          fi
+
+          echo "Kiểm tra sharp cho Web..."
+          cd /workspace/apps/web/.output/server
+
+          if node -e 'require("sharp")' >/dev/null 2>&1; then
+            echo "sharp OK."
+          elif [ -d node_modules/sharp ]; then
+            echo "sharp bị lỗi (thường do artifact build từ OS khác). Đang cài lại sharp cho Linux..."
+            sharp_ver="$(node -p 'require(\"./node_modules/sharp/package.json\").version' 2>/dev/null || true)"
+            rm -rf node_modules/sharp node_modules/@img/sharp-* node_modules/@img/sharp-libvips-* || true
+            if [ -n "$$sharp_ver" ]; then
+              npm install --no-save "sharp@$$sharp_ver" --no-audit --no-fund || true
+            else
+              npm install --no-save sharp --no-audit --no-fund || true
+            fi
+
+            if node -e 'require("sharp")' >/dev/null 2>&1; then
+              echo "sharp repaired."
+            else
+              echo "WARN: sharp vẫn lỗi, nhưng vẫn tiếp tục (web có thể không cần sharp ở runtime)."
+            fi
+          else
+            echo "Không thấy sharp trong .output/server/node_modules — bỏ qua."
+          fi
+
+          echo "Hoàn thành!"
     volumes:
       # Thêm :cached hoặc :delegated để tăng tốc độ I/O cực lớn trên Mac/Windows
       - ../:/workspace:cached 
       - backend_server_node_modules:/workspace/apps/backend/.medusa/server/node_modules
+      # Persist npm cache between deploys; biggest win for deps runtime speed.
+      - npm_cache:/root/.npm
     restart: "no"
 
   # --- Medusa backend (prebuilt: API + built admin, `medusa start`) ----------
@@ -254,3 +304,4 @@ volumes:
   backend_static:
   backend_backups:
   restic_repo:
+  npm_cache:
