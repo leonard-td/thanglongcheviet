@@ -52,6 +52,12 @@ trap 'kill "$WATCH_PID" 2>/dev/null' EXIT
 echo "==> Ensuring web/store integration (publishable key, region, navigation)..."
 node scripts/setup-web-integration.mjs || echo "WARN: setup-web-integration.mjs failed — see output above; apps/web may show a publishable-key error until this is fixed and start.dev.sh is re-run."
 
+# setup-web-integration writes NUXT_PUBLIC_* into .env.dev AFTER web already
+# started — recreate web (and nginx) so Nuxt picks up the publishable key.
+# Without this, Store/Ask calls fail with "A valid publishable key is required".
+echo "==> Recreating web/nginx so Nuxt loads the publishable key..."
+"${COMPOSE[@]}" up -d --no-deps --force-recreate web nginx
+
 # Re-attach in the foreground: containers are already up, so this only starts
 # streaming their logs (no recreate) and restores Ctrl+C -> stop-everything,
 # matching the plain `"${COMPOSE[@]}" up` behavior this replaces.

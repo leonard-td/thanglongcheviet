@@ -165,3 +165,14 @@ fix, not "check file size didn't change" or other polling-based workarounds.
 Revisit this same class of bug if a similar directory-scanning list endpoint
 is ever added elsewhere (e.g. the media library, or the products-excel
 import CLI if it ever grows a progress/output file).
+
+# Ask Messages (storefront) vs care-messages (admin)
+
+- **Ask** = consumer assistant: `src/modules/ask` + `POST /store/ask` (+
+  `/store/ask/escalate`). **Rule-engine** path: QueryMapper →
+  executeMappedPlan → in-process Medusa catalog search. Opt-in Cohere Rerank
+  via `COHERE_RERANK=1` + `COHERE_API_KEY` (server-only; never Nuxt public).
+- **care-messages** = admin human CSKH inbox for Telegram/Zalo. Do not merge
+  these two concepts.
+- No Typesense on this stack — lib keyword + filters/sort + optional Cohere.
+- Full architecture + ops guide: `docs/ASK-MESSAGES.md`.

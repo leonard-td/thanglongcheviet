@@ -40,6 +40,10 @@
 
 # Medusa DTC Starter
 
+> **Thăng Long Chè Việt (this fork):** Nuxt storefront + Medusa 2 + Docker.  
+> Start local: `./start.dev.sh` → http://localhost:8800  
+> Docs: [`docs/ASK-MESSAGES.md`](docs/ASK-MESSAGES.md) (Ask chat + Typesense) · [`docs/GO-LIVE.md`](docs/GO-LIVE.md) (production) · [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+
 A production-ready monorepo starter for direct-to-consumer ecommerce stores powered by Medusa and Next.js. Includes a fully featured storefront with product browsing, cart, checkout, customer accounts, and order management.
 
 ## Features

@@ -50,6 +50,19 @@ contract applies before assuming a field is "live from admin":
   the `v-for` array on filter change would create fresh `.animate-on-scroll`
   nodes that never get observed and stay stuck at `opacity: 0`.
 
+# Ask Messages (storefront chat)
+
+- Consumer Ask chat is **`WidgetsAskMessages`** (FAB bottom-right) +
+  `composables/useAsk.ts` → Medusa **`POST /store/ask`** and
+  **`POST /store/ask/escalate`**.
+- Backend is a **rule-engine** (mapper → executeMappedPlan → Medusa catalog
+  keyword/filter/sort) with opt-in **Cohere Rerank** (`COHERE_RERANK=1` +
+  `COHERE_API_KEY` on the Medusa process — never `NUXT_PUBLIC_*`).
+- This is **not** admin `care-messages` (human CSKH inbox). Escalate creates an
+  `inquiry` (`source: ask-messages`) and forwards via care-channel notify.
+- Product suggestion links use `/san-pham/{slug}`.
+- Full architecture + usage: [`docs/ASK-MESSAGES.md`](../../docs/ASK-MESSAGES.md).
+
 # Checking "is the frontend clean" — use typecheck, not lint
 
 `npm run lint` in this workspace is **broken and non-functional** — it

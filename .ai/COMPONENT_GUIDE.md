@@ -9,7 +9,7 @@ Nuxt auto-prefixes: `layout/AppHeader` → `<LayoutAppHeader />`, `sections/Hero
 | `layout/` | AppHeader, AppFooter, SiteLogo, PageHero |
 | `home/` | HomePageBackground, HomePillarList, HomeNewsMarquee (full-bleed ticker), HomeNewsTicker (featured + upward scroll), HomeMobileTopBanner |
 | `sections/` | HeroSlider, Services*, Team*, Blog*, Product*, Contact*, GalleryFilter, … |
-| `widgets/` | ConnectWidget, LangSwitch, CartToast, AutoScrollSidebar (article/about/product group — not homepage) |
+| `widgets/` | ConnectWidget, AskMessages (Ask FAB), LangSwitch, CartToast, AutoScrollSidebar (article/about/product group — not homepage) |
 | `product/` | CardActions |
 
 Home (`pages/index.vue`) uses `layout: false` + `HomeNewsMarquee` + pillars + `HomeNewsTicker`.

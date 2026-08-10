@@ -25,6 +25,7 @@
     "seed:initial-data": "medusa exec ./src/migration-scripts/initial-data-seed.ts",
     "export:initial-data": "medusa exec ./src/scripts/export-initial-data.ts",
     "seed:care-channel-telegram": "medusa exec ./src/scripts/seed-care-channel-telegram.ts",
+    "ask:reindex": "medusa exec ./src/scripts/ask-reindex.ts",
     "import:products-excel": "medusa exec ./src/scripts/import-products-excel.ts"
   },
   "dependencies": {
@@ -65,11 +66,13 @@
     "@tiptap/react": "^3.27.1",
     "@tiptap/starter-kit": "^3.27.1",
     "archiver": "^7.0.1",
+    "cohere-ai": "^8.0.0",
     "lucide-react": "^1.23.0",
     "multer": "^2.0.1",
     "pg": "^8.16.0",
     "pg-copy-streams": "^6.0.6",
     "react-i18next": "13.5.0",
+    "typesense": "^1.8.2",
     "unzipper": "^0.12.3",
     "xlsx": "^0.18.5",
     "zod": "4.2.0"

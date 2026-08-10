@@ -3,6 +3,7 @@
     <LayoutAppHeader />
     <WidgetsLangSwitch />
     <WidgetsConnectWidget />
+    <WidgetsAskMessages />
     <!-- <LayoutGlobalWidgets /> -->
     <main id="main-content" class="flex-1 pt-[72px]">
       <slot />

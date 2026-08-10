@@ -11,6 +11,7 @@ const { active: overlayActive, closeAll } = useUiOverlay()
   />
   <WidgetsLangSwitch />
   <WidgetsConnectWidget />
+  <!-- Ask is mounted in layouts/default.vue + pages/index.vue (layout:false). Do not remount here. -->
 </template>
 
 <style scoped>

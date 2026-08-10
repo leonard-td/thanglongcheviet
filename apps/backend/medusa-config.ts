@@ -154,6 +154,9 @@ module.exports = defineConfig({
       resolve: "./src/modules/site-settings",
     },
     {
+      resolve: "./src/modules/ask",
+    },
+    {
       resolve: "@medusajs/file",
       options: {
         providers: [

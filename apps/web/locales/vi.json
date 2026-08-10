@@ -267,6 +267,30 @@
     "leaveInfo": "Để lại thông tin",
     "leaveInfoSubtitle": "Gửi thông tin, chúng tôi sẽ liên hệ lại sớm nhất"
   },
+  "ask": {
+    "greeting": "Xin chào! Bạn có thể hỏi về giao hàng, quà trà, đặt lịch hoặc sản phẩm.",
+    "conversationLabel": "Hội thoại Ask",
+    "suggestionsLabel": "Sản phẩm gợi ý",
+    "relatedLabel": "Câu hỏi liên quan",
+    "ui": {
+      "title": "Ask — Hỏi đáp",
+      "close": "Đóng",
+      "placeholder": "Nhập câu hỏi…",
+      "send": "Gửi",
+      "thinking": "Đang tìm câu trả lời…",
+      "error": "Không gửi được tin nhắn. Thử lại sau."
+    },
+    "escalate": {
+      "hint": "Để lại thông tin, đội ngũ sẽ liên hệ lại.",
+      "namePlaceholder": "Họ tên (tuỳ chọn)",
+      "phonePlaceholder": "Số điện thoại",
+      "emailPlaceholder": "Email",
+      "submit": "Gửi liên hệ",
+      "sending": "Đang gửi…",
+      "success": "Đã gửi — chúng tôi sẽ phản hồi sớm.",
+      "error": "Không gửi được. Thử lại hoặc dùng form Liên hệ."
+    }
+  },
   "corporate": {
     "title": "Quà tặng doanh nghiệp",
     "subtitle": "Giải pháp quà tặng trà cao cấp, tinh tế, khẳng định dấu ấn thương hiệu và tri ân đối tác.",
