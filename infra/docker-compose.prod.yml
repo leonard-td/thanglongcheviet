@@ -70,9 +70,12 @@ services:
       - NPM_CONFIG_UPDATE_NOTIFIER=false
       - NPM_CONFIG_FUND=false
       - NPM_CONFIG_AUDIT=false
-      - NPM_CONFIG_FETCH_RETRIES=3
-      - NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=5000
-      - NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=60000
+      - NPM_CONFIG_PREFER_OFFLINE=true
+      - NPM_CONFIG_MAXSOCKETS=5
+      - NPM_CONFIG_FETCH_RETRIES=5
+      - NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=10000
+      - NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
+      - NPM_CONFIG_FETCH_TIMEOUT=600000
       # Avoid npm v10 peer-deps ERESOLVE in Medusa runtime output.
       - NPM_CONFIG_LEGACY_PEER_DEPS=true
       # Optional: provide an npm token to avoid registry rate limits (E429).
@@ -94,12 +97,15 @@ services:
           stamp_file="node_modules/.tlcv_package_lock.sha256"
           if [ -f package-lock.json ]; then
             lock_hash="$(sha256sum package-lock.json | cut -d " " -f1)"
+          elif [ -f package.json ]; then
+            lock_hash="$(sha256sum package.json | cut -d " " -f1)"
           fi
 
           if [ -n "$$lock_hash" ] && [ -f "$$stamp_file" ] && [ "$$(cat "$$stamp_file")" = "$$lock_hash" ]; then
             echo "Backend deps đã sẵn (lockfile không đổi) — bỏ qua npm install."
           else
-            npm install --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund --legacy-peer-deps
+            npm install --omit=dev --no-audit --no-fund --prefer-offline --progress=false \
+              || npm install --omit=dev --no-audit --no-fund --prefer-offline --progress=false --legacy-peer-deps
             if [ -n "$$lock_hash" ]; then
               echo "$$lock_hash" > "$$stamp_file"
             fi
@@ -150,8 +156,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      deps:
-        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-medusa}
@@ -223,8 +227,8 @@ services:
     working_dir: /workspace/apps/web
     restart: unless-stopped
     depends_on:
-      deps:
-        condition: service_completed_successfully
+      backend:
+        condition: service_started
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
