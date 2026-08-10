@@ -23,6 +23,16 @@ const isSolid = computed(() => scrollY.value > solidThreshold.value || isMenuOpe
 
 const { totalItems } = useCart()
 
+const { categories: productCategories, collections: productCollections, pending: productsPending } = useProducts()
+
+// The products nav item gets an image-led mega menu (categories/collections
+// with thumbnails) instead of the plain text dropdown other nav items use.
+const isProductsLink = (link: NavLink) => link.path === '/san-pham-list' || link.key === 'nav.products'
+
+// Same treatment for the blog/news nav item — topics + latest post banner
+// instead of a plain text dropdown.
+const isNewsLink = (link: NavLink) => link.path === '/tin-tuc' || link.key === 'nav.blog'
+
 interface NavLink {
   key: string
   path: string
@@ -136,17 +146,33 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             leave-active-class="transition-all duration-100"
             leave-to-class="opacity-0 -translate-y-1"
           >
-            <div v-if="link.children && openDropdown === link.key" class="site-dropdown">
-              <NuxtLink
-                v-for="child in link.children"
-                :key="child.key"
-                :to="localePath(child.path)"
-                class="site-dropdown-link"
-                :target="child.openInNewTab ? '_blank' : undefined"
-                :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
-              >
-                {{ child.label || t(child.key) }}
-              </NuxtLink>
+            <div
+              v-if="link.children && openDropdown === link.key"
+              class="site-dropdown"
+              :class="{ 'site-dropdown-mega': isProductsLink(link) || isNewsLink(link) }"
+            >
+              <LayoutAppHeaderProductsMenu
+                v-if="isProductsLink(link)"
+                :categories="productCategories"
+                :collections="productCollections"
+                :pending="productsPending"
+              />
+              <LayoutAppHeaderNewsMenu
+                v-else-if="isNewsLink(link)"
+                :children="link.children"
+              />
+              <template v-else>
+                <NuxtLink
+                  v-for="child in link.children"
+                  :key="child.key"
+                  :to="localePath(child.path)"
+                  class="site-dropdown-link"
+                  :target="child.openInNewTab ? '_blank' : undefined"
+                  :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
+                >
+                  {{ child.label || t(child.key) }}
+                </NuxtLink>
+              </template>
             </div>
           </Transition>
         </div>
@@ -351,6 +377,13 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   border: 1px solid rgba(201, 168, 108, .2);
   box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
   z-index: 10;
+}
+
+.site-dropdown-mega {
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 0;
+  padding: 0;
 }
 
 .site-dropdown-link {

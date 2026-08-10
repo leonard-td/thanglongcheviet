@@ -15,7 +15,8 @@
     "productsMenu": {
       "teaViet": "Thăng Long Chè Việt",
       "anQuangCaffe": "Ân Quang cà phê",
-      "corporateGifts": "Quà tặng doanh nghiệp"
+      "corporateGifts": "Quà tặng doanh nghiệp",
+      "moreTitle": "Khám phá thêm"
     },
     "craftVillage": "Làng nghề",
     "projectsPartners": "Dự án & Đối tác",
@@ -28,7 +29,8 @@
       "vietTea": "Nếp trà Việt",
       "tradition": "Văn hóa Việt & làng nghề truyền thống",
       "teaHeritage": "Di sản trà cụ",
-      "anQuangGarden": "Vườn Ân Quang"
+      "anQuangGarden": "Vườn Ân Quang",
+      "moreTitle": "Khám phá thêm"
     },
     "library": "Thư viện văn hóa Việt",
     "contact": "Liên hệ",
