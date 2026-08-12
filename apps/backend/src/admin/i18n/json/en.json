@@ -533,6 +533,26 @@
       "failed": "Failed to save description"
     }
   },
+  "productMediaLibrary": {
+    "title": "Product images from library",
+    "hint": "Choose an existing image from the Image Library to add to this product. Use the default Product Images section to upload, reorder, or remove images.",
+    "action": "Choose from library",
+    "modalTitle": "Choose product image",
+    "empty": "There are no images in the library yet.",
+    "noProductImages": "This product has no images yet.",
+    "select": "Add this image",
+    "selected": "This image is already on the product",
+    "thumbnail": "Thumbnail",
+    "setThumbnail": "Set as thumbnail",
+    "moveEarlier": "Move image earlier",
+    "moveLater": "Move image later",
+    "remove": "Remove image",
+    "messages": {
+      "saved": "Product images updated",
+      "addFailed": "Failed to update product images",
+      "alreadyAdded": "This image is already on the product"
+    }
+  },
   "campaign-topics": {
     "title": "Post Topics",
     "create": "Add topic",

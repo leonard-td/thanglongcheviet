@@ -533,6 +533,26 @@
       "failed": "Lưu mô tả thất bại"
     }
   },
+  "productMediaLibrary": {
+    "title": "Ảnh sản phẩm từ thư viện",
+    "hint": "Chọn ảnh có sẵn trong Thư viện ảnh để thêm vào sản phẩm. Dùng phần Ảnh sản phẩm mặc định để tải ảnh mới, sắp xếp hoặc xóa ảnh.",
+    "action": "Chọn từ thư viện",
+    "modalTitle": "Chọn ảnh sản phẩm",
+    "empty": "Chưa có ảnh nào trong thư viện.",
+    "noProductImages": "Sản phẩm chưa có ảnh nào.",
+    "select": "Thêm ảnh này",
+    "selected": "Ảnh này đã có trong sản phẩm",
+    "thumbnail": "Ảnh đại diện",
+    "setThumbnail": "Đặt làm ảnh đại diện",
+    "moveEarlier": "Đưa ảnh lên trước",
+    "moveLater": "Đưa ảnh xuống sau",
+    "remove": "Xóa ảnh",
+    "messages": {
+      "saved": "Đã cập nhật ảnh sản phẩm",
+      "addFailed": "Cập nhật ảnh sản phẩm thất bại",
+      "alreadyAdded": "Ảnh này đã có trong sản phẩm"
+    }
+  },
   "campaign-topics": {
     "title": "Chủ đề bài viết",
     "create": "Thêm chủ đề",
