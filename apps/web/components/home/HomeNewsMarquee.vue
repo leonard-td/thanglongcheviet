@@ -9,10 +9,13 @@ const props = withDefaults(defineProps<{
   motionToggle?: boolean
   /** Chạy chậm hơn cho dễ đọc (dùng ở trang chủ v3). */
   slow?: boolean
+  /** Ẩn logo box bên trái — dùng ở layout chung (mọi trang trừ trang chủ). */
+  hideBrand?: boolean
 }>(), {
   inline: false,
   motionToggle: false,
   slow: false,
+  hideBrand: false,
 })
 
 const { t, locale } = useI18n()
@@ -42,7 +45,7 @@ const duration = computed(() => {
     role="region"
     :aria-label="t('site.name')"
   >
-    <div class="home-marquee-brand">
+    <div v-if="!props.hideBrand" class="home-marquee-brand">
       <LayoutSiteLogo variant="marquee" />
     </div>
     <div class="home-marquee-viewport">
