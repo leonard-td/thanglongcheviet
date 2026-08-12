@@ -10,6 +10,13 @@ export interface ProductGroup {
   label: string
   /** Banner đầu trang — lưu ở metadata.thumbnail (danh mục/bộ sưu tập không có field ảnh gốc). */
   thumbnail: string | null
+  /**
+   * metadata.menu_group trên category ("coffee" | "gift") — admin gắn qua
+   * Metadata editor của Medusa để tách category đó khỏi nhóm "Chè" trong
+   * mega-menu, không phụ thuộc vào handle (đổi tên/handle không làm vỡ nhóm).
+   * null với category không gắn (mặc định thuộc nhóm "Chè").
+   */
+  menuGroup: string | null
 }
 
 const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
@@ -48,7 +55,8 @@ export function useProducts() {
   const categories = computed<ProductGroup[]>(() =>
     (categoriesData.value?.product_categories ?? []).map((c) => {
       const cat = transformMedusaCategory(c)
-      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail }
+      const menuGroup = typeof c.metadata?.menu_group === 'string' ? c.metadata.menu_group : null
+      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail, menuGroup }
     }),
   )
 
@@ -64,6 +72,7 @@ export function useProducts() {
       slug: c.handle,
       label: categoryLabel(c.title, locale.value),
       thumbnail: typeof c.metadata?.thumbnail === 'string' ? c.metadata.thumbnail : null,
+      menuGroup: null,
     })),
   )
 

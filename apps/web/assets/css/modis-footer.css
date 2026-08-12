@@ -51,10 +51,86 @@
   color: #c9a86c;
 }
 
-.modis-site-footer .widget-address address span {
-  display: block;
+.modis-site-footer .widget-address address > span {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin-bottom: 8px;
   line-height: 1.6;
+}
+
+.modis-site-footer .widget-address .address-item-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  color: #c9a86c;
+  display: block;
+}
+
+.modis-site-footer .widget-address .address-item--map {
+  position: relative;
+  cursor: pointer;
+}
+
+.modis-site-footer .widget-address .address-item-text {
+  border-bottom: 1px dashed transparent;
+  transition: border-color .2s ease, color .2s ease;
+}
+
+.modis-site-footer .widget-address .address-item--map:hover .address-item-text {
+  border-color: #c9a86c;
+  color: #fff;
+}
+
+.modis-site-footer .widget-address .address-map-popup {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 12px);
+  width: 320px;
+  max-width: 80vw;
+  height: 200px;
+  background: #151515;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.modis-site-footer .widget-address .address-item--map:hover .address-map-popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.modis-site-footer .widget-address .address-map-popup iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 6px;
+}
+
+.modis-site-footer .widget-address .address-map-popup::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  border: 8px solid transparent;
+  border-top-color: #151515;
+}
+
+@media (max-width: 767px) {
+  .modis-site-footer .widget-address .address-map-popup {
+    width: 260px;
+    left: -8px;
+  }
 }
 
 .modis-site-footer .list-border-bottom li {

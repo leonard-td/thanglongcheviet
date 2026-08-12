@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FALLBACK_POST_IMAGE } from '~/utils/storefront'
+import { FALLBACK_POST_IMAGE, resolveCardImage } from '~/utils/storefront'
 
 interface NavChildLink {
   key: string
@@ -8,7 +8,16 @@ interface NavChildLink {
   openInNewTab?: boolean
 }
 
-defineProps<{
+interface QuickLink {
+  key: string
+  path: string
+  label: string
+  image: string
+  openInNewTab?: boolean
+  isCta?: boolean
+}
+
+const props = defineProps<{
   children: NavChildLink[]
 }>()
 
@@ -24,16 +33,45 @@ const { topics, pending: topicsPending } = useBlogTopics()
 const { latestPosts, pending: postsPending } = useBlog()
 const featuredPost = computed(() => latestPosts.value[0] ?? null)
 
-const pending = computed(() => topicsPending.value || postsPending.value)
+// Same admin-managed "Cards" content as the products mega menu — gives the
+// former plain-text "Khám phá thêm" links a representative image so they
+// read as tiles inside the Chủ đề grid instead of a separate text list.
+const { cards, pending: cardsPending } = useCards()
+
+const cardImageForPath = (path: string) => {
+  const card = cards.value.find(c => c.type === 'link' && c.is_active && c.path === path)
+  return (card ? resolveCardImage(card.image) : '') || FALLBACK_POST_IMAGE
+}
+
+const quickLinks = computed<QuickLink[]>(() => [
+  ...props.children.map(child => ({
+    key: child.key,
+    path: child.path,
+    label: child.label || t(child.key),
+    image: cardImageForPath(child.path),
+    openInNewTab: child.openInNewTab,
+  })),
+  {
+    key: 'blog.viewAll',
+    path: '/tin-tuc',
+    label: t('blog.viewAll'),
+    image: cardImageForPath('/tin-tuc'),
+    isCta: true,
+  },
+])
+
+const pending = computed(() => topicsPending.value || postsPending.value || cardsPending.value)
 </script>
 
 <template>
   <div class="news-mega">
     <!-- Loading skeleton -->
-    <div v-if="pending" class="news-mega-grid">
-      <div v-for="n in 6" :key="n" class="news-mega-skeleton">
-        <div class="news-mega-skeleton-thumb" />
-        <div class="news-mega-skeleton-line" />
+    <div v-if="pending" class="news-mega-section">
+      <div class="news-mega-grid">
+        <div v-for="n in 6" :key="n" class="news-mega-skeleton">
+          <div class="news-mega-skeleton-thumb" />
+          <div class="news-mega-skeleton-line" />
+        </div>
       </div>
     </div>
 
@@ -50,7 +88,7 @@ const pending = computed(() => topicsPending.value || postsPending.value)
         </span>
       </NuxtLink>
 
-      <div v-if="topics.length" class="news-mega-section">
+      <div v-if="topics.length || quickLinks.length" class="news-mega-section">
         <span class="news-mega-title">{{ t('blog.topics.eyebrow') }}</span>
         <div class="news-mega-grid">
           <NuxtLink
@@ -64,24 +102,21 @@ const pending = computed(() => topicsPending.value || postsPending.value)
             </span>
             <span class="news-mega-label">{{ topic.name }}</span>
           </NuxtLink>
+          <NuxtLink
+            v-for="link in quickLinks"
+            :key="link.key"
+            :to="localePath(link.path)"
+            class="news-mega-item"
+            :class="{ 'news-mega-item-cta': link.isCta }"
+            :target="link.openInNewTab ? '_blank' : undefined"
+            :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
+          >
+            <span class="news-mega-thumb">
+              <img :src="link.image" :alt="link.label" loading="lazy">
+            </span>
+            <span class="news-mega-label">{{ link.label }}</span>
+          </NuxtLink>
         </div>
-      </div>
-
-      <div class="news-mega-section news-mega-links">
-        <span class="news-mega-title">{{ t('nav.blogMenu.moreTitle') }}</span>
-        <NuxtLink
-          v-for="child in children"
-          :key="child.key"
-          :to="localePath(child.path)"
-          class="news-mega-textlink"
-          :target="child.openInNewTab ? '_blank' : undefined"
-          :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
-        >
-          {{ child.label || t(child.key) }}
-        </NuxtLink>
-        <NuxtLink :to="localePath('/tin-tuc')" class="news-mega-textlink news-mega-textlink-cta">
-          {{ t('blog.viewAll') }}
-        </NuxtLink>
       </div>
     </template>
   </div>
@@ -216,30 +251,11 @@ const pending = computed(() => topicsPending.value || postsPending.value)
   color: #e8d5a8;
 }
 
-.news-mega-links {
-  flex: 1 1 200px;
-  display: flex;
-  flex-direction: column;
+.news-mega-item-cta .news-mega-thumb {
+  border-color: rgba(221, 160, 77, .55);
 }
 
-.news-mega-textlink {
-  padding: .55rem 0;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: rgba(245, 240, 230, .82);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255, 255, 255, .06);
-  transition: color .15s ease;
-}
-
-.news-mega-textlink:hover {
-  color: #e8d5a8;
-}
-
-.news-mega-textlink-cta {
-  margin-top: .75rem;
-  border: none;
+.news-mega-item-cta .news-mega-label {
   color: #dda04d;
   font-weight: 700;
 }

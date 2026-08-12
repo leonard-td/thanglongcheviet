@@ -16,7 +16,10 @@
       "teaViet": "Thang Long Che Viet",
       "anQuangCaffe": "An Quang Coffee",
       "corporateGifts": "Corporate gifts",
-      "moreTitle": "Explore more"
+      "moreTitle": "Explore more",
+      "teaGroup": "Tea",
+      "coffeeGroup": "Coffee",
+      "giftGroup": "Gifts"
     },
     "craftVillage": "Craft Village",
     "projectsPartners": "Projects & Partners",

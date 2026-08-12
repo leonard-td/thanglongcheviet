@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { ProductGroup } from '~/composables/useProducts'
-import { FALLBACK_PRODUCT_IMAGE } from '~/utils/storefront'
+import { FALLBACK_PRODUCT_IMAGE, resolveCardImage } from '~/utils/storefront'
 
-defineProps<{
+const props = defineProps<{
   categories: ProductGroup[]
   collections: ProductGroup[]
   pending: boolean
@@ -16,20 +16,9 @@ const localePath = useLocalePath()
 // whichever type="link" card points at /san-pham-list drives the image and
 // title here, so updating the banner later is just an admin edit, no code
 // change.
-const { cards } = useCards()
+const { cards, pending: cardsPending } = useCards()
 
-const imgModules = import.meta.glob('~/assets/images/*.jpg', {
-  eager: true,
-  import: 'default',
-}) as Record<string, string>
-const imgUrl = (name: string) =>
-  Object.entries(imgModules).find(([k]) => k.endsWith(`/${name}`))?.[1] ?? ''
-
-const resolveCardImage = (image: string | null) => {
-  if (!image) return ''
-  if (/^https?:\/\//.test(image) || image.startsWith('/')) return image
-  return imgUrl(image)
-}
+const showSkeleton = computed(() => props.pending || cardsPending.value)
 
 const featuredCard = computed(() =>
   cards.value.find(c => c.type === 'link' && c.is_active && c.path === '/san-pham-list') ?? null,
@@ -47,33 +36,127 @@ const categoryFallbackImage = computed(() => {
   const card = cards.value.find(c => c.type === 'link' && c.is_active && c.path === '/van-hoa-viet')
   return (card ? resolveCardImage(card.image) : '') || FALLBACK_PRODUCT_IMAGE
 })
+
+const cardImageForPath = (path: string) => {
+  const card = cards.value.find(c => c.type === 'link' && c.is_active && c.path === path)
+  return (card ? resolveCardImage(card.image) : '') || categoryFallbackImage.value
+}
+
+interface GroupItem {
+  key: string
+  path: string
+  label: string
+  image: string
+}
+
+interface ProductMegaGroup {
+  key: string
+  title: string
+  items: GroupItem[]
+}
+
+// Category-style grouping (thegioididong.com pattern): a short group title
+// ("Chè", "Cà phê", "Quà tặng") with an image-tile grid underneath, instead
+// of one flat "Danh mục" list. Every group is now backed by a real Medusa
+// product category (see apps/backend/src/scripts/sync-menu-categories.ts) —
+// "Cà phê" and "Quà tặng" still route to their own curated landing pages
+// (/an-quang-caffe, /qua-tang-doanh-nghiep) instead of the generic category
+// grid, but their tile only renders once the matching category actually
+// exists in the backend, and disappears if an admin deactivates/removes it.
+//
+// Which group a category belongs to is read from its metadata.menu_group
+// ("coffee" | "gift", set by sync-menu-categories.ts or by hand via the
+// category's Metadata editor in Medusa admin) — NOT from its handle, because
+// an admin renaming/recreating the category in the dashboard (as happened
+// with "cà phê", created there with handle "ca-phe" instead of a guessed
+// "an-quang-caffe") silently dropped it back into "Chè" before. The handle
+// list below is only a one-time fallback for categories that predate the
+// menu_group tag; keep it in sync with the real handles if it's ever used.
+const COFFEE_CATEGORY_HANDLES = ['ca-phe', 'an-quang-caffe']
+const GIFT_CATEGORY_HANDLES = ['qua-tang-doanh-nghiep']
+
+type MenuGroupKey = 'tea' | 'coffee' | 'gift'
+
+const categoryMenuGroup = (cat: ProductGroup): MenuGroupKey => {
+  if (cat.menuGroup === 'coffee' || cat.menuGroup === 'gift') return cat.menuGroup
+  if (COFFEE_CATEGORY_HANDLES.includes(cat.slug)) return 'coffee'
+  if (GIFT_CATEGORY_HANDLES.includes(cat.slug)) return 'gift'
+  return 'tea'
+}
+
+const teaCategories = computed(() => props.categories.filter(cat => categoryMenuGroup(cat) === 'tea'))
+const coffeeCategory = computed(() => props.categories.find(cat => categoryMenuGroup(cat) === 'coffee') ?? null)
+const giftCategory = computed(() => props.categories.find(cat => categoryMenuGroup(cat) === 'gift') ?? null)
+
+const productGroups = computed<ProductMegaGroup[]>(() => [
+  {
+    key: 'tea',
+    title: t('nav.productsMenu.teaGroup'),
+    items: teaCategories.value.map(cat => ({
+      key: cat.id,
+      path: `/san-pham/danh-muc/${cat.slug}`,
+      label: cat.label,
+      image: cat.thumbnail || FALLBACK_PRODUCT_IMAGE,
+    })),
+  },
+  {
+    key: 'coffee',
+    title: t('nav.productsMenu.coffeeGroup'),
+    items: coffeeCategory.value
+      ? [
+          {
+            key: coffeeCategory.value.id,
+            path: '/an-quang-caffe',
+            label: t('nav.productsMenu.anQuangCaffe'),
+            image: cardImageForPath('/an-quang-caffe'),
+          },
+        ]
+      : [],
+  },
+  {
+    key: 'gift',
+    title: t('nav.productsMenu.giftGroup'),
+    items: giftCategory.value
+      ? [
+          {
+            key: giftCategory.value.id,
+            path: '/qua-tang-doanh-nghiep',
+            label: t('nav.productsMenu.corporateGifts'),
+            image: cardImageForPath('/qua-tang-doanh-nghiep'),
+          },
+        ]
+      : [],
+  },
+].filter(group => group.items.length))
 </script>
 
 <template>
   <div class="products-mega">
     <!-- Loading skeleton -->
-    <div v-if="pending" class="products-mega-grid">
-      <div v-for="n in 8" :key="n" class="products-mega-skeleton">
-        <div class="products-mega-skeleton-thumb" />
-        <div class="products-mega-skeleton-line" />
+    <div v-if="showSkeleton" class="products-mega-section">
+      <div class="products-mega-grid">
+        <div v-for="n in 8" :key="n" class="products-mega-skeleton">
+          <div class="products-mega-skeleton-thumb" />
+          <div class="products-mega-skeleton-line" />
+        </div>
       </div>
     </div>
 
     <template v-else>
 
-      <div v-if="categories.length" class="products-mega-section">
-        <span class="products-mega-title">{{ t('products.browseCategories') }}</span>
+      <div v-for="group in productGroups" :key="group.key" class="products-mega-section">
+        <span class="products-mega-title">{{ group.title }}</span>
         <div class="products-mega-grid">
           <NuxtLink
-            v-for="cat in categories"
-            :key="cat.id"
-            :to="localePath(`/san-pham/danh-muc/${cat.slug}`)"
+            v-for="item in group.items"
+            :key="item.key"
+            :to="localePath(item.path)"
             class="products-mega-item"
           >
             <span class="products-mega-thumb">
-              <img :src="cat.thumbnail || FALLBACK_PRODUCT_IMAGE" :alt="cat.label" loading="lazy">
+              <img :src="item.image" :alt="item.label" loading="lazy">
             </span>
-            <span class="products-mega-label">{{ cat.label }}</span>
+            <span class="products-mega-label">{{ item.label }}</span>
           </NuxtLink>
         </div>
       </div>
@@ -95,16 +178,12 @@ const categoryFallbackImage = computed(() => {
         </div>
       </div>
 
-      <div class="products-mega-section products-mega-links">
-        <span class="products-mega-title">{{ t('nav.productsMenu.moreTitle') }}</span>
-        <NuxtLink :to="localePath('/an-quang-caffe')" class="products-mega-textlink">
-          {{ t('nav.productsMenu.anQuangCaffe') }}
-        </NuxtLink>
-        <NuxtLink :to="localePath('/qua-tang-doanh-nghiep')" class="products-mega-textlink">
-          {{ t('nav.productsMenu.corporateGifts') }}
-        </NuxtLink>
-        <NuxtLink :to="localePath('/san-pham-list')" class="products-mega-textlink products-mega-textlink-cta">
+      <div class="products-mega-footer">
+        <NuxtLink :to="localePath('/san-pham-list')" class="products-mega-viewall">
           {{ t('products.viewAllProducts') }}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9 6 6 6-6 6" />
+          </svg>
         </NuxtLink>
       </div>
     </template>
@@ -232,32 +311,33 @@ const categoryFallbackImage = computed(() => {
   color: #e8d5a8;
 }
 
-.products-mega-links {
-  flex: 1 1 180px;
+.products-mega-footer {
+  flex-basis: 100%;
   display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
+  padding-top: .75rem;
+  border-top: 1px solid rgba(255, 255, 255, .08);
 }
 
-.products-mega-textlink {
-  padding: .55rem 0;
+.products-mega-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
   font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: rgba(245, 240, 230, .82);
-  text-decoration: none;
-  border-bottom: 1px solid rgba(255, 255, 255, .06);
-  transition: color .15s ease;
-}
-
-.products-mega-textlink:hover {
-  color: #e8d5a8;
-}
-
-.products-mega-textlink-cta {
-  margin-top: .75rem;
-  border: none;
   color: #dda04d;
-  font-weight: 700;
+  text-decoration: none;
+}
+
+.products-mega-viewall svg {
+  width: 14px;
+  height: 14px;
+}
+
+.products-mega-viewall:hover {
+  color: #e8d5a8;
 }
 
 .products-mega-skeleton {
