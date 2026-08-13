@@ -1,7 +1,10 @@
 import { Button } from "@medusajs/ui"
 import type { Editor } from "@tiptap/react"
 import { useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
+import * as mammoth from "mammoth"
 import MediaPickerModal from "../media-picker-modal"
+import { sanitizePastedHtml } from "./paste-sanitize"
 import {
   Undo,
   Redo,
@@ -36,11 +39,16 @@ import {
   Plus,
   Trash2,
   Video,
-  Eraser
+  Eraser,
+  FileUp,
+  Maximize2,
+  Minimize2
 } from "lucide-react"
 
 type TiptapToolbarProps = {
   editor: Editor
+  isFullscreen: boolean
+  onToggleFullscreen: () => void
 }
 
 const ToolbarDivider = () => (
@@ -73,8 +81,14 @@ const ToolbarButton = ({
   </Button>
 )
 
-const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
+const TiptapToolbar = ({
+  editor,
+  isFullscreen,
+  onToggleFullscreen,
+}: TiptapToolbarProps) => {
+  const { t } = useTranslation()
   const colorInputRef = useRef<HTMLInputElement>(null)
+  const wordInputRef = useRef<HTMLInputElement>(null)
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
 
   const setLink = () => {
@@ -109,9 +123,47 @@ const TiptapToolbar = ({ editor }: TiptapToolbarProps) => {
     editor.chain().focus().setColor(event.target.value).run()
   }
 
+  const importWord = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    try {
+      const { value } = await mammoth.convertToHtml({
+        arrayBuffer: await file.arrayBuffer(),
+      })
+      editor.commands.setContent(sanitizePastedHtml(value))
+    } catch {
+      window.alert(t("campaign-posts.editor.importWordFailed"))
+    }
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-t-lg border border-b-0 border-ui-border-base bg-ui-bg-subtle px-2 py-2">
       <div className="flex flex-wrap items-center gap-1">
+        <ToolbarButton
+          title={t(
+            isFullscreen
+              ? "campaign-posts.editor.exitFullscreen"
+              : "campaign-posts.editor.fullscreen"
+          )}
+          onClick={onToggleFullscreen}
+        >
+          {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </ToolbarButton>
+        <input
+          ref={wordInputRef}
+          type="file"
+          accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="hidden"
+          onChange={importWord}
+        />
+        <ToolbarButton
+          title={t("campaign-posts.editor.importWord")}
+          onClick={() => wordInputRef.current?.click()}
+        >
+          <FileUp size={16} />
+        </ToolbarButton>
         <ToolbarButton
           title="Undo"
           disabled={!editor.can().chain().focus().undo().run()}

@@ -4,11 +4,32 @@ import { zodValidator } from "../../utils/zod-validator"
 import { CAMPAIGN_MODULE } from "../../../modules/campaign"
 import type CampaignModuleService from "../../../modules/campaign/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../utils/media-url"
+import {
+  legacyFieldsFromVietnameseTranslation,
+  mergeCampaignPostTranslations,
+  type CampaignPostTranslations,
+} from "../../../modules/campaign/translations"
+
+const LocalizedCampaignPostSchema = z.object({
+  title: z.string().min(1).optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
+  description: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  seo_title: z.string().nullable().optional(),
+  seo_description: z.string().nullable().optional(),
+  seo_keywords: z.string().nullable().optional(),
+})
 
 const CreateCampaignPostSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).optional(),
   slug: z.string().min(1).optional(),
-  content: z.record(z.string(), z.unknown()).default({}),
+  content: z.record(z.string(), z.unknown()).optional(),
+  translations: z
+    .object({
+      vi: LocalizedCampaignPostSchema.optional(),
+      en: LocalizedCampaignPostSchema.optional(),
+    })
+    .optional(),
   description: z.string().nullable().optional(),
   thumbnail: z.string().nullable().optional(),
   topic_id: z.string().nullable().optional(),
@@ -19,6 +40,22 @@ const CreateCampaignPostSchema = z.object({
   seo_title: z.string().nullable().optional(),
   seo_description: z.string().nullable().optional(),
   seo_keywords: z.string().nullable().optional(),
+}).superRefine((data, ctx) => {
+  if (!data.translations && !data.title) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["title"],
+      message: "A Vietnamese title is required",
+    })
+  }
+
+  if (data.translations && !data.translations.vi?.title) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["translations", "vi", "title"],
+      message: "A Vietnamese title is required",
+    })
+  }
 })
 
 const slugify = (value: string) =>
@@ -57,22 +94,43 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     req.scope.resolve(CAMPAIGN_MODULE)
 
   const body = await zodValidator(CreateCampaignPostSchema, req.body)
-  const slug = body.slug || slugify(body.title)
+  const translations = mergeCampaignPostTranslations(
+    {},
+    body.translations as CampaignPostTranslations | undefined,
+    {
+      ...body,
+      content: body.content ?? {},
+    }
+  )
+  const localizedFields = legacyFieldsFromVietnameseTranslation(translations)
+  const title = localizedFields.title ?? body.title
+  const slug = body.slug || slugify(title ?? "")
 
   const post = await campaignModuleService.createCampaignPosts({
-    title: body.title,
+    title: title!,
     slug,
-    content: normalizeTiptapImageUrls(body.content),
-    description: body.description ?? null,
+    content: normalizeTiptapImageUrls(localizedFields.content ?? {}),
+    translations: Object.fromEntries(
+      Object.entries(translations).map(([locale, translation]) => [
+        locale,
+        {
+          ...translation,
+          content: translation.content
+            ? normalizeTiptapImageUrls(translation.content)
+            : undefined,
+        },
+      ])
+    ),
+    description: localizedFields.description ?? null,
     thumbnail: toRelativeMediaUrl(body.thumbnail),
     topic_id: body.topic_id ?? null,
     is_active: body.is_active,
     publish_at: body.publish_at ? new Date(body.publish_at) : null,
     unpublish_at: body.unpublish_at ? new Date(body.unpublish_at) : null,
-    source: body.source ?? null,
-    seo_title: body.seo_title ?? null,
-    seo_description: body.seo_description ?? null,
-    seo_keywords: body.seo_keywords ?? null,
+    source: localizedFields.source ?? null,
+    seo_title: localizedFields.seo_title ?? null,
+    seo_description: localizedFields.seo_description ?? null,
+    seo_keywords: localizedFields.seo_keywords ?? null,
   })
 
   res.status(201).json({ campaign_post: post })

@@ -281,6 +281,12 @@
       "closed": "Closed"
     },
     "fields": {
+      "contentLanguage": "Content language",
+      "contentLanguageHint": "Vietnamese is required. English is optional and the storefront falls back to Vietnamese when it is empty.",
+      "language": {
+        "vi": "Tiếng Việt",
+        "en": "English"
+      },
       "title": "Title",
       "slug": "Slug",
       "slugPlaceholder": "auto-generated from title",
@@ -449,6 +455,12 @@
     "edit": "Edit post",
     "backToList": "Back to list",
     "scheduleHint": "Set publish and unpublish times to publish automatically",
+    "editor": {
+      "importWord": "Import from Word",
+      "importWordFailed": "Could not read the Word file",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen"
+    },
     "columns": {
       "title": "Title",
       "slug": "Slug",

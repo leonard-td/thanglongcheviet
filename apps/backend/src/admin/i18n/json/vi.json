@@ -449,6 +449,12 @@
     "edit": "Chỉnh sửa bài viết",
     "backToList": "Quay lại danh sách",
     "scheduleHint": "Đặt thời gian đăng và gỡ bài để tự động công bố",
+    "editor": {
+      "importWord": "Nhập từ Word",
+      "importWordFailed": "Không thể đọc file Word",
+      "fullscreen": "Toàn màn hình",
+      "exitFullscreen": "Thoát toàn màn hình"
+    },
     "columns": {
       "title": "Tiêu đề",
       "slug": "Đường dẫn",
@@ -463,6 +469,12 @@
       "inactive": "Tạm dừng"
     },
     "fields": {
+      "contentLanguage": "Ngôn ngữ nội dung",
+      "contentLanguageHint": "Tiếng Việt là bắt buộc. Tiếng Anh là tùy chọn; website sẽ dùng tiếng Việt khi chưa có bản dịch.",
+      "language": {
+        "vi": "Tiếng Việt",
+        "en": "English"
+      },
       "title": "Tiêu đề",
       "slug": "Đường dẫn (slug)",
       "slugPlaceholder": "tự động tạo từ tiêu đề",

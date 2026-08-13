@@ -5,6 +5,9 @@ const CampaignPost = model.define("campaign_post", {
   title: model.text(),
   slug: model.text().searchable(),
   content: model.json(),
+  // Localized article fields. The legacy flat fields above stay populated for
+  // backwards-compatible admin and Store API consumers.
+  translations: model.json().nullable(),
   // Short summary shown on listing cards/sidebar on the storefront and used
   // as the SEO meta description fallback — replaces the old behavior of
   // auto-truncating the content body

@@ -3,8 +3,6 @@ import {
   toast,
   usePrompt,
 } from "@medusajs/ui"
-import type { JSONContent } from "@tiptap/core"
-import { EMPTY_TIPTAP_DOC } from "../../../components/tiptap-editor/extensions"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import {
@@ -23,6 +21,7 @@ import { sdk } from "../../../lib/sdk"
 import type {
   CampaignPost,
   CampaignPostResponse,
+  CampaignPostTranslations,
 } from "../../../types/campaign-post"
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
@@ -51,9 +50,7 @@ const EditCampaignPostPage = () => {
   const { t } = useTranslation()
   const { campaign_post } = useLoaderData() as Awaited<ReturnType<typeof loader>>
 
-  const [title, setTitle] = useState(campaign_post.title)
   const [slug, setSlug] = useState(campaign_post.slug)
-  const [description, setDescription] = useState(campaign_post.description ?? "")
   const [thumbnail, setThumbnail] = useState(campaign_post.thumbnail ?? "")
   const [topicId, setTopicId] = useState(campaign_post.topic_id ?? "")
   const [isActive, setIsActive] = useState(campaign_post.is_active)
@@ -63,15 +60,20 @@ const EditCampaignPostPage = () => {
   const [unpublishAt, setUnpublishAt] = useState(
     toDatetimeLocal(campaign_post.unpublish_at)
   )
-  const [source, setSource] = useState(campaign_post.source ?? "")
-  const [seoTitle, setSeoTitle] = useState(campaign_post.seo_title ?? "")
-  const [seoDescription, setSeoDescription] = useState(
-    campaign_post.seo_description ?? ""
+  const [translations, setTranslations] = useState<CampaignPostTranslations>(
+    campaign_post.translations ?? {
+      vi: {
+        title: campaign_post.title,
+        content: campaign_post.content,
+        description: campaign_post.description,
+        source: campaign_post.source,
+        seo_title: campaign_post.seo_title,
+        seo_description: campaign_post.seo_description,
+        seo_keywords: campaign_post.seo_keywords,
+      },
+    }
   )
-  const [seoKeywords, setSeoKeywords] = useState(campaign_post.seo_keywords ?? "")
-  const [content, setContent] = useState<JSONContent | null>(
-    campaign_post.content
-  )
+  const title = translations.vi?.title ?? campaign_post.title
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
@@ -121,19 +123,13 @@ const EditCampaignPostPage = () => {
 
     try {
       await mutateAsync({
-        title,
         slug,
-        content: content || EMPTY_TIPTAP_DOC,
-        description: description || null,
+        translations,
         thumbnail: thumbnail || null,
         topic_id: topicId || null,
         is_active: isActive,
         publish_at: toIsoDateTime(publishAt),
         unpublish_at: toIsoDateTime(unpublishAt),
-        source: source || null,
-        seo_title: seoTitle || null,
-        seo_description: seoDescription || null,
-        seo_keywords: seoKeywords || null,
       })
 
       toast.success(t("campaign-posts.messages.updated"))
@@ -200,34 +196,22 @@ const EditCampaignPostPage = () => {
       <CampaignPostForm
         formId="campaign-post-form"
         hideSubmit
-        title={title}
         slug={slug}
-        description={description}
         thumbnail={thumbnail}
         topicId={topicId}
         isActive={isActive}
         publishAt={publishAt}
         unpublishAt={unpublishAt}
-        source={source}
-        seoTitle={seoTitle}
-        seoDescription={seoDescription}
-        seoKeywords={seoKeywords}
-        content={content}
+        translations={translations}
         isSubmitting={isPending}
         submitLabel={t("campaign-posts.actions.save")}
-        onTitleChange={setTitle}
         onSlugChange={setSlug}
-        onDescriptionChange={setDescription}
         onThumbnailChange={setThumbnail}
         onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}
         onPublishAtChange={setPublishAt}
         onUnpublishAtChange={setUnpublishAt}
-        onSourceChange={setSource}
-        onSeoTitleChange={setSeoTitle}
-        onSeoDescriptionChange={setSeoDescription}
-        onSeoKeywordsChange={setSeoKeywords}
-        onContentChange={setContent}
+        onTranslationsChange={setTranslations}
         onSubmit={handleSubmit}
         editorKey={id}
       />
