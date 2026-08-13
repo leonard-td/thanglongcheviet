@@ -56,7 +56,7 @@ const directionsUrl = computed(() => {
 const DEFAULT_VIDEO_ID = '7igBpDPreSU'
 const reviewVideoId = computed(() => homeVideoId.value || DEFAULT_VIDEO_ID)
 const reviewUrl = computed(() => `https://youtu.be/${reviewVideoId.value}`)
-const videoPlaying = ref(false)
+const videoPlaying = ref(true)
 // maxresdefault không tồn tại với mọi video -> lùi về hqdefault (luôn có).
 const posterFallback = ref(false)
 watch(reviewVideoId, () => { posterFallback.value = false })
@@ -80,7 +80,7 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
               <iframe
                 width="100%"
                 height="100%"
-                :src="`https://www.youtube.com/embed/${reviewVideoId}?autoplay=1`"
+                :src="`https://www.youtube.com/embed/${reviewVideoId}?autoplay=1&mute=1&loop=1&playlist=${reviewVideoId}&playsinline=1&rel=0`"
                 title="YouTube video player"
                 frameborder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -210,8 +210,8 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
   --pillar-red: #a10c25;
   --pillar-red-bright: #c41e3a;
   --pillar-red-glow: rgba(161, 12, 37, .72);
-  --pillar-green: #4d7c3a;
-  --pillar-green-glow: rgba(77, 124, 58, .55);
+  --pillar-green: #7c4d3a;
+  --pillar-green-glow: rgba(124, 68, 58, 0.55);
   margin-top: 4px;
 }
 
@@ -666,8 +666,8 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
   background: linear-gradient(
     to top,
     rgba(161, 12, 37, .92) 0%,
-    rgba(30, 168, 53, .55) 55%,
-    rgba(1, 97, 14, 0) 100%
+    /* rgba(30, 168, 53, .55) 55%, */
+    rgba(97, 31, 1, 0) 100%
   );
 }
 
@@ -782,8 +782,8 @@ a.info-val:hover {
   display: block;
   margin: 0;
   padding: 22px 12px 10px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   letter-spacing: .08em;
   line-height: 1.35;
   text-align: center;
@@ -805,7 +805,7 @@ a.info-val:hover {
 @media (min-width: 768px) {
   .pillar-title {
     padding: 24px 14px 11px;
-    font-size: 12px;
+    font-size: 1rem;
   }
 }
 
@@ -831,7 +831,7 @@ a.info-val:hover {
   overflow: hidden;
   border-radius: 6px;
   background: #2a3326;
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   box-shadow: none;
   transform: translateZ(0);
   transition: border-color .35s cubic-bezier(.22, .61, .36, 1);
@@ -908,6 +908,7 @@ a.info-val:hover {
   overflow: hidden;
   transform: none;
   border-color: var(--pillar-red);
+  border-color: #cfcfcf;
   box-shadow: none;
 }
 
@@ -927,8 +928,8 @@ a.info-val:hover {
   background: linear-gradient(
     to top,
     rgba(161, 12, 37, .94) 0%,
-    rgba(30, 168, 53, 0.62) 46%,
-    rgba(1, 97, 14, 0) 100%
+    /* rgba(30, 168, 53, 0.62) 46%, */
+    rgba(97, 36, 1, 0) 100%
   );
 }
 

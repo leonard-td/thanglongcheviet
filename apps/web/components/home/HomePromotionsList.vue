@@ -75,7 +75,7 @@ const formatPrice = (price: number) =>
 .promotions-card {
   position: relative;
   display: block;
-  width: calc(100% - var(--pillar-gutter, 0px) * 2);
+  /* width: calc(100% - var(--pillar-gutter, 0px) * 2); */
   margin-left: auto;
   margin-right: auto;
   max-width: none;
