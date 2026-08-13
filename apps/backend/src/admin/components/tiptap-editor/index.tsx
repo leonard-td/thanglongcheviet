@@ -1,12 +1,13 @@
 import type { JSONContent } from "@tiptap/core"
 import { EditorContent, useEditor } from "@tiptap/react"
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   EMPTY_TIPTAP_DOC,
   getCampaignEditorExtensions,
 } from "./extensions"
 import TiptapToolbar from "./toolbar"
+import { sanitizePastedHtml } from "./paste-sanitize"
 
 import "./editor.css"
 
@@ -28,6 +29,8 @@ const TiptapEditor = ({
   readOnly = false,
 }: TiptapEditorProps) => {
   const extensions = useMemo(() => getCampaignEditorExtensions(), [])
+  const editorContainerRef = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const initialContent = useMemo(() => {
     if (typeof value === "string") {
@@ -50,6 +53,7 @@ const TiptapEditor = ({
         attributes: {
           class: "tiptap",
         },
+        transformPastedHTML: sanitizePastedHtml,
       },
       onUpdate: ({ editor: currentEditor }) => {
         if (output === "html") {
@@ -62,17 +66,46 @@ const TiptapEditor = ({
     [editorKey, readOnly, output]
   )
 
+  useEffect(() => {
+    const onFullscreenChange = () =>
+      setIsFullscreen(document.fullscreenElement === editorContainerRef.current)
+
+    document.addEventListener("fullscreenchange", onFullscreenChange)
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
+  }, [])
+
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+      } else {
+        await editorContainerRef.current?.requestFullscreen()
+      }
+    } catch {
+      // Fullscreen can be blocked by browser permissions or embedded contexts.
+    }
+  }
+
   if (!editor) {
     return null
   }
 
   return (
     <div
+      ref={editorContainerRef}
       className="campaign-tiptap-editor overflow-visible"
       onKeyDown={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
     >
-      {!readOnly && <TiptapToolbar editor={editor} />}
+      {!readOnly && (
+        <div className="campaign-tiptap-editor__toolbar">
+          <TiptapToolbar
+            editor={editor}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={toggleFullscreen}
+          />
+        </div>
+      )}
 
       <div className="campaign-tiptap-editor__content">
         <EditorContent editor={editor} />

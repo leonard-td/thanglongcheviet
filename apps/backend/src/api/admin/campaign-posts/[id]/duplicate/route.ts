@@ -40,6 +40,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     title: `${post.title} (Copy)`,
     slug,
     content: post.content ?? {},
+    translations: post.translations ?? null,
+    description: post.description ?? null,
     thumbnail: post.thumbnail ?? null,
     topic_id: post.topic_id ?? null,
     is_active: false,

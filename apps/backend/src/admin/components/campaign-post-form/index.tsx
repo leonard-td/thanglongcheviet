@@ -11,85 +11,82 @@ import {
 } from "@medusajs/ui"
 import type { JSONContent } from "@tiptap/core"
 import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
 import TiptapEditor from "../tiptap-editor"
 import ImagePicker from "../image-picker"
 import { slugify } from "../../lib/campaign-post"
 import { sdk } from "../../lib/sdk"
 import { useTranslation } from "react-i18next"
 import type { CampaignTopicsResponse } from "../../types/campaign-topic"
+import type {
+  CampaignPostLocale,
+  CampaignPostTranslations,
+} from "../../types/campaign-post"
 
 const NO_TOPIC = "__none__"
 
 type CampaignPostFormProps = {
-  title: string
   slug: string
-  description: string
   thumbnail: string
   topicId: string
   isActive: boolean
   publishAt: string
   unpublishAt: string
-  source: string
-  seoTitle: string
-  seoDescription: string
-  seoKeywords: string
-  content: JSONContent | null
+  translations: CampaignPostTranslations
   editorKey?: string
   isSubmitting?: boolean
   submitLabel: string
   formId?: string
   hideSubmit?: boolean
-  onTitleChange: (value: string) => void
   onSlugChange: (value: string) => void
-  onDescriptionChange: (value: string) => void
   onThumbnailChange: (value: string) => void
   onTopicIdChange: (value: string) => void
   onIsActiveChange: (value: boolean) => void
   onPublishAtChange: (value: string) => void
   onUnpublishAtChange: (value: string) => void
-  onSourceChange: (value: string) => void
-  onSeoTitleChange: (value: string) => void
-  onSeoDescriptionChange: (value: string) => void
-  onSeoKeywordsChange: (value: string) => void
-  onContentChange: (value: JSONContent) => void
+  onTranslationsChange: (value: CampaignPostTranslations) => void
   onSubmit: (event: React.FormEvent) => void
 }
 
 const CampaignPostForm = ({
-  title,
   slug,
-  description,
   thumbnail,
   topicId,
   isActive,
   publishAt,
   unpublishAt,
-  source,
-  seoTitle,
-  seoDescription,
-  seoKeywords,
-  content,
+  translations,
   editorKey,
   isSubmitting = false,
   submitLabel,
   formId,
   hideSubmit = false,
-  onTitleChange,
   onSlugChange,
-  onDescriptionChange,
   onThumbnailChange,
   onTopicIdChange,
   onIsActiveChange,
   onPublishAtChange,
   onUnpublishAtChange,
-  onSourceChange,
-  onSeoTitleChange,
-  onSeoDescriptionChange,
-  onSeoKeywordsChange,
-  onContentChange,
+  onTranslationsChange,
   onSubmit,
 }: CampaignPostFormProps) => {
   const { t } = useTranslation()
+  const [activeLocale, setActiveLocale] = useState<CampaignPostLocale>("vi")
+  const translation = translations[activeLocale] ?? {}
+  const vietnameseTitle = translations.vi?.title ?? ""
+
+  const updateTranslation = (
+    field: keyof NonNullable<CampaignPostTranslations[CampaignPostLocale]>,
+    value: string | JSONContent | null
+  ) => {
+    onTranslationsChange({
+      ...translations,
+      [activeLocale]: {
+        ...translation,
+        [field]: value,
+      },
+    })
+  }
 
   const { data: topicsData } = useQuery<CampaignTopicsResponse>({
     queryFn: () =>
@@ -104,12 +101,33 @@ const CampaignPostForm = ({
   return (
     <form id={formId} className="flex flex-col gap-6 px-6 py-6" onSubmit={onSubmit}>
       <div className="flex flex-col gap-y-2">
+        <Label>{t("campaign-posts.fields.contentLanguage")}</Label>
+        <div className="flex gap-x-2" role="tablist">
+          {(["vi", "en"] as const).map((locale) => (
+            <Button
+              key={locale}
+              type="button"
+              variant={activeLocale === locale ? "primary" : "secondary"}
+              role="tab"
+              aria-selected={activeLocale === locale}
+              onClick={() => setActiveLocale(locale)}
+            >
+              {t(`campaign-posts.fields.language.${locale}`)}
+            </Button>
+          ))}
+        </div>
+        <Text size="small" className="text-ui-fg-subtle">
+          {t("campaign-posts.fields.contentLanguageHint")}
+        </Text>
+      </div>
+
+      <div className="flex flex-col gap-y-2">
         <Label htmlFor="title">{t("campaign-posts.fields.title")}</Label>
         <Input
           id="title"
-          required
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
+          required={activeLocale === "vi"}
+          value={translation.title ?? ""}
+          onChange={(e) => updateTranslation("title", e.target.value)}
         />
       </div>
 
@@ -119,12 +137,12 @@ const CampaignPostForm = ({
           <Input
             id="slug"
             required={!!slug}
-            placeholder={slugify(title) || t("campaign-posts.fields.slugPlaceholder")}
+            placeholder={slugify(vietnameseTitle) || t("campaign-posts.fields.slugPlaceholder")}
             value={slug}
             onChange={(e) => onSlugChange(e.target.value)}
           />
-          {(slug || slugify(title)) && (
-            <Copy content={`/tin-tuc/${slug || slugify(title)}`} />
+          {(slug || slugify(vietnameseTitle)) && (
+            <Copy content={`/tin-tuc/${slug || slugify(vietnameseTitle)}`} />
           )}
         </div>
         <span className="text-ui-fg-subtle text-xs">
@@ -138,8 +156,8 @@ const CampaignPostForm = ({
           id="description"
           rows={3}
           placeholder={t("campaign-posts.fields.descriptionPlaceholder")}
-          value={description}
-          onChange={(e) => onDescriptionChange(e.target.value)}
+          value={translation.description ?? ""}
+          onChange={(e) => updateTranslation("description", e.target.value)}
         />
         <span className="text-ui-fg-subtle text-xs">
           {t("campaign-posts.fields.descriptionHint")}
@@ -208,8 +226,8 @@ const CampaignPostForm = ({
         <Label htmlFor="source">{t("campaign-posts.fields.source")}</Label>
         <Input
           id="source"
-          value={source}
-          onChange={(e) => onSourceChange(e.target.value)}
+          value={translation.source ?? ""}
+          onChange={(e) => updateTranslation("source", e.target.value)}
         />
         <span className="text-ui-fg-subtle text-xs">
           {t("campaign-posts.fields.sourceHint")}
@@ -229,8 +247,8 @@ const CampaignPostForm = ({
           <Input
             id="seo_title"
             placeholder={t("campaign-posts.fields.seoTitlePlaceholder")}
-            value={seoTitle}
-            onChange={(e) => onSeoTitleChange(e.target.value)}
+            value={translation.seo_title ?? ""}
+            onChange={(e) => updateTranslation("seo_title", e.target.value)}
           />
         </div>
 
@@ -240,8 +258,8 @@ const CampaignPostForm = ({
             id="seo_description"
             rows={3}
             placeholder={t("campaign-posts.fields.seoDescriptionPlaceholder")}
-            value={seoDescription}
-            onChange={(e) => onSeoDescriptionChange(e.target.value)}
+            value={translation.seo_description ?? ""}
+            onChange={(e) => updateTranslation("seo_description", e.target.value)}
           />
         </div>
 
@@ -250,8 +268,8 @@ const CampaignPostForm = ({
           <Input
             id="seo_keywords"
             placeholder={t("campaign-posts.fields.seoKeywordsPlaceholder")}
-            value={seoKeywords}
-            onChange={(e) => onSeoKeywordsChange(e.target.value)}
+            value={translation.seo_keywords ?? ""}
+            onChange={(e) => updateTranslation("seo_keywords", e.target.value)}
           />
         </div>
       </div>
@@ -260,8 +278,8 @@ const CampaignPostForm = ({
         <Label>{t("campaign-posts.fields.content")}</Label>
         <TiptapEditor
           editorKey={editorKey}
-          value={content}
-          onChange={onContentChange}
+          value={translation.content ?? null}
+          onChange={(value) => updateTranslation("content", value)}
         />
       </div>
 
