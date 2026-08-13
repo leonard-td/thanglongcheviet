@@ -536,6 +536,7 @@
   "productMediaLibrary": {
     "title": "Ảnh sản phẩm từ thư viện",
     "hint": "Chọn ảnh có sẵn trong Thư viện ảnh để thêm vào sản phẩm. Dùng phần Ảnh sản phẩm mặc định để tải ảnh mới, sắp xếp hoặc xóa ảnh.",
+    "createHint": "Chọn ảnh có sẵn trong Thư viện ảnh, đặt ảnh đại diện và sắp xếp thứ tự hiển thị.",
     "action": "Chọn từ thư viện",
     "modalTitle": "Chọn ảnh sản phẩm",
     "empty": "Chưa có ảnh nào trong thư viện.",
@@ -551,6 +552,46 @@
       "saved": "Đã cập nhật ảnh sản phẩm",
       "addFailed": "Cập nhật ảnh sản phẩm thất bại",
       "alreadyAdded": "Ảnh này đã có trong sản phẩm"
+    }
+  },
+  "productCreate": {
+    "title": "Tạo sản phẩm",
+    "hint": "Tạo sản phẩm mới với ảnh từ thư viện media.",
+    "sections": {
+      "general": "Thông tin cơ bản",
+      "catalog": "Danh mục & giá"
+    },
+    "fields": {
+      "title": "Tên sản phẩm",
+      "handle": "Đường dẫn (handle)",
+      "handlePlaceholder": "tu-dong-tao-tu-ten-san-pham",
+      "status": "Trạng thái",
+      "description": "Mô tả",
+      "collection": "Bộ sưu tập",
+      "collectionPlaceholder": "Chọn bộ sưu tập",
+      "none": "Không chọn",
+      "sku": "SKU",
+      "price": "Giá bán (VND)",
+      "pricePlaceholder": "Ví dụ: 150000",
+      "categories": "Danh mục",
+      "noCategories": "Chưa có danh mục nào."
+    },
+    "status": {
+      "draft": "Bản nháp",
+      "published": "Đã xuất bản"
+    },
+    "actions": {
+      "cancel": "Hủy",
+      "saveDraft": "Lưu nháp",
+      "publish": "Tạo & xuất bản"
+    },
+    "messages": {
+      "created": "Đã tạo sản phẩm “{{title}}”",
+      "createFailed": "Tạo sản phẩm thất bại"
+    },
+    "errors": {
+      "titleRequired": "Nhập tên sản phẩm",
+      "invalidPrice": "Giá bán không hợp lệ"
     }
   },
   "campaign-topics": {

@@ -536,6 +536,7 @@
   "productMediaLibrary": {
     "title": "Product images from library",
     "hint": "Choose an existing image from the Image Library to add to this product. Use the default Product Images section to upload, reorder, or remove images.",
+    "createHint": "Choose existing images from the Image Library, set a thumbnail, and arrange their display order.",
     "action": "Choose from library",
     "modalTitle": "Choose product image",
     "empty": "There are no images in the library yet.",
@@ -551,6 +552,46 @@
       "saved": "Product images updated",
       "addFailed": "Failed to update product images",
       "alreadyAdded": "This image is already on the product"
+    }
+  },
+  "productCreate": {
+    "title": "Create product",
+    "hint": "Create a new product with images from the media library.",
+    "sections": {
+      "general": "General information",
+      "catalog": "Catalog & price"
+    },
+    "fields": {
+      "title": "Product title",
+      "handle": "Handle",
+      "handlePlaceholder": "generated-from-product-title",
+      "status": "Status",
+      "description": "Description",
+      "collection": "Collection",
+      "collectionPlaceholder": "Select collection",
+      "none": "None",
+      "sku": "SKU",
+      "price": "Price (VND)",
+      "pricePlaceholder": "E.g. 150000",
+      "categories": "Categories",
+      "noCategories": "There are no categories yet."
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "saveDraft": "Save draft",
+      "publish": "Create & publish"
+    },
+    "messages": {
+      "created": "Created “{{title}}”",
+      "createFailed": "Failed to create product"
+    },
+    "errors": {
+      "titleRequired": "Enter a product title",
+      "invalidPrice": "The price is invalid"
     }
   },
   "campaign-topics": {
