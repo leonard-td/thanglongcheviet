@@ -35,7 +35,7 @@ const posts = computed(() =>
       <div v-if="props.title" class="text-center mb-10 md:mb-14 animate-on-scroll">
         <h2 id="blog-list-heading" class="section-heading text-white mb-4">{{ props.title }}</h2>
         <div class="divider-gold" />
-        <p v-if="props.subtitle" class="section-subheading mt-4 max-w-2xl mx-auto">{{ props.subtitle }}</p>
+        <!-- <p v-if="props.subtitle" class="section-subheading mt-4 max-w-2xl mx-auto">{{ props.subtitle }}</p> -->
       </div>
       <h2 v-else id="blog-list-heading" class="sr-only">{{ t('blog.title') }}</h2>
 
