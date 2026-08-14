@@ -2,7 +2,10 @@
   overflow: visible;
 }
 
-.campaign-tiptap-editor:fullscreen {
+.campaign-tiptap-editor.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -12,11 +15,11 @@
   background: var(--bg-base, #fff);
 }
 
-.campaign-tiptap-editor:fullscreen .campaign-tiptap-editor__content {
+.campaign-tiptap-editor.is-fullscreen .campaign-tiptap-editor__content {
   flex: 1;
 }
 
-.campaign-tiptap-editor:fullscreen .campaign-tiptap-editor__content .tiptap {
+.campaign-tiptap-editor.is-fullscreen .campaign-tiptap-editor__content .tiptap {
   min-height: 100%;
 }
 
