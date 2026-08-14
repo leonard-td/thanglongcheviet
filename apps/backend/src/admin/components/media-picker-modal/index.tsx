@@ -72,7 +72,10 @@ const MediaPickerModal = ({ open, onOpenChange, onSelect }: MediaPickerModalProp
 
   return (
     <FocusModal open={open} onOpenChange={onOpenChange}>
-      <FocusModal.Content>
+      <FocusModal.Content
+        className="z-[10002]"
+        overlayProps={{ className: "z-[10001]" }}
+      >
         <FocusModal.Header>
           <FocusModal.Title className="text-ui-fg-base font-medium">
             {t("mediaLib.picker.title")}

@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/core"
 import { EditorContent, useEditor } from "@tiptap/react"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   EMPTY_TIPTAP_DOC,
@@ -29,7 +29,6 @@ const TiptapEditor = ({
   readOnly = false,
 }: TiptapEditorProps) => {
   const extensions = useMemo(() => getCampaignEditorExtensions(), [])
-  const editorContainerRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const initialContent = useMemo(() => {
@@ -67,11 +66,22 @@ const TiptapEditor = ({
   )
 
   useEffect(() => {
-    const onFullscreenChange = () =>
-      setIsFullscreen(document.fullscreenElement === editorContainerRef.current)
+    const onFullscreenChange = () => {
+      const active =
+        document.fullscreenElement === document.documentElement &&
+        document.body.classList.contains("tiptap-fullscreen-active")
+
+      setIsFullscreen(active)
+      if (!active) {
+        document.body.classList.remove("tiptap-fullscreen-active")
+      }
+    }
 
     document.addEventListener("fullscreenchange", onFullscreenChange)
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange)
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange)
+      document.body.classList.remove("tiptap-fullscreen-active")
+    }
   }, [])
 
   const toggleFullscreen = async () => {
@@ -79,10 +89,15 @@ const TiptapEditor = ({
       if (document.fullscreenElement) {
         await document.exitFullscreen()
       } else {
-        await editorContainerRef.current?.requestFullscreen()
+        // Fullscreening only the editor hides Radix/Medusa modal portals that
+        // mount under <body>. Fullscreening <html> keeps those popups inside
+        // the browser's fullscreen top layer while CSS isolates this editor.
+        document.body.classList.add("tiptap-fullscreen-active")
+        await document.documentElement.requestFullscreen()
       }
     } catch {
       // Fullscreen can be blocked by browser permissions or embedded contexts.
+      document.body.classList.remove("tiptap-fullscreen-active")
     }
   }
 
@@ -92,8 +107,7 @@ const TiptapEditor = ({
 
   return (
     <div
-      ref={editorContainerRef}
-      className="campaign-tiptap-editor overflow-visible"
+      className={`campaign-tiptap-editor overflow-visible${isFullscreen ? " is-fullscreen" : ""}`}
       onKeyDown={(event) => event.stopPropagation()}
       onMouseDown={(event) => event.stopPropagation()}
     >

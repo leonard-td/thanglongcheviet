@@ -106,8 +106,8 @@ sleep 1m
 # the publishable key/region.
 bash ./provisioning.sh
 
-# copy static assets to web container
-cp apps/backend/static/* apps/backend/.medusa/server/static
+# # copy static assets to web container
+# cp apps/backend/static/* apps/backend/.medusa/server/static
 
 "${COMPOSE[@]}" ps
 echo "==> Done. Stack is live on port ${HTTP_PORT:-8800}."
