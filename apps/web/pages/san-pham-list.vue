@@ -18,13 +18,11 @@ useSeoMeta({
 
 <template>
   <div class="bg-dark text-white">
-    <!-- <LayoutPageHero
-      :label="t('products.label')"
-      :title="t('products.title')"
-      :subtitle="t('products.subtitle')"
-    /> -->
+    <!-- Lưới danh mục sản phẩm dạng card -->
+    <SectionsCategoryGrid />
 
-    <SectionsProductCatalog />
+    <!-- Sản phẩm tiêu biểu -->
+    <SectionsFeaturedProducts />
 
     <SectionsCollectionShowcase />
 
