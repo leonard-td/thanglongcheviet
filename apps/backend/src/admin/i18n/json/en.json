@@ -889,7 +889,42 @@
       "label": "Label",
       "url": "Path / URL",
       "openInNewTab": "Open in new tab",
-      "isActive": "Visible on the website"
+      "isActive": "Visible on the website",
+      "thumbnail": "Thumbnail",
+      "thumbnailHint": "Leave empty to auto-use the image from whatever the URL points to (product, category, post, event…).",
+      "thumbnailAutoHint": "Using the image auto-matched from the URL. Pick a different one to override it.",
+      "displayMode": "Main menu bar display",
+      "displayModeHint": "What to show before the label on the website's main navigation bar (top-level items only).",
+      "displayModeNone": "Nothing",
+      "displayModeIcon": "Icon",
+      "displayModeImage": "Image (uses the thumbnail above)",
+      "icon": "Icon"
+    },
+    "icons": {
+      "home": "Home",
+      "leaf": "Leaf",
+      "tea": "Tea",
+      "coffee": "Coffee",
+      "gift": "Gift",
+      "calendar": "Calendar",
+      "newspaper": "Newspaper",
+      "book": "Book",
+      "users": "Users",
+      "phone": "Phone",
+      "map-pin": "Map pin",
+      "star": "Star",
+      "tag": "Tag",
+      "info": "Info"
+    },
+    "linkTypes": {
+      "product": "Product",
+      "productCategory": "Category",
+      "productCollection": "Collection",
+      "productTopic": "Product topic",
+      "post": "News",
+      "postTopic": "News topic",
+      "event": "Experience",
+      "eventTopic": "Experience topic"
     },
     "actions": {
       "createMenu": "Create menu template",

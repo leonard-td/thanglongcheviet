@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import { z } from "zod"
 import { zodValidator } from "../../utils/zod-validator"
+import { attachNavThumbnails } from "../../utils/nav-thumbnails"
 import { NAVIGATION_MODULE } from "../../../modules/navigation"
 import type NavigationModuleService from "../../../modules/navigation/service"
 
@@ -13,6 +14,9 @@ const CreateItemSchema = z.object({
   openInNewTab: z.boolean().optional().default(false),
   parent_id: z.string().nullable().optional(),
   is_active: z.boolean().optional().default(true),
+  thumbnail: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+  display_mode: z.enum(["none", "icon", "image"]).optional().default("none"),
 })
 
 /**
@@ -31,7 +35,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     if (!active) {
       return res.json({ menu: null, navigations: [], tree: [] })
     }
-    const tree = await service.getMenuTree(active.id)
+    const tree = await attachNavThumbnails(
+      req.scope,
+      await service.getMenuTree(active.id)
+    )
     return res.json({
       menu: active,
       navigations: tree,
@@ -42,11 +49,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   await service.retrieveNavigationMenu(menuId)
 
   if (flat) {
-    const items = await service.listItemsByMenu(menuId)
+    const items = await attachNavThumbnails(
+      req.scope,
+      await service.listItemsByMenu(menuId)
+    )
     return res.json({ navigations: items })
   }
 
-  const tree = await service.getMenuTree(menuId)
+  const tree = await attachNavThumbnails(req.scope, await service.getMenuTree(menuId))
   res.json({ navigations: tree, tree })
 }
 
@@ -84,6 +94,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     openInNewTab: body.openInNewTab,
     parent_id: body.parent_id ?? null,
     is_active: body.is_active,
+    thumbnail: body.thumbnail ?? null,
+    icon: body.icon ?? null,
+    display_mode: body.display_mode,
   })
 
   res.status(201).json({ navigation: item })

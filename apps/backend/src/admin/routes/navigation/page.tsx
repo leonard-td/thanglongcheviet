@@ -50,6 +50,9 @@ const NavigationPage = () => {
 
   const [itemDrawerOpen, setItemDrawerOpen] = useState(false)
   const [itemForm, setItemForm] = useState<ItemFormState>(emptyItemForm())
+  const [itemResolvedThumbnail, setItemResolvedThumbnail] = useState<
+    string | null
+  >(null)
 
   const { data: menusData, isLoading: menusLoading } =
     useQuery<NavigationMenusResponse>({
@@ -230,6 +233,7 @@ const NavigationPage = () => {
 
   const openCreateItem = (parentId: string | null = null) => {
     setItemForm(emptyItemForm(parentId))
+    setItemResolvedThumbnail(null)
     setItemDrawerOpen(true)
   }
 
@@ -241,7 +245,11 @@ const NavigationPage = () => {
       openInNewTab: item.openInNewTab,
       is_active: item.is_active,
       parent_id: item.parent_id,
+      thumbnail: item.thumbnail ?? "",
+      icon: item.icon ?? "",
+      display_mode: item.display_mode ?? "none",
     })
+    setItemResolvedThumbnail(item.resolved_thumbnail ?? null)
     setItemDrawerOpen(true)
   }
 
@@ -259,6 +267,9 @@ const NavigationPage = () => {
             openInNewTab: itemForm.openInNewTab,
             is_active: itemForm.is_active,
             parent_id: itemForm.parent_id,
+            thumbnail: itemForm.thumbnail || null,
+            icon: itemForm.icon || null,
+            display_mode: itemForm.display_mode,
           },
         })
         toast.success(t("navigation.messages.itemUpdated"))
@@ -270,6 +281,9 @@ const NavigationPage = () => {
           openInNewTab: itemForm.openInNewTab,
           is_active: itemForm.is_active,
           parent_id: itemForm.parent_id,
+          thumbnail: itemForm.thumbnail || null,
+          icon: itemForm.icon || null,
+          display_mode: itemForm.display_mode,
         })
         toast.success(t("navigation.messages.itemCreated"))
       }
@@ -442,6 +456,7 @@ const NavigationPage = () => {
         onOpenChange={setItemDrawerOpen}
         form={itemForm}
         isLoading={savingItem || updatingItem}
+        resolvedThumbnail={itemResolvedThumbnail}
         onChange={setItemForm}
         onSubmit={handleSaveItem}
       />

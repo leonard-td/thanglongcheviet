@@ -14,7 +14,6 @@ interface QuickLink {
   label: string
   image: string
   openInNewTab?: boolean
-  isCta?: boolean
 }
 
 const props = defineProps<{
@@ -43,22 +42,15 @@ const cardImageForPath = (path: string) => {
   return (card ? resolveCardImage(card.image) : '') || FALLBACK_POST_IMAGE
 }
 
-const quickLinks = computed<QuickLink[]>(() => [
-  ...props.children.map(child => ({
+const quickLinks = computed<QuickLink[]>(() =>
+  props.children.map(child => ({
     key: child.key,
     path: child.path,
     label: child.label || t(child.key),
     image: cardImageForPath(child.path),
     openInNewTab: child.openInNewTab,
   })),
-  {
-    key: 'blog.viewAll',
-    path: '/tin-tuc',
-    label: t('blog.viewAll'),
-    image: cardImageForPath('/tin-tuc'),
-    isCta: true,
-  },
-])
+)
 
 const pending = computed(() => topicsPending.value || postsPending.value || cardsPending.value)
 </script>
@@ -76,17 +68,6 @@ const pending = computed(() => topicsPending.value || postsPending.value || card
     </div>
 
     <template v-else>
-      <NuxtLink
-        v-if="featuredPost"
-        :to="localePath(`/tin-tuc/${featuredPost.slug}`)"
-        class="news-mega-feature"
-      >
-        <img :src="featuredPost.image" :alt="featuredPost.title" loading="lazy">
-        <span class="news-mega-feature-overlay">
-          <span class="news-mega-feature-eyebrow">{{ t('blog.featured') }}</span>
-          <span class="news-mega-feature-title">{{ featuredPost.title }}</span>
-        </span>
-      </NuxtLink>
 
       <div v-if="topics.length || quickLinks.length" class="news-mega-section">
         <span class="news-mega-title">{{ t('blog.topics.eyebrow') }}</span>
@@ -107,7 +88,6 @@ const pending = computed(() => topicsPending.value || postsPending.value || card
             :key="link.key"
             :to="localePath(link.path)"
             class="news-mega-item"
-            :class="{ 'news-mega-item-cta': link.isCta }"
             :target="link.openInNewTab ? '_blank' : undefined"
             :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
           >
@@ -117,6 +97,12 @@ const pending = computed(() => topicsPending.value || postsPending.value || card
             <span class="news-mega-label">{{ link.label }}</span>
           </NuxtLink>
         </div>
+      </div>
+
+      <div class="news-mega-footer">
+        <NuxtLink :to="localePath('/tin-tuc')" class="mega-viewall">
+          {{ t('blog.viewAll') }}
+        </NuxtLink>
       </div>
     </template>
   </div>
@@ -251,13 +237,28 @@ const pending = computed(() => topicsPending.value || postsPending.value || card
   color: #e8d5a8;
 }
 
-.news-mega-item-cta .news-mega-thumb {
-  border-color: rgba(221, 160, 77, .55);
+.news-mega-footer {
+   flex-basis: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: .75rem;
+  border-top: 1px solid rgba(255, 255, 255, .08);
 }
 
-.news-mega-item-cta .news-mega-label {
-  color: #dda04d;
+.mega-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: 11px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: #dda04d;
+  text-decoration: none;
+}
+
+.mega-viewall:hover {
+    color: #e8d5a8;
 }
 
 .news-mega-skeleton {

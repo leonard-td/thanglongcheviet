@@ -11,6 +11,9 @@ export type NavigationItemRecord = {
   openInNewTab: boolean
   parent_id: string | null
   is_active: boolean
+  thumbnail: string | null
+  icon: string | null
+  display_mode: "none" | "icon" | "image"
 }
 
 export type NavigationTreeNode = NavigationItemRecord & {

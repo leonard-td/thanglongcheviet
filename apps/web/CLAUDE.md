@@ -42,6 +42,31 @@ contract applies before assuming a field is "live from admin":
   `metadata.related_collection_id` on the **product category** (see
   `apps/backend` CLAUDE.md's Product admin extensions section) — read here via
   `relatedCollectionIdByCategory`.
+- The header's product mega-menu (`AppHeaderProductsMenu.vue`) groups tiles
+  of each category's **actual products** (`byCategory(cat.id)`, from
+  `useProducts()`), not one tile per category — a category with 5 products
+  shows 5 tiles under its section, a category with 0 shows nothing (the
+  whole section is filtered out). Section bucketing is still purely
+  category-metadata driven — `metadata.menu_group` (bucket key, empty =
+  default "Chè" bucket, title from `nav.productsMenu.teaGroup`),
+  `metadata.menu_group_label` (bucket title override; falls back to the
+  category's own name if unset). No group name/count is hardcoded in the
+  component — adding or renaming a group, or adding more chè/cà phê/quà tặng
+  products, is purely a Medusa-admin/data change. **`metadata.menu_hidden` is
+  not consulted here** — it predates this products-per-section design (back
+  when a category was rendered as a single tile, `menu_hidden` kept
+  coffee/gift out of that flat grid and routed them to a curated landing page
+  via a nav child instead); with real products as the tiles now, an
+  empty/zero-product category already stays invisible on its own, so the flag
+  has no remaining effect on this component. `sync-menu-categories.ts` still
+  writes `menu_hidden: true` when creating those categories — harmless here,
+  but don't rely on it to hide a category from this menu; the only lever now
+  is whether it has products. The `quickLinks` section (labelled via
+  `nav.productsMenu.moreTitle`) is separate and still nav-driven: it lists
+  whatever children Admin > Điều hướng has under "Sản phẩm" (curated
+  destinations like `/qua-tang-doanh-nghiep`, `/an-quang-caffe`, or the full
+  `/san-pham-list` catalog) — see `apps/backend` CLAUDE.md's "Navigation item
+  thumbnails" entry for how those get their thumbnail.
 - Pages: `pages/san-pham-list.vue` (catalog, uses `ProductCatalog.vue`),
   `pages/san-pham/[slug].vue` (detail).
 - `ProductCatalog.vue` renders **every** product permanently and toggles
@@ -83,3 +108,46 @@ been ignored` warning on every dev/build/typecheck run. Nothing in this repo
 imports these types via the composable path — only via Nuxt's auto-import of
 `utils/` — so import the type locally inside the composable if you need it
 there, but don't re-export it.
+
+# DONE — Header nav thumbnails are backend-resolved, not fetched here
+
+`AppHeader.vue`'s dropdowns (both the plain `site-dropdown-link`/
+`site-mobile-sublink` fallback and, going forward, anything similar) render a
+`thumbnail` per item straight from `composables/useNavigation.ts`'s
+`NavLink.thumbnail`/`linkType`, which come from `GET /store/navigations`
+as-is. **Don't add client-side logic here that maps a nav item's `url` to a
+product/post/event to fetch its own image** — that mapping already lives
+once, server-side, in `apps/backend/src/api/utils/nav-thumbnails.ts` (see
+that repo's CLAUDE.md, "Navigation item thumbnails"), shared by both the
+admin preview and this same `/store/navigations` response, specifically so
+the admin's preview and what actually renders here can't drift apart. Only
+`useMediaUrl().resolveMediaUrl()` runs on the client, in
+`useNavigation.ts`'s `mapNavigationToNavLinks()`, to turn a relative
+`/static/...` path from the backend into an absolute URL — same pattern as
+`useBlog.ts`/`useEvents.ts`. The two mega-menu components
+(`LayoutAppHeaderProductsMenu`, `LayoutAppHeaderNewsMenu`) still fetch their
+own images independently via `useProducts`/`useBlog` for the
+`isProductsLink`/`isNewsLink` special cases — that's pre-existing and
+untouched; the shared `thumbnail` field only feeds the generic dropdown/
+mobile-menu path today.
+
+# DONE — Main nav bar leading icon/image (`NavLink.icon`/`displayMode`)
+
+Each top-level item in `AppHeader.vue`'s `<nav aria-label="Main navigation">`
+(desktop `.site-nav-link`) and its mobile equivalent (`.site-mobile-link`)
+can render a small icon or thumbnail image before the label, driven entirely
+by Admin > Điều hướng — `link.displayMode` (`"none" | "icon" | "image"`) and
+`link.icon` come straight off `GET /store/navigations` via
+`useNavigation.ts`'s `mapNavigationToNavLinks()`, no client-side resolution
+needed (unlike thumbnail, `icon`/`display_mode` aren't derived from `url`).
+`displayMode: "image"` reuses the item's existing `thumbnail` field — there's
+no second image field. Icons render via `<WidgetsIcon :name="link.icon" />`
+(`components/widgets/Icon.vue`) — the `AppIconName` union there was extended
+with a nav icon set (`home`, `leaf`, `tea`, `coffee`, `gift`, `calendar`,
+`newspaper`, `book`, `users`, `phone`, `map-pin`, `star`, `tag`, `info`) that
+**must** stay byte-for-byte in sync with `NAV_ICON_KEYS`/`NavIconPreview` in
+the backend's
+`src/admin/routes/navigation/nav-icons.tsx` (separate React/Vue apps, no
+shared package — see that repo's CLAUDE.md). Only top-level items render
+this; dropdown/mega-menu children keep the unconditional `thumbnail`-only
+behavior they already had.

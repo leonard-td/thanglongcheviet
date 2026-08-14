@@ -11,12 +11,22 @@ export interface ProductGroup {
   /** Banner đầu trang — lưu ở metadata.thumbnail (danh mục/bộ sưu tập không có field ảnh gốc). */
   thumbnail: string | null
   /**
-   * metadata.menu_group trên category ("coffee" | "gift") — admin gắn qua
-   * Metadata editor của Medusa để tách category đó khỏi nhóm "Chè" trong
-   * mega-menu, không phụ thuộc vào handle (đổi tên/handle không làm vỡ nhóm).
-   * null với category không gắn (mặc định thuộc nhóm "Chè").
+   * metadata.menu_group trên category — admin gắn qua Metadata editor của
+   * Medusa như một tag ổn định để tra ra category này bất kể handle đổi tên
+   * (vd. an-quang-caffe.vue tìm category "coffee", qua-tang-doanh-nghiep.vue
+   * tìm category "gift"). KHÔNG còn được dùng để nhóm tile trong mega-menu
+   * sản phẩm — mega-menu (AppHeaderProductsMenu.vue) giờ chỉ vẽ theo children
+   * của nav-item "Sản phẩm" trong Admin > Điều hướng, không tự quét category.
    */
   menuGroup: string | null
+  /** metadata.menu_group_label — không còn consumer nào đọc field này (trước đây là tiêu đề section trong mega-menu sản phẩm, đã bỏ). Giữ lại trong metadata/type để không phá dữ liệu cũ. */
+  menuGroupLabel: string | null
+  /**
+   * metadata.menu_hidden — không còn consumer nào đọc field này (mega-menu
+   * sản phẩm hiện chỉ vẽ theo Điều hướng, không quét category nữa nên không
+   * cần cờ ẩn riêng). Giữ lại trong metadata/type để không phá dữ liệu cũ.
+   */
+  menuHidden: boolean
 }
 
 const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
@@ -56,7 +66,9 @@ export function useProducts() {
     (categoriesData.value?.product_categories ?? []).map((c) => {
       const cat = transformMedusaCategory(c)
       const menuGroup = typeof c.metadata?.menu_group === 'string' ? c.metadata.menu_group : null
-      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail, menuGroup }
+      const menuGroupLabel = typeof c.metadata?.menu_group_label === 'string' ? c.metadata.menu_group_label : null
+      const menuHidden = c.metadata?.menu_hidden === true
+      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail, menuGroup, menuGroupLabel, menuHidden }
     }),
   )
 
@@ -73,6 +85,8 @@ export function useProducts() {
       label: categoryLabel(c.title, locale.value),
       thumbnail: typeof c.metadata?.thumbnail === 'string' ? c.metadata.thumbnail : null,
       menuGroup: null,
+      menuGroupLabel: null,
+      menuHidden: false,
     })),
   )
 

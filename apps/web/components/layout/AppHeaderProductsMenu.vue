@@ -1,52 +1,38 @@
 <script setup lang="ts">
-import type { ProductGroup } from '~/composables/useProducts'
-import { FALLBACK_PRODUCT_IMAGE, resolveCardImage } from '~/utils/storefront'
+import { FALLBACK_PRODUCT_IMAGE } from '~/utils/storefront'
+
+type NavLinkType =
+  | 'product'
+  | 'product_category'
+  | 'product_collection'
+  | 'product_topic'
+  | 'post'
+  | 'post_topic'
+  | 'event'
+  | 'event_topic'
+
+interface NavChildLink {
+  key: string
+  path: string
+  label?: string
+  openInNewTab?: boolean
+  thumbnail?: string | null
+  linkType?: NavLinkType | null
+}
 
 const props = defineProps<{
-  categories: ProductGroup[]
-  collections: ProductGroup[]
-  pending: boolean
+  children: NavChildLink[]
 }>()
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const localePath = useLocalePath()
-
-// Feature banner: same admin-managed "Cards" content used for the homepage
-// pillars (see content.cards in initial-data.json / Medusa admin > Cards) —
-// whichever type="link" card points at /san-pham-list drives the image and
-// title here, so updating the banner later is just an admin edit, no code
-// change.
-const { cards, pending: cardsPending } = useCards()
-
-const showSkeleton = computed(() => props.pending || cardsPending.value)
-
-const featuredCard = computed(() =>
-  cards.value.find(c => c.type === 'link' && c.is_active && c.path === '/san-pham-list') ?? null,
-)
-const featuredTitle = computed(() =>
-  featuredCard.value?.title?.[locale.value] ?? featuredCard.value?.title?.vi ?? '',
-)
-
-// Categories/collections without their own metadata.thumbnail fall back to
-// the "Văn hóa Việt" card's image (same Cards content as above) instead of a
-// generic stock photo — editing that card's image in Admin > Cards updates
-// this fallback too, no code change needed. FALLBACK_PRODUCT_IMAGE is only
-// the very last resort if that card itself gets deleted/deactivated.
-const categoryFallbackImage = computed(() => {
-  const card = cards.value.find(c => c.type === 'link' && c.is_active && c.path === '/van-hoa-viet')
-  return (card ? resolveCardImage(card.image) : '') || FALLBACK_PRODUCT_IMAGE
-})
-
-const cardImageForPath = (path: string) => {
-  const card = cards.value.find(c => c.type === 'link' && c.is_active && c.path === path)
-  return (card ? resolveCardImage(card.image) : '') || categoryFallbackImage.value
-}
 
 interface GroupItem {
   key: string
   path: string
   label: string
   image: string
+  openInNewTab?: boolean
 }
 
 interface ProductMegaGroup {
@@ -55,138 +41,71 @@ interface ProductMegaGroup {
   items: GroupItem[]
 }
 
-// Category-style grouping (thegioididong.com pattern): a short group title
-// ("Chè", "Cà phê", "Quà tặng") with an image-tile grid underneath, instead
-// of one flat "Danh mục" list. Every group is now backed by a real Medusa
-// product category (see apps/backend/src/scripts/sync-menu-categories.ts) —
-// "Cà phê" and "Quà tặng" still route to their own curated landing pages
-// (/an-quang-caffe, /qua-tang-doanh-nghiep) instead of the generic category
-// grid, but their tile only renders once the matching category actually
-// exists in the backend, and disappears if an admin deactivates/removes it.
-//
-// Which group a category belongs to is read from its metadata.menu_group
-// ("coffee" | "gift", set by sync-menu-categories.ts or by hand via the
-// category's Metadata editor in Medusa admin) — NOT from its handle, because
-// an admin renaming/recreating the category in the dashboard (as happened
-// with "cà phê", created there with handle "ca-phe" instead of a guessed
-// "an-quang-caffe") silently dropped it back into "Chè" before. The handle
-// list below is only a one-time fallback for categories that predate the
-// menu_group tag; keep it in sync with the real handles if it's ever used.
-const COFFEE_CATEGORY_HANDLES = ['ca-phe', 'an-quang-caffe']
-const GIFT_CATEGORY_HANDLES = ['qua-tang-doanh-nghiep']
+// Every tile in this menu comes straight from the "Sản phẩm" nav item's
+// children in Admin > Điều hướng — no independent product/category scan.
+// Section grouping falls out of `linkType`, already resolved server-side by
+// nav-link-resolver.ts from each item's url (see apps/backend CLAUDE.md's
+// "Navigation item thumbnails") — admin doesn't pick a section manually,
+// it's inferred from what kind of entity the item actually links to.
+const SECTIONS: { linkTypes: NavLinkType[] | null; titleKey: string }[] = [
+  { linkTypes: ['product_category'], titleKey: 'products.browseCategories' },
+  { linkTypes: ['product_collection'], titleKey: 'products.browseCollections' },
+  { linkTypes: null, titleKey: 'nav.productsMenu.moreTitle' }, // catch-all: single products, topics, curated/static pages
+]
 
-type MenuGroupKey = 'tea' | 'coffee' | 'gift'
+const groups = computed<ProductMegaGroup[]>(() => {
+  const buckets = new Map<string, GroupItem[]>()
 
-const categoryMenuGroup = (cat: ProductGroup): MenuGroupKey => {
-  if (cat.menuGroup === 'coffee' || cat.menuGroup === 'gift') return cat.menuGroup
-  if (COFFEE_CATEGORY_HANDLES.includes(cat.slug)) return 'coffee'
-  if (GIFT_CATEGORY_HANDLES.includes(cat.slug)) return 'gift'
-  return 'tea'
-}
+  for (const child of props.children) {
+    const section = SECTIONS.find(
+      s => s.linkTypes === null || (child.linkType && s.linkTypes.includes(child.linkType)),
+    )!
+    const items = buckets.get(section.titleKey) ?? []
+    items.push({
+      key: child.key,
+      path: child.path,
+      label: child.label || t(child.key),
+      image: child.thumbnail || FALLBACK_PRODUCT_IMAGE,
+      openInNewTab: child.openInNewTab,
+    })
+    buckets.set(section.titleKey, items)
+  }
 
-const teaCategories = computed(() => props.categories.filter(cat => categoryMenuGroup(cat) === 'tea'))
-const coffeeCategory = computed(() => props.categories.find(cat => categoryMenuGroup(cat) === 'coffee') ?? null)
-const giftCategory = computed(() => props.categories.find(cat => categoryMenuGroup(cat) === 'gift') ?? null)
-
-const productGroups = computed<ProductMegaGroup[]>(() => [
-  {
-    key: 'tea',
-    title: t('nav.productsMenu.teaGroup'),
-    items: teaCategories.value.map(cat => ({
-      key: cat.id,
-      path: `/san-pham/danh-muc/${cat.slug}`,
-      label: cat.label,
-      image: cat.thumbnail || FALLBACK_PRODUCT_IMAGE,
-    })),
-  },
-  {
-    key: 'coffee',
-    title: t('nav.productsMenu.coffeeGroup'),
-    items: coffeeCategory.value
-      ? [
-          {
-            key: coffeeCategory.value.id,
-            path: '/an-quang-caffe',
-            label: t('nav.productsMenu.anQuangCaffe'),
-            image: cardImageForPath('/an-quang-caffe'),
-          },
-        ]
-      : [],
-  },
-  {
-    key: 'gift',
-    title: t('nav.productsMenu.giftGroup'),
-    items: giftCategory.value
-      ? [
-          {
-            key: giftCategory.value.id,
-            path: '/qua-tang-doanh-nghiep',
-            label: t('nav.productsMenu.corporateGifts'),
-            image: cardImageForPath('/qua-tang-doanh-nghiep'),
-          },
-        ]
-      : [],
-  },
-].filter(group => group.items.length))
+  return SECTIONS
+    .filter(s => buckets.has(s.titleKey))
+    .map(s => ({ key: s.titleKey, title: t(s.titleKey), items: buckets.get(s.titleKey)! }))
+})
 </script>
 
 <template>
   <div class="products-mega">
-    <!-- Loading skeleton -->
-    <div v-if="showSkeleton" class="products-mega-section">
+    <div v-for="group in groups" :key="group.key" class="products-mega-section">
+      <span class="products-mega-title">{{ group.title }}</span>
       <div class="products-mega-grid">
-        <div v-for="n in 8" :key="n" class="products-mega-skeleton">
-          <div class="products-mega-skeleton-thumb" />
-          <div class="products-mega-skeleton-line" />
-        </div>
+        <NuxtLink
+          v-for="item in group.items"
+          :key="item.key"
+          :to="localePath(item.path)"
+          class="products-mega-item"
+          :target="item.openInNewTab ? '_blank' : undefined"
+          :rel="item.openInNewTab ? 'noopener noreferrer' : undefined"
+        >
+          <span class="products-mega-thumb">
+            <img :src="item.image" :alt="item.label" loading="lazy">
+          </span>
+          <span class="products-mega-label">{{ item.label }}</span>
+        </NuxtLink>
       </div>
     </div>
 
-    <template v-else>
-
-      <div v-for="group in productGroups" :key="group.key" class="products-mega-section">
-        <span class="products-mega-title">{{ group.title }}</span>
-        <div class="products-mega-grid">
-          <NuxtLink
-            v-for="item in group.items"
-            :key="item.key"
-            :to="localePath(item.path)"
-            class="products-mega-item"
-          >
-            <span class="products-mega-thumb">
-              <img :src="item.image" :alt="item.label" loading="lazy">
-            </span>
-            <span class="products-mega-label">{{ item.label }}</span>
-          </NuxtLink>
-        </div>
-      </div>
-
-      <div v-if="collections.length" class="products-mega-section">
-        <span class="products-mega-title">{{ t('products.browseCollections') }}</span>
-        <div class="products-mega-grid">
-          <NuxtLink
-            v-for="col in collections"
-            :key="col.id"
-            :to="localePath(`/san-pham/bo-suu-tap/${col.slug}`)"
-            class="products-mega-item"
-          >
-            <span class="products-mega-thumb">
-              <img :src="col.thumbnail || FALLBACK_PRODUCT_IMAGE" :alt="col.label" loading="lazy">
-            </span>
-            <span class="products-mega-label">{{ col.label }}</span>
-          </NuxtLink>
-        </div>
-      </div>
-
-      <div class="products-mega-footer">
-        <NuxtLink :to="localePath('/san-pham-list')" class="products-mega-viewall">
-          {{ t('products.viewAllProducts') }}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="m9 6 6 6-6 6" />
-          </svg>
-        </NuxtLink>
-      </div>
-    </template>
+    <div class="products-mega-footer">
+      <NuxtLink :to="localePath('/san-pham-list')" class="products-mega-viewall">
+        {{ t('products.viewAllProducts') }}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+      </NuxtLink>
+    </div>
   </div>
 </template>
 
@@ -338,33 +257,5 @@ const productGroups = computed<ProductMegaGroup[]>(() => [
 
 .products-mega-viewall:hover {
   color: #e8d5a8;
-}
-
-.products-mega-skeleton {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .5rem;
-}
-
-.products-mega-skeleton-thumb {
-  width: 64px;
-  height: 64px;
-  border-radius: .65rem;
-  background: rgba(255, 255, 255, .06);
-  animation: products-mega-pulse 1.4s ease-in-out infinite;
-}
-
-.products-mega-skeleton-line {
-  width: 70%;
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, .06);
-  animation: products-mega-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes products-mega-pulse {
-  0%, 100% { opacity: .5; }
-  50% { opacity: 1; }
 }
 </style>

@@ -23,11 +23,14 @@ const isSolid = computed(() => scrollY.value > solidThreshold.value || isMenuOpe
 
 const { totalItems } = useCart()
 
-const { categories: productCategories, collections: productCollections, pending: productsPending } = useProducts()
-
 // The products nav item gets an image-led mega menu (categories/collections
 // with thumbnails) instead of the plain text dropdown other nav items use.
-const isProductsLink = (link: NavLink) => link.path === '/san-pham-list' || link.key === 'nav.products'
+// '/san-pham-list' + 'nav.products' match the hardcoded static fallback list
+// below; '/san-pham' is the real "Sản phẩm" item's url as created in
+// Admin > Điều hướng (GET /store/navigations) — the two never share a path,
+// so both must be checked.
+const isProductsLink = (link: NavLink) =>
+  link.path === '/san-pham-list' || link.path === '/san-pham' || link.key === 'nav.products'
 
 // Same treatment for the blog/news nav item — topics + latest post banner
 // instead of a plain text dropdown.
@@ -38,7 +41,17 @@ interface NavLink {
   path: string
   label?: string
   openInNewTab?: boolean
-  children?: { key: string, path: string, label?: string, openInNewTab?: boolean }[]
+  thumbnail?: string | null
+  icon?: string | null
+  displayMode?: 'none' | 'icon' | 'image' | null
+  children?: {
+    key: string
+    path: string
+    label?: string
+    openInNewTab?: boolean
+    thumbnail?: string | null
+    linkType?: 'product' | 'product_category' | 'product_collection' | 'product_topic' | 'post' | 'post_topic' | 'event' | 'event_topic' | null
+  }[]
 }
 
 const { getStoreNavigation, mapNavigationToNavLinks } = useNavigation()
@@ -124,6 +137,17 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
               :target="link.openInNewTab ? '_blank' : undefined"
               :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
             >
+              <WidgetsIcon
+                v-if="link.displayMode === 'icon' && link.icon"
+                :name="link.icon as any"
+                class="site-nav-link-icon"
+              />
+              <img
+                v-else-if="link.displayMode === 'image' && link.thumbnail"
+                :src="link.thumbnail"
+                alt=""
+                class="site-nav-link-thumb"
+              >
               {{ link.label || t(link.key) }}
             </NuxtLink>
             <button
@@ -153,9 +177,7 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             >
               <LayoutAppHeaderProductsMenu
                 v-if="isProductsLink(link)"
-                :categories="productCategories"
-                :collections="productCollections"
-                :pending="productsPending"
+                :children="link.children || []"
               />
               <LayoutAppHeaderNewsMenu
                 v-else-if="isNewsLink(link)"
@@ -170,6 +192,12 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                   :target="child.openInNewTab ? '_blank' : undefined"
                   :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
                 >
+                  <img
+                    v-if="child.thumbnail"
+                    :src="child.thumbnail"
+                    alt=""
+                    class="site-dropdown-link-thumb"
+                  >
                   {{ child.label || t(child.key) }}
                 </NuxtLink>
               </template>
@@ -231,6 +259,17 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
                 @click="isMenuOpen = false"
               >
+                <WidgetsIcon
+                  v-if="link.displayMode === 'icon' && link.icon"
+                  :name="link.icon as any"
+                  class="site-nav-link-icon"
+                />
+                <img
+                  v-else-if="link.displayMode === 'image' && link.thumbnail"
+                  :src="link.thumbnail"
+                  alt=""
+                  class="site-nav-link-thumb"
+                >
                 {{ link.label || t(link.key) }}
               </NuxtLink>
               <button
@@ -260,6 +299,12 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
                 @click="isMenuOpen = false"
               >
+                <img
+                  v-if="child.thumbnail"
+                  :src="child.thumbnail"
+                  alt=""
+                  class="site-mobile-sublink-thumb"
+                >
                 {{ child.label || t(child.key) }}
               </NuxtLink>
             </div>
@@ -322,6 +367,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 }
 
 .site-nav-link {
+  display: inline-flex;
+  align-items: center;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .12em;
@@ -330,6 +377,22 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   text-decoration: none;
   transition: color .2s ease;
   white-space: nowrap;
+}
+
+.site-nav-link-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: .4rem;
+  flex-shrink: 0;
+}
+
+.site-nav-link-thumb {
+  width: 18px;
+  height: 18px;
+  margin-right: .4rem;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 @media (min-width: 1280px) {
@@ -380,14 +443,26 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 }
 
 .site-dropdown-mega {
+  /* Centering on the trigger nav-item (like the plain dropdown does)
+     overflows the viewport whenever that item isn't near page-center — e.g.
+     "SẢN PHẨM" sits left-of-center, so a 720-920px mega panel centered under
+     it runs off both edges on anything narrower than ~1400px. Anchor to the
+     viewport instead of the trigger element, and clamp its width so it never
+     exceeds the available space. */
+  position: fixed;
+  top: 72px;
   left: 50%;
+  right: auto;
   transform: translateX(-50%);
   min-width: 0;
+  max-width: calc(100vw - 2rem);
   padding: 0;
 }
 
 .site-dropdown-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
   padding: .65rem 1.1rem;
   font-size: 11px;
   text-transform: uppercase;
@@ -396,6 +471,23 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   text-decoration: none;
   white-space: nowrap;
   transition: background .15s ease, color .15s ease;
+}
+
+.site-dropdown-link-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.site-mobile-sublink-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-right: .6rem;
 }
 
 .site-dropdown-link:hover {
