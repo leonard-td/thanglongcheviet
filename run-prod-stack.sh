@@ -30,8 +30,12 @@ set +a
 
 COMPOSE=(docker compose -f infra/docker-compose.prod.yml --env-file .env.prod)
 
-"${COMPOSE[@]}" down --remove-orphans || true
-echo "==> Cleared running containers and orphaned ones."
+if [ "${SKIP_DOWN:-0}" != "1" ]; then
+  "${COMPOSE[@]}" down --remove-orphans || true
+  echo "==> Cleared running containers and orphaned ones."
+else
+  echo "==> SKIP_DOWN=1 — keeping existing containers (no full stop)."
+fi
 
 if grep -q '^REBUILD_ALL=true' .env.prod; then
   echo "==> REBUILD_ALL: wiping ALL volumes (Postgres data included!)..."
@@ -39,8 +43,50 @@ if grep -q '^REBUILD_ALL=true' .env.prod; then
   echo "==> Volumes wiped — the database will be re-seeded from scratch."
 fi
 
+# Optional: reset ONLY backend runtime deps (safe for DB).
+# This fixes cases where node_modules got corrupted or a previous deploy left it inconsistent.
+if [ "${RESET_BACKEND_DEPS:-0}" = "1" ]; then
+  echo "==> RESET_BACKEND_DEPS=1 — wiping ONLY backend runtime deps volume..."
+  docker volume rm -f tlcv-prod_backend_server_node_modules 2>/dev/null || true
+fi
+
+if [ "${RESET_NPM_CACHE:-0}" = "1" ]; then
+  echo "==> RESET_NPM_CACHE=1 — wiping ONLY npm cache volume..."
+  docker volume rm -f tlcv-prod_npm_cache 2>/dev/null || true
+fi
+
+echo "==> Starting postgres (+backup) first..."
+"${COMPOSE[@]}" up -d postgres backup
+
+echo "==> Running one-shot deps (backend runtime deps + sharp check)..."
+deps_attempts="${DEPS_ATTEMPTS:-5}"
+deps_sleep="${DEPS_RETRY_SLEEP_SEC:-15}"
+for i in $(seq 1 "$deps_attempts"); do
+  tmp_log="$(mktemp)"
+  set +e
+  "${COMPOSE[@]}" run --rm deps 2>&1 | tee "$tmp_log"
+  rc="${PIPESTATUS[0]}"
+  set -e
+  if [ "$rc" = "0" ]; then
+    rm -f "$tmp_log" || true
+    break
+  fi
+  if grep -q 'E429\|Too Many Requests' "$tmp_log"; then
+    echo "WARN: npm registry rate-limited (E429)."
+    echo "      Tip: set NPM_TOKEN in .env.prod (or export it in the server env) to avoid 429."
+  fi
+  rm -f "$tmp_log" || true
+  if [ "$i" = "$deps_attempts" ]; then
+    echo "ERROR: deps step failed after $deps_attempts attempts." >&2
+    exit 1
+  fi
+  echo "==> Retrying deps in ${deps_sleep}s... ($i/$deps_attempts)"
+  sleep "$deps_sleep"
+  deps_sleep=$((deps_sleep * 2))
+done
+
 echo "==> Starting the production stack (prebuilt output — nothing to build here)..."
-"${COMPOSE[@]}" up -d --force-recreate
+"${COMPOSE[@]}" up -d --force-recreate backend web nginx
 
 echo "==> Waiting for backend to become healthy..."
 status=""
@@ -59,6 +105,9 @@ sleep 1m
 # script and .env.prod are visible there), then recreates web so it picks up
 # the publishable key/region.
 bash ./provisioning.sh
+
+# # copy static assets to web container
+# cp apps/backend/static/* apps/backend/.medusa/server/static
 
 "${COMPOSE[@]}" ps
 echo "==> Done. Stack is live on port ${HTTP_PORT:-8800}."

@@ -16,6 +16,11 @@ cd "$(dirname "$0")"
 
 command -v node >/dev/null || { echo "ERROR: node is not installed (need >= 20)." >&2; exit 1; }
 command -v npm >/dev/null || { echo "ERROR: npm is not installed." >&2; exit 1; }
+
+# remove old folder if it exists
+rm -rf apps/backend/.medusa/server apps/web/.output
+
+echo "==> Checking Node version..."
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
 if [ "$NODE_MAJOR" -lt 20 ]; then
   echo "ERROR: Node >= 20 required (found $(node -v))." >&2
@@ -24,8 +29,9 @@ fi
 
 if [ "${SKIP_INSTALL:-0}" != "1" ]; then
   echo "==> npm install (workspace root)..."
-  npm install --no-audit --no-fund \
-    || npm install --no-audit --no-fund --legacy-peer-deps
+  # Prefer offline/cache to avoid npm registry E429.
+  npm install --no-audit --no-fund --prefer-offline \
+    || npm install --no-audit --no-fund --prefer-offline --legacy-peer-deps
 fi
 
 echo "==> Building backend (medusa build)..."

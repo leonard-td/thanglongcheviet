@@ -449,6 +449,12 @@
     "edit": "Chỉnh sửa bài viết",
     "backToList": "Quay lại danh sách",
     "scheduleHint": "Đặt thời gian đăng và gỡ bài để tự động công bố",
+    "editor": {
+      "importWord": "Nhập từ Word",
+      "importWordFailed": "Không thể đọc file Word",
+      "fullscreen": "Toàn màn hình",
+      "exitFullscreen": "Thoát toàn màn hình"
+    },
     "columns": {
       "title": "Tiêu đề",
       "slug": "Đường dẫn",
@@ -463,6 +469,12 @@
       "inactive": "Tạm dừng"
     },
     "fields": {
+      "contentLanguage": "Ngôn ngữ nội dung",
+      "contentLanguageHint": "Tiếng Việt là bắt buộc. Tiếng Anh là tùy chọn; website sẽ dùng tiếng Việt khi chưa có bản dịch.",
+      "language": {
+        "vi": "Tiếng Việt",
+        "en": "English"
+      },
       "title": "Tiêu đề",
       "slug": "Đường dẫn (slug)",
       "slugPlaceholder": "tự động tạo từ tiêu đề",
@@ -531,6 +543,67 @@
     "messages": {
       "success": "Đã lưu mô tả",
       "failed": "Lưu mô tả thất bại"
+    }
+  },
+  "productMediaLibrary": {
+    "title": "Ảnh sản phẩm từ thư viện",
+    "hint": "Chọn ảnh có sẵn trong Thư viện ảnh để thêm vào sản phẩm. Dùng phần Ảnh sản phẩm mặc định để tải ảnh mới, sắp xếp hoặc xóa ảnh.",
+    "createHint": "Chọn ảnh có sẵn trong Thư viện ảnh, đặt ảnh đại diện và sắp xếp thứ tự hiển thị.",
+    "action": "Chọn từ thư viện",
+    "modalTitle": "Chọn ảnh sản phẩm",
+    "empty": "Chưa có ảnh nào trong thư viện.",
+    "noProductImages": "Sản phẩm chưa có ảnh nào.",
+    "select": "Thêm ảnh này",
+    "selected": "Ảnh này đã có trong sản phẩm",
+    "thumbnail": "Ảnh đại diện",
+    "setThumbnail": "Đặt làm ảnh đại diện",
+    "moveEarlier": "Đưa ảnh lên trước",
+    "moveLater": "Đưa ảnh xuống sau",
+    "remove": "Xóa ảnh",
+    "messages": {
+      "saved": "Đã cập nhật ảnh sản phẩm",
+      "addFailed": "Cập nhật ảnh sản phẩm thất bại",
+      "alreadyAdded": "Ảnh này đã có trong sản phẩm"
+    }
+  },
+  "productCreate": {
+    "title": "Tạo sản phẩm",
+    "hint": "Tạo sản phẩm mới với ảnh từ thư viện media.",
+    "sections": {
+      "general": "Thông tin cơ bản",
+      "catalog": "Danh mục & giá"
+    },
+    "fields": {
+      "title": "Tên sản phẩm",
+      "handle": "Đường dẫn (handle)",
+      "handlePlaceholder": "tu-dong-tao-tu-ten-san-pham",
+      "status": "Trạng thái",
+      "description": "Mô tả",
+      "collection": "Bộ sưu tập",
+      "collectionPlaceholder": "Chọn bộ sưu tập",
+      "none": "Không chọn",
+      "sku": "SKU",
+      "price": "Giá bán (VND)",
+      "pricePlaceholder": "Ví dụ: 150000",
+      "categories": "Danh mục",
+      "noCategories": "Chưa có danh mục nào."
+    },
+    "status": {
+      "draft": "Bản nháp",
+      "published": "Đã xuất bản"
+    },
+    "actions": {
+      "cancel": "Hủy",
+      "saveDraft": "Lưu nháp",
+      "publish": "Tạo & xuất bản"
+    },
+    "messages": {
+      "created": "Đã tạo sản phẩm “{{title}}”",
+      "createFailed": "Tạo sản phẩm thất bại"
+    },
+    "errors": {
+      "titleRequired": "Nhập tên sản phẩm",
+      "invalidPrice": "Giá bán không hợp lệ"
     }
   },
   "campaign-topics": {

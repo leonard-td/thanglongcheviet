@@ -281,6 +281,12 @@
       "closed": "Closed"
     },
     "fields": {
+      "contentLanguage": "Content language",
+      "contentLanguageHint": "Vietnamese is required. English is optional and the storefront falls back to Vietnamese when it is empty.",
+      "language": {
+        "vi": "Tiếng Việt",
+        "en": "English"
+      },
       "title": "Title",
       "slug": "Slug",
       "slugPlaceholder": "auto-generated from title",
@@ -449,6 +455,12 @@
     "edit": "Edit post",
     "backToList": "Back to list",
     "scheduleHint": "Set publish and unpublish times to publish automatically",
+    "editor": {
+      "importWord": "Import from Word",
+      "importWordFailed": "Could not read the Word file",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen"
+    },
     "columns": {
       "title": "Title",
       "slug": "Slug",
@@ -531,6 +543,67 @@
     "messages": {
       "success": "Description saved",
       "failed": "Failed to save description"
+    }
+  },
+  "productMediaLibrary": {
+    "title": "Product images from library",
+    "hint": "Choose an existing image from the Image Library to add to this product. Use the default Product Images section to upload, reorder, or remove images.",
+    "createHint": "Choose existing images from the Image Library, set a thumbnail, and arrange their display order.",
+    "action": "Choose from library",
+    "modalTitle": "Choose product image",
+    "empty": "There are no images in the library yet.",
+    "noProductImages": "This product has no images yet.",
+    "select": "Add this image",
+    "selected": "This image is already on the product",
+    "thumbnail": "Thumbnail",
+    "setThumbnail": "Set as thumbnail",
+    "moveEarlier": "Move image earlier",
+    "moveLater": "Move image later",
+    "remove": "Remove image",
+    "messages": {
+      "saved": "Product images updated",
+      "addFailed": "Failed to update product images",
+      "alreadyAdded": "This image is already on the product"
+    }
+  },
+  "productCreate": {
+    "title": "Create product",
+    "hint": "Create a new product with images from the media library.",
+    "sections": {
+      "general": "General information",
+      "catalog": "Catalog & price"
+    },
+    "fields": {
+      "title": "Product title",
+      "handle": "Handle",
+      "handlePlaceholder": "generated-from-product-title",
+      "status": "Status",
+      "description": "Description",
+      "collection": "Collection",
+      "collectionPlaceholder": "Select collection",
+      "none": "None",
+      "sku": "SKU",
+      "price": "Price (VND)",
+      "pricePlaceholder": "E.g. 150000",
+      "categories": "Categories",
+      "noCategories": "There are no categories yet."
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "saveDraft": "Save draft",
+      "publish": "Create & publish"
+    },
+    "messages": {
+      "created": "Created “{{title}}”",
+      "createFailed": "Failed to create product"
+    },
+    "errors": {
+      "titleRequired": "Enter a product title",
+      "invalidPrice": "The price is invalid"
     }
   },
   "campaign-topics": {

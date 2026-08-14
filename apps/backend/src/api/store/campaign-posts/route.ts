@@ -1,6 +1,13 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CAMPAIGN_MODULE } from "../../../modules/campaign"
 import type CampaignModuleService from "../../../modules/campaign/service"
+import {
+  resolveCampaignPostTranslation,
+  type CampaignPostLocale,
+} from "../../../modules/campaign/translations"
+
+const requestedLocale = (value: unknown): CampaignPostLocale =>
+  value === "en" ? "en" : "vi"
 
 /**
  * GET /store/campaign-posts
@@ -20,6 +27,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
   const limit = Math.min(Number(req.query.limit) || 20, 100)
   const offset = Number(req.query.offset) || 0
+  const locale = requestedLocale(req.query.lang)
 
   const filters: { topic_id?: string } = {}
 
@@ -62,6 +70,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   res.json({
     campaign_posts: posts.map((post) => ({
       ...post,
+      ...resolveCampaignPostTranslation(post, locale),
       topic: post.topic_id ? (topicById.get(post.topic_id) ?? null) : null,
     })),
     count,

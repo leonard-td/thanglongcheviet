@@ -4,6 +4,21 @@ import { zodValidator } from "../../../utils/zod-validator"
 import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
 import type CampaignModuleService from "../../../../modules/campaign/service"
 import { normalizeTiptapImageUrls, toRelativeMediaUrl } from "../../../utils/media-url"
+import {
+  legacyFieldsFromVietnameseTranslation,
+  mergeCampaignPostTranslations,
+  type CampaignPostTranslations,
+} from "../../../../modules/campaign/translations"
+
+const LocalizedCampaignPostSchema = z.object({
+  title: z.string().min(1).optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
+  description: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  seo_title: z.string().nullable().optional(),
+  seo_description: z.string().nullable().optional(),
+  seo_keywords: z.string().nullable().optional(),
+})
 
 const UpdateCampaignPostSchema = z.object({
   title: z.string().min(1).optional(),
@@ -19,6 +34,12 @@ const UpdateCampaignPostSchema = z.object({
   seo_title: z.string().nullable().optional(),
   seo_description: z.string().nullable().optional(),
   seo_keywords: z.string().nullable().optional(),
+  translations: z
+    .object({
+      vi: LocalizedCampaignPostSchema.optional(),
+      en: LocalizedCampaignPostSchema.optional(),
+    })
+    .optional(),
 })
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -39,12 +60,38 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     req.scope.resolve(CAMPAIGN_MODULE)
 
   const body = await zodValidator(UpdateCampaignPostSchema, req.body)
+  const existing = await campaignModuleService.retrieveCampaignPost(id)
+  const translations = mergeCampaignPostTranslations(
+    existing,
+    body.translations as CampaignPostTranslations | undefined,
+    body
+  )
+  const localizedFields = legacyFieldsFromVietnameseTranslation(translations)
 
   const post = await campaignModuleService.updateCampaignPosts({
     id,
     ...body,
-    content: body.content === undefined ? undefined : normalizeTiptapImageUrls(body.content),
+    title: localizedFields.title ?? existing.title,
+    content: localizedFields.content
+      ? normalizeTiptapImageUrls(localizedFields.content)
+      : existing.content,
+    translations: Object.fromEntries(
+      Object.entries(translations).map(([locale, translation]) => [
+        locale,
+        {
+          ...translation,
+          content: translation.content
+            ? normalizeTiptapImageUrls(translation.content)
+            : undefined,
+        },
+      ])
+    ),
+    description: localizedFields.description ?? null,
     thumbnail: body.thumbnail === undefined ? undefined : toRelativeMediaUrl(body.thumbnail),
+    source: localizedFields.source ?? null,
+    seo_title: localizedFields.seo_title ?? null,
+    seo_description: localizedFields.seo_description ?? null,
+    seo_keywords: localizedFields.seo_keywords ?? null,
     publish_at:
       body.publish_at === undefined
         ? undefined

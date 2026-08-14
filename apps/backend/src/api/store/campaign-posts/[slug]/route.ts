@@ -2,6 +2,13 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError } from "@medusajs/framework/utils"
 import { CAMPAIGN_MODULE } from "../../../../modules/campaign"
 import type CampaignModuleService from "../../../../modules/campaign/service"
+import {
+  resolveCampaignPostTranslation,
+  type CampaignPostLocale,
+} from "../../../../modules/campaign/translations"
+
+const requestedLocale = (value: unknown): CampaignPostLocale =>
+  value === "en" ? "en" : "vi"
 
 /**
  * GET /store/campaign-posts/:slug
@@ -11,6 +18,7 @@ import type CampaignModuleService from "../../../../modules/campaign/service"
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const { slug } = req.params
+  const locale = requestedLocale(req.query.lang)
 
   const campaignModuleService: CampaignModuleService =
     req.scope.resolve(CAMPAIGN_MODULE)
@@ -40,5 +48,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
   }
 
-  res.json({ campaign_post: { ...post, topic } })
+  res.json({
+    campaign_post: {
+      ...post,
+      ...resolveCampaignPostTranslation(post, locale),
+      topic,
+    },
+  })
 }

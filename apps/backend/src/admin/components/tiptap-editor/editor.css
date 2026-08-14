@@ -2,6 +2,35 @@
   overflow: visible;
 }
 
+.campaign-tiptap-editor.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--bg-base, #fff);
+}
+
+.campaign-tiptap-editor.is-fullscreen .campaign-tiptap-editor__content {
+  flex: 1;
+}
+
+.campaign-tiptap-editor.is-fullscreen .campaign-tiptap-editor__content .tiptap {
+  min-height: 100%;
+}
+
+.campaign-tiptap-editor__toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg-base, #fff);
+  box-shadow: 0 1px 0 var(--border-base, #e4e4e7);
+}
+
 .campaign-tiptap-editor__content {
   min-height: 320px;
   border-radius: 0 0 0.5rem 0.5rem;

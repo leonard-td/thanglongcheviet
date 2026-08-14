@@ -2,8 +2,6 @@ import {
   Button,
   toast,
 } from "@medusajs/ui"
-import type { JSONContent } from "@tiptap/core"
-import { EMPTY_TIPTAP_DOC } from "../../../components/tiptap-editor/extensions"
 import { useMutation } from "@tanstack/react-query"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -13,24 +11,23 @@ import PageHeader from "../../../components/page-header"
 import PageLayout from "../../../components/page-layout"
 import { slugify, toIsoDateTime } from "../../../lib/campaign-post"
 import { sdk } from "../../../lib/sdk"
-import type { CampaignPostResponse } from "../../../types/campaign-post"
+import type {
+  CampaignPostResponse,
+  CampaignPostTranslations,
+} from "../../../types/campaign-post"
 
 const CreateCampaignPostPage = () => {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
-  const [description, setDescription] = useState("")
   const [thumbnail, setThumbnail] = useState("")
   const [topicId, setTopicId] = useState("")
   const [isActive, setIsActive] = useState(true)
   const [publishAt, setPublishAt] = useState("")
   const [unpublishAt, setUnpublishAt] = useState("")
-  const [source, setSource] = useState("")
-  const [seoTitle, setSeoTitle] = useState("")
-  const [seoDescription, setSeoDescription] = useState("")
-  const [seoKeywords, setSeoKeywords] = useState("")
-  const [content, setContent] = useState<JSONContent | null>(null)
+  const [translations, setTranslations] = useState<CampaignPostTranslations>({
+    vi: {},
+  })
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (body: Record<string, unknown>) =>
@@ -45,19 +42,13 @@ const CreateCampaignPostPage = () => {
 
     try {
       const response = await mutateAsync({
-        title,
-        slug: slug || slugify(title),
-        content: content || EMPTY_TIPTAP_DOC,
-        description: description || null,
+        slug: slug || slugify(translations.vi?.title ?? ""),
+        translations,
         thumbnail: thumbnail || null,
         topic_id: topicId || null,
         is_active: isActive,
         publish_at: toIsoDateTime(publishAt),
         unpublish_at: toIsoDateTime(unpublishAt),
-        source: source || null,
-        seo_title: seoTitle || null,
-        seo_description: seoDescription || null,
-        seo_keywords: seoKeywords || null,
       }) as CampaignPostResponse
 
       toast.success(t("campaign-posts.messages.created"))
@@ -94,34 +85,22 @@ const CreateCampaignPostPage = () => {
       <CampaignPostForm
         formId="campaign-post-form"
         hideSubmit
-        title={title}
         slug={slug}
-        description={description}
         thumbnail={thumbnail}
         topicId={topicId}
         isActive={isActive}
         publishAt={publishAt}
         unpublishAt={unpublishAt}
-        source={source}
-        seoTitle={seoTitle}
-        seoDescription={seoDescription}
-        seoKeywords={seoKeywords}
-        content={content}
+        translations={translations}
         isSubmitting={isPending}
         submitLabel={t("campaign-posts.actions.create")}
-        onTitleChange={setTitle}
         onSlugChange={setSlug}
-        onDescriptionChange={setDescription}
         onThumbnailChange={setThumbnail}
         onTopicIdChange={setTopicId}
         onIsActiveChange={setIsActive}
         onPublishAtChange={setPublishAt}
         onUnpublishAtChange={setUnpublishAt}
-        onSourceChange={setSource}
-        onSeoTitleChange={setSeoTitle}
-        onSeoDescriptionChange={setSeoDescription}
-        onSeoKeywordsChange={setSeoKeywords}
-        onContentChange={setContent}
+        onTranslationsChange={setTranslations}
         onSubmit={handleSubmit}
         editorKey="create"
       />

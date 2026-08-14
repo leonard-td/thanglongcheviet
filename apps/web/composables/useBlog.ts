@@ -93,7 +93,7 @@ export function useBlog() {
     async () => {
       try {
         const res = await fetchMedusa<{ campaign_posts: CampaignPost[] }>(
-          '/store/campaign-posts?limit=50',
+          `/store/campaign-posts?limit=50&lang=${encodeURIComponent(locale.value)}`,
         )
         return res.campaign_posts ?? []
       } catch (e) {
@@ -101,7 +101,7 @@ export function useBlog() {
         return [] as CampaignPost[]
       }
     },
-    { default: () => [] as CampaignPost[] },
+    { default: () => [] as CampaignPost[], watch: [locale] },
   )
 
   const posts = computed<BlogPost[]>(() => {
@@ -114,7 +114,7 @@ export function useBlog() {
   const getBySlug = async (slug: string): Promise<BlogPost | null> => {
     try {
       const res = await fetchMedusa<{ campaign_post: CampaignPost }>(
-        `/store/campaign-posts/${encodeURIComponent(slug)}`,
+        `/store/campaign-posts/${encodeURIComponent(slug)}?lang=${encodeURIComponent(locale.value)}`,
       )
       if (res.campaign_post) return transformCampaignPost(res.campaign_post, resolveMediaUrl)
     } catch (e) {
@@ -136,6 +136,7 @@ export function useBlog() {
  */
 export function useBlogTopics() {
   const { fetchMedusa } = useMedusaApi()
+  const { locale } = useI18n()
   const { resolveMediaUrl } = useMediaUrl()
 
   const { data, pending } = useAsyncData(
@@ -176,7 +177,7 @@ export function useBlogTopics() {
   const getPostsByTopicSlug = async (slug: string): Promise<BlogPost[]> => {
     try {
       const res = await fetchMedusa<{ campaign_posts: CampaignPost[] }>(
-        `/store/campaign-posts?limit=100&topic_slug=${encodeURIComponent(slug)}`,
+        `/store/campaign-posts?limit=100&topic_slug=${encodeURIComponent(slug)}&lang=${encodeURIComponent(locale.value)}`,
       )
       return (res.campaign_posts ?? []).map(p => transformCampaignPost(p, resolveMediaUrl))
     } catch (e) {
