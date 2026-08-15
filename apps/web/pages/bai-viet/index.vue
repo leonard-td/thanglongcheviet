@@ -11,12 +11,12 @@ useSeoMeta({
 
 <template>
   <div class="bg-dark">
-    <LayoutPageHero
+    <!-- <LayoutPageHero
       :label="t('blog.eyebrow')"
       :title="t('blog.title')"
       :subtitle="t('blog.subtitle')"
-    />
+    /> -->
     <SectionsBlogTopics />
-    <SectionsBlogList />
+    <!-- <SectionsBlogList /> -->
   </div>
 </template>

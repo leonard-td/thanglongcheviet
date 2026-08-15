@@ -11,7 +11,7 @@ const { topics, pending } = useBlogTopics()
     aria-labelledby="blog-topics-heading"
   >
     <div class="container-page">
-      <div class="text-center mb-10 md:mb-14 animate-on-scroll">
+      <!-- <div class="text-center mb-10 md:mb-14 animate-on-scroll">
         <h2 id="blog-topics-heading" class="section-heading text-white mb-4">
           {{ t('blog.topics.title') }}
         </h2>
@@ -19,7 +19,7 @@ const { topics, pending } = useBlogTopics()
         <p class="section-subheading mt-4 max-w-2xl mx-auto">
           {{ t('blog.topics.subtitle') }}
         </p>
-      </div>
+      </div> -->
 
       <!-- Loading skeleton -->
       <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
