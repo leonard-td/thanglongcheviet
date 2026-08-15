@@ -48,14 +48,14 @@ const EditCardPage = () => {
         body,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] })
+      queryClient.invalidateQueries({ queryKey: [["cards"]] })
     },
   })
 
   const { mutateAsync: deleteCard, isPending: isDeleting } = useMutation({
     mutationFn: () => sdk.client.fetch(`/admin/cards/${id}`, { method: "DELETE" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] })
+      queryClient.invalidateQueries({ queryKey: [["cards"]] })
       toast.success(t("cards.messages.deleted"))
       navigate("..")
     },

@@ -1,5 +1,5 @@
 import { Button, toast } from "@medusajs/ui"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
@@ -11,6 +11,7 @@ import type { CardResponse } from "../../../types/card"
 
 const CreateCardPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { t } = useTranslation()
   const [titleVi, setTitleVi] = useState("")
   const [titleEn, setTitleEn] = useState("")
@@ -39,6 +40,7 @@ const CreateCardPage = () => {
         is_active: isActive,
       })) as CardResponse
 
+      queryClient.invalidateQueries({ queryKey: [["cards"]] })
       toast.success(t("cards.messages.created"))
       navigate(`../${response.card.id}`)
     } catch (error) {
