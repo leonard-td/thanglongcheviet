@@ -17,7 +17,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { NavigationItem, NavLinkType } from "../../../types/navigation"
-import { NavIconPreview } from "../nav-icons"
+import { NavIconOrImagePreview } from "../nav-icons"
 
 const LINK_TYPE_LABEL_KEYS: Record<NavLinkType, string> = {
   product: "navigation.linkTypes.product",
@@ -156,7 +156,7 @@ export const SortableNavRow = ({
               color="purple"
               className="inline-flex items-center gap-x-1"
             >
-              <NavIconPreview name={item.icon} className="h-3 w-3" />
+              <NavIconOrImagePreview name={item.icon} className="h-3 w-3" />
               {t("navigation.fields.displayModeIcon")}
             </Badge>
           )}

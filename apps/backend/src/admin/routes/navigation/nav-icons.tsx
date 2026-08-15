@@ -1,13 +1,24 @@
+import type { ComponentType } from "react"
+import * as LucideIcons from "lucide-react"
+
 /**
- * Nav icon set: a small, fixed list of SVGs an admin can pick as the
- * leading visual for a navigation item's `icon` field (used when
- * `display_mode === "icon"`). Keys here MUST match the AppIconName union
- * in apps/web/components/widgets/Icon.vue exactly — that's the component
- * the storefront renders these with (GET /store/navigations just returns
- * the key as a string, the storefront maps it to an SVG).
+ * Nav icon set. Two tiers:
  *
- * Add a new icon: add the key to NAV_ICON_KEYS below + an SVG branch here,
- * AND the matching branch + AppIconName entry in Icon.vue.
+ * 1. NAV_ICON_KEYS — a small curated "quick pick" list, hand-drawn as SVGs
+ *    both here and in apps/web/components/widgets/Icon.vue (kept visually
+ *    identical, e.g. the "tea" teapot has no real Lucide equivalent). Keys
+ *    here MUST match the AppIconName legacy branches in Icon.vue exactly.
+ *
+ * 2. Everything else — any icon from lucide-react (LUCIDE_ICON_NAMES below),
+ *    resolved dynamically by name. The storefront resolves the same name
+ *    dynamically from lucide-vue-next (same icon set, same names, matching
+ *    major version) — no per-icon code needed on either side, so this tier
+ *    needs no hand-sync. See item-drawer.tsx's icon search field.
+ *
+ * Add a *curated* icon (rare — only for on-brand icons no library has):
+ * add the key to NAV_ICON_KEYS below + an SVG branch here, AND the matching
+ * branch + AppIconName entry in Icon.vue. For everything else, just pick it
+ * from the search field in the admin — no code change needed.
  */
 export const NAV_ICON_KEYS = [
   "home",
@@ -123,3 +134,40 @@ export const NavIconPreview = ({ name, className }: NavIconProps) => (
     )}
   </svg>
 )
+
+// lucide-react's named exports are all PascalCase icon components except
+// this one helper — everything else in the module is a valid icon name.
+const NON_ICON_EXPORTS = new Set(["createLucideIcon"])
+
+/** Every icon name available for the search field below, e.g. "Sparkles", "MapPinned", "Coffee". */
+export const LUCIDE_ICON_NAMES: string[] = Object.keys(LucideIcons).filter(
+  (key) => !NON_ICON_EXPORTS.has(key) && /^[A-Z]/.test(key)
+)
+
+type LucideIconComponent = ComponentType<{ className?: string }>
+
+/** Renders any icon from LUCIDE_ICON_NAMES by name; renders nothing for an unknown name. */
+export const LucideDynamicIcon = ({ name, className }: NavIconProps) => {
+  const Icon = (LucideIcons as unknown as Record<string, LucideIconComponent>)[name]
+  return Icon ? <Icon className={className} /> : null
+}
+
+/**
+ * A custom-uploaded icon (via ImagePicker in item-drawer.tsx) is stored as
+ * an image URL in the same `icon` text field — no separate column. Any
+ * legacy key or Lucide name is a bare word with no slash, so this is enough
+ * to tell the two apart without a schema change. Keep this check identical
+ * to apps/web/components/widgets/Icon.vue's `isImageUrl`.
+ */
+export const isIconImageUrl = (value: string) => value.includes("/")
+
+/** Resolves any stored `icon` value — legacy key, Lucide name, or uploaded image URL — to its preview. */
+export const NavIconOrImagePreview = ({ name, className }: NavIconProps) => {
+  if (isIconImageUrl(name)) {
+    return <img src={name} alt="" className={className} style={{ objectFit: "contain" }} />
+  }
+  if ((NAV_ICON_KEYS as readonly string[]).includes(name)) {
+    return <NavIconPreview name={name} className={className} />
+  }
+  return <LucideDynamicIcon name={name} className={className} />
+}

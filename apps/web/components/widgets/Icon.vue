@@ -1,23 +1,57 @@
 <script setup lang="ts">
-// Icon SVG dùng chung, tái sử dụng ở mọi nơi thay vì fix cứng path trong từng
-// component. Thêm icon mới: thêm 1 nhánh `v-else-if` bên dưới + tên vào
-// AppIconName.
-// 'home' | 'leaf' | 'tea' | 'coffee' | 'gift' | 'calendar' | 'newspaper' |
-// 'book' | 'users' | 'star' | 'tag' | 'info' also double as the nav icon set
-// an admin can pick in Admin > Điều hướng (display_mode "icon") — keys and
-// paths here MUST stay in sync with
-// apps/backend/src/admin/routes/navigation/nav-icons.tsx.
-export type AppIconName =
-  | 'map-pin' | 'phone' | 'mail' | 'globe'
-  | 'home' | 'leaf' | 'tea' | 'coffee' | 'gift' | 'calendar' | 'newspaper' | 'book' | 'users' | 'star' | 'tag' | 'info'
+import { computed, defineAsyncComponent, type Component } from 'vue'
 
-defineProps<{
+// Icon SVG dùng chung, tái sử dụng ở mọi nơi thay vì fix cứng path trong từng
+// component. Three tiers, checked in this order:
+// 1. Custom uploaded image — admin picked "Hoặc dùng ảnh riêng" in
+//    item-drawer.tsx (ImagePicker), so `name` is an image URL, not a key.
+//    Same `isImageUrl` check as the backend's `isIconImageUrl` in
+//    nav-icons.tsx — keep both in sync (no schema field for this, the same
+//    `icon` text column just holds a URL instead of a key).
+// 2. LEGACY_ICON_NAMES below — hand-drawn `v-else-if` branches, on-brand
+//    icons no generic library has (e.g. the "tea" teapot). Also doubles as
+//    the admin's curated quick-pick set in Admin > Điều hướng — keys and
+//    paths here MUST stay in sync with
+//    apps/backend/src/admin/routes/navigation/nav-icons.tsx.
+// 3. Anything else — resolved dynamically from @lucide/vue by PascalCase
+//    name (e.g. "leaf" -> "Leaf", "map-pin" -> "MapPin"). This is what
+//    admin's icon search field (item-drawer.tsx) picks from — adding one of
+//    those needs no code change here.
+export type AppIconName = string
+
+const LEGACY_ICON_NAMES = new Set([
+  'map-pin', 'phone', 'mail', 'globe',
+  'home', 'leaf', 'tea', 'coffee', 'gift', 'calendar', 'newspaper', 'book', 'users', 'star', 'tag', 'info',
+])
+
+const props = defineProps<{
   name: AppIconName
 }>()
+
+const isImageUrl = computed(() => props.name.includes('/'))
+const isLegacy = computed(() => !isImageUrl.value && LEGACY_ICON_NAMES.has(props.name))
+
+function toPascalCase(name: string) {
+  return name
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
+}
+
+const DynamicIcon = computed(() => {
+  const iconName = props.name
+  return defineAsyncComponent(async () => {
+    const lucideIcons = await import('@lucide/vue')
+    const pascalName = toPascalCase(iconName)
+    return (lucideIcons as unknown as Record<string, Component>)[pascalName] ?? { render: () => null }
+  })
+})
 </script>
 
 <template>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <img v-if="isImageUrl" :src="name" alt="" class="app-icon-image" style="object-fit: contain">
+  <svg v-else-if="isLegacy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <template v-if="name === 'map-pin'">
       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
       <circle cx="12" cy="10" r="3" />
@@ -84,4 +118,5 @@ defineProps<{
       <path d="M12 16v-4M12 8h.01" />
     </template>
   </svg>
+  <component :is="DynamicIcon" v-else :size="20" :stroke-width="2" aria-hidden="true" />
 </template>

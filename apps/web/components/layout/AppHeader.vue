@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+import LayoutAppHeaderProductsMenu from './AppHeaderProductsMenu.vue'
+import LayoutAppHeaderNewsMenu from './AppHeaderNewsMenu.vue'
+
 const { t } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
@@ -35,6 +39,17 @@ const isProductsLink = (link: NavLink) =>
 // Same treatment for the blog/news nav item — topics + latest post banner
 // instead of a plain text dropdown.
 const isNewsLink = (link: NavLink) => link.path === '/tin-tuc' || link.key === 'nav.blog'
+
+// Nav items that get an image-tile mega menu instead of the plain text
+// dropdown, matched to the component that supplies its data (see
+// AppHeaderMegaMenu.vue for the shared presentational shell both render
+// through). Add a new mega menu type here — one line, no template edits.
+const MEGA_MENU_VARIANTS: { matches: (link: NavLink) => boolean, component: Component }[] = [
+  { matches: isProductsLink, component: LayoutAppHeaderProductsMenu },
+  { matches: isNewsLink, component: LayoutAppHeaderNewsMenu },
+]
+
+const megaMenuFor = (link: NavLink) => MEGA_MENU_VARIANTS.find(v => v.matches(link))?.component ?? null
 
 interface NavLink {
   key: string
@@ -173,15 +188,12 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             <div
               v-if="link.children && openDropdown === link.key"
               class="site-dropdown"
-              :class="{ 'site-dropdown-mega': isProductsLink(link) || isNewsLink(link) }"
+              :class="{ 'site-dropdown-mega': !!megaMenuFor(link) }"
             >
-              <LayoutAppHeaderProductsMenu
-                v-if="isProductsLink(link)"
+              <component
+                :is="megaMenuFor(link)"
+                v-if="megaMenuFor(link)"
                 :children="link.children || []"
-              />
-              <LayoutAppHeaderNewsMenu
-                v-else-if="isNewsLink(link)"
-                :children="link.children"
               />
               <template v-else>
                 <NuxtLink

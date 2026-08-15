@@ -219,8 +219,9 @@ mapping in the Vue layer.
 
 # DONE — Navigation item icon / leading-visual choice (`icon` + `display_mode`)
 
-`navigation_item` also has `icon` (nullable text, a key from the fixed set in
-`routes/navigation/nav-icons.tsx`) and `display_mode` (`"none" | "icon" |
+`navigation_item` also has `icon` (nullable text — either one of the curated
+keys or any Lucide icon name, see the two-tier breakdown below) and
+`display_mode` (`"none" | "icon" |
 "image"`, default `"none"`). In `item-drawer.tsx`, admins pick what renders
 before an item's label on the storefront's **main navigation bar** (the
 top-level `TRANG CHỦ / SẢN PHẨM / …` row, `apps/web/components/layout/
@@ -232,16 +233,44 @@ resolution needed, unlike thumbnail), and the storefront reads them straight
 off `NavLink.icon`/`NavLink.displayMode` — same "resolve once, flow
 app→client" rule noted above.
 
-**The icon set is duplicated by necessity, keep both in sync:** admin and
-storefront are separate apps (React admin vs. Vue storefront) with no shared
-package, so the same icon keys + SVG paths exist twice (14 as of writing,
-see `NAV_ICON_KEYS` for the current list) — `NAV_ICON_KEYS`/
-`NavIconPreview` in `routes/navigation/nav-icons.tsx` (admin picker + row
-badge) and the `AppIconName` union + template branches in
-`apps/web/components/widgets/Icon.vue` (storefront + admin **must** use
-identical keys, e.g. `"map-pin"`, `"newspaper"`). Adding a 13th icon means
-editing both files with matching key + path, or the admin picker will offer
-an option the storefront silently renders as an empty `<svg>`.
+**The icon set is now two tiers, only the small tier needs hand-syncing:**
+`icon` is a plain `text` column (no DB enum/check constraint), so it accepts
+any string, not just the curated keys.
+
+1. **Curated/legacy** — `NAV_ICON_KEYS`/`NavIconPreview` in
+   `routes/navigation/nav-icons.tsx` (14 hand-drawn SVGs, admin's quick-pick
+   row) mirror the `AppIconName` legacy branches in
+   `apps/web/components/widgets/Icon.vue` **by necessity** — these are
+   on-brand icons (e.g. the "tea" teapot) no generic library has an
+   equivalent for. Adding one of these still means editing both files with
+   a matching key + hand-drawn path, or the storefront silently renders
+   nothing for that key.
+2. **Everything else** — resolved dynamically from `lucide-react` here
+   (`LUCIDE_ICON_NAMES`/`LucideDynamicIcon` in `nav-icons.tsx`, powering the
+   search field in `item-drawer.tsx` below the quick-pick row) and from
+   `@lucide/vue` on the storefront (`Icon.vue`'s `DynamicIcon`, resolved by
+   converting the stored key to PascalCase, e.g. `"map-pin"` -> `"MapPin"`).
+   Both packages ship the same icon set under matching names for the same
+   major version — **no hand-sync needed** for this tier; picking a new
+   icon in the admin search field just works on the storefront with zero
+   code changes. Keep the two packages' major versions aligned
+   (`lucide-react` here, `@lucide/vue` in `apps/web` — **not**
+   `lucide-vue-next`, which is deprecated/frozen; Lucide renamed its Vue
+   package) since a version drift could rename/remove an icon on one side
+   only.
+3. **Custom uploaded image** — `item-drawer.tsx`'s "Hoặc dùng ảnh riêng"
+   section reuses the same `ImagePicker` (`src/admin/components/
+   image-picker`) as the thumbnail field. There's no separate DB column for
+   this — `isIconImageUrl()` in `nav-icons.tsx` just checks whether the
+   stored `icon` string contains a `/` (every legacy key and Lucide name is
+   a bare word; every uploaded/pasted URL has one), and every icon preview
+   site (`item-drawer.tsx`, the tree row badge in `sortable-nav-row.tsx`)
+   goes through `NavIconOrImagePreview`, which branches on that check before
+   falling back to tier 1/2. **Never call `NavIconPreview` directly for a
+   value that came from the `icon` field** — it only knows tier 1 and
+   renders a blank `<svg>` for anything else; always go through
+   `NavIconOrImagePreview` instead. `apps/web/components/widgets/Icon.vue`
+   mirrors the same `.includes('/')` check as its first branch.
 
 - `display_mode` is a DB-level enum/check constraint (`'none' | 'icon' |
   'image'`), not just a TS union — see `Migration20260813000000.ts`. Needs

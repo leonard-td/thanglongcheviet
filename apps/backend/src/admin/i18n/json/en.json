@@ -971,7 +971,12 @@
       "displayModeNone": "Nothing",
       "displayModeIcon": "Icon",
       "displayModeImage": "Image (uses the thumbnail above)",
-      "icon": "Icon"
+      "icon": "Icon",
+      "iconSearchPlaceholder": "Search icons by name (e.g. leaf, gift, mountain, heart...)",
+      "iconSearchHint": "The icons above are the curated set. Type to search thousands more — pick one and it's ready to use right away, no developer needed.",
+      "iconNoResults": "No matching icons found.",
+      "iconCustomImage": "Or use your own image",
+      "iconCustomImageHint": "Upload or paste an image URL (a transparent-background image works best) to use as this item's own icon instead of picking from the set above."
     },
     "icons": {
       "home": "Home",

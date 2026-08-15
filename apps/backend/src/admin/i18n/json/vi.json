@@ -1146,7 +1146,12 @@
       "displayModeNone": "Không hiển thị",
       "displayModeIcon": "Icon",
       "displayModeImage": "Hình ảnh (dùng ảnh thumbnail phía trên)",
-      "icon": "Icon"
+      "icon": "Icon",
+      "iconSearchPlaceholder": "Tìm icon theo tên (vd: leaf, gift, mountain, heart...)",
+      "iconSearchHint": "Các icon phía trên là bộ có sẵn. Gõ để tìm thêm hàng nghìn icon khác — chọn xong dùng được ngay, không cần lập trình viên can thiệp.",
+      "iconNoResults": "Không tìm thấy icon phù hợp.",
+      "iconCustomImage": "Hoặc dùng ảnh riêng",
+      "iconCustomImageHint": "Tải lên hoặc dán URL ảnh (nên dùng ảnh nền trong suốt) để dùng làm icon riêng cho mục này thay vì chọn từ bộ có sẵn."
     },
     "icons": {
       "home": "Trang chủ",

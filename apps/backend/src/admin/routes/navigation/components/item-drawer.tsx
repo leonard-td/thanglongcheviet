@@ -1,8 +1,17 @@
 import { Button, Checkbox, Drawer, Input, Label, Select, Text, clx } from "@medusajs/ui"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import ImagePicker from "../../../components/image-picker"
-import { NAV_ICON_KEYS, NavIconPreview } from "../nav-icons"
+import { isIconImageUrl, LUCIDE_ICON_NAMES, LucideDynamicIcon, NAV_ICON_KEYS, NavIconOrImagePreview, NavIconPreview } from "../nav-icons"
 import type { ItemFormState } from "../tree-utils"
+
+const LUCIDE_SEARCH_RESULT_LIMIT = 48
+
+type IconOption = {
+  key: string
+  label: string
+  Preview: (props: { name: string; className?: string }) => JSX.Element | null
+}
 
 type ItemDrawerProps = {
   open: boolean
@@ -25,6 +34,27 @@ export const ItemDrawer = ({
   onSubmit,
 }: ItemDrawerProps) => {
   const { t } = useTranslation()
+  const [iconQuery, setIconQuery] = useState("")
+
+  const iconResults = useMemo<IconOption[]>(() => {
+    const query = iconQuery.trim().toLowerCase()
+
+    const legacyMatches = NAV_ICON_KEYS.filter((key) => {
+      if (!query) return true
+      const label = t(`navigation.icons.${key}`)
+      return key.includes(query) || label.toLowerCase().includes(query)
+    }).map((key) => ({ key, label: t(`navigation.icons.${key}`), Preview: NavIconPreview }))
+
+    if (!query) return legacyMatches
+
+    const lucideMatches = LUCIDE_ICON_NAMES.filter((name) =>
+      name.toLowerCase().includes(query)
+    )
+      .slice(0, LUCIDE_SEARCH_RESULT_LIMIT)
+      .map((name) => ({ key: name, label: name, Preview: LucideDynamicIcon }))
+
+    return [...legacyMatches, ...lucideMatches]
+  }, [iconQuery, t])
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -38,8 +68,8 @@ export const ItemDrawer = ({
                 : t("navigation.actions.addRoot")}
           </Drawer.Title>
         </Drawer.Header>
-        <form onSubmit={onSubmit}>
-          <Drawer.Body className="flex flex-col gap-y-4 overflow-y-auto">
+        <form onSubmit={onSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <Drawer.Body className="flex flex-1 flex-col gap-y-4 overflow-y-auto">
             <div className="flex flex-col gap-y-2">
               <Label htmlFor="item_label">{t("navigation.fields.label")}</Label>
               <Input
@@ -106,13 +136,27 @@ export const ItemDrawer = ({
             </div>
             {form.display_mode === "icon" && (
               <div className="flex flex-col gap-y-2">
-                <Label>{t("navigation.fields.icon")}</Label>
-                <div className="grid grid-cols-6 gap-2">
-                  {NAV_ICON_KEYS.map((key) => (
+                <Label className="flex items-center gap-x-1.5">
+                  {t("navigation.fields.icon")}
+                  {form.icon && (
+                    <>
+                      <NavIconOrImagePreview name={form.icon} className="h-3.5 w-3.5" />
+                      <span className="font-normal text-ui-fg-subtle">— {form.icon}</span>
+                    </>
+                  )}
+                </Label>
+                <Input
+                  type="text"
+                  value={iconQuery}
+                  placeholder={t("navigation.fields.iconSearchPlaceholder")}
+                  onChange={(e) => setIconQuery(e.target.value)}
+                />
+                <div className="grid grid-cols-6 gap-2 max-h-48 overflow-y-auto">
+                  {iconResults.map(({ key, label, Preview }) => (
                     <button
                       key={key}
                       type="button"
-                      title={t(`navigation.icons.${key}`)}
+                      title={label}
                       className={clx(
                         "flex items-center justify-center rounded border p-2 text-ui-fg-subtle transition-colors hover:bg-ui-bg-subtle-hover",
                         form.icon === key
@@ -121,9 +165,30 @@ export const ItemDrawer = ({
                       )}
                       onClick={() => onChange({ ...form, icon: key })}
                     >
-                      <NavIconPreview name={key} className="h-4 w-4" />
+                      <Preview name={key} className="h-4 w-4" />
                     </button>
                   ))}
+                  {iconResults.length === 0 && (
+                    <Text size="xsmall" className="col-span-6 text-ui-fg-muted">
+                      {t("navigation.fields.iconNoResults")}
+                    </Text>
+                  )}
+                </div>
+                <Text size="xsmall" className="text-ui-fg-subtle">
+                  {t("navigation.fields.iconSearchHint")}
+                </Text>
+
+                <div className="flex flex-col gap-y-2 border-t border-ui-border-base pt-3 mt-1">
+                  <Text size="small" weight="plus">
+                    {t("navigation.fields.iconCustomImage")}
+                  </Text>
+                  <ImagePicker
+                    value={form.icon && isIconImageUrl(form.icon) ? form.icon : ""}
+                    onChange={(url) => onChange({ ...form, icon: url })}
+                  />
+                  <Text size="xsmall" className="text-ui-fg-subtle">
+                    {t("navigation.fields.iconCustomImageHint")}
+                  </Text>
                 </div>
               </div>
             )}
