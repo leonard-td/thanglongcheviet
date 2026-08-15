@@ -12,7 +12,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const entries = await fsp.readdir(BACKUP_DIR, { withFileTypes: true })
   const backups: { file_name: string; size: number; created_at: string }[] = []
   for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".zip")) continue
+    if (!entry.isFile()) continue
+    if (!entry.name.endsWith(".zip") && !entry.name.endsWith(".json")) continue
     const stat = await fsp.stat(path.join(BACKUP_DIR, entry.name))
     backups.push({
       file_name: entry.name,

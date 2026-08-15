@@ -79,7 +79,12 @@
   },
   "backup": {
     "title": "Backup & Restore",
-    "hint": "Compress the entire database and uploaded media library into a zip file, or restore the system from a backup file. Before every restore, the current state is automatically backed up (pre-restore).",
+    "hint": "Full zip backup for disaster recovery, or JSON export/import for website content (products, articles, config, menu).",
+    "fullHint": "Compress the entire database and uploaded media into a zip file. Before every restore, the current state is automatically backed up (pre-restore).",
+    "tabs": {
+      "full": "Full backup",
+      "content": "Content export / import"
+    },
     "createButton": "Create backup",
     "restoreUploadButton": "Restore from file...",
     "listTitle": "Available backups",
@@ -110,8 +115,13 @@
       "validate": "Validating backup file integrity...",
       "check_compat": "Checking schema compatibility...",
       "pre_restore_backup": "Backing up current data (pre-restore)...",
+      "pre_import_backup": "Backing up before import...",
       "restore_db": "Restoring database...",
-      "restore_static": "Restoring media files..."
+      "restore_static": "Restoring media files...",
+      "read_schema": "Reading database schema...",
+      "export_tables": "Exporting selected tables...",
+      "write_json": "Writing JSON file...",
+      "import_tables": "Importing data..."
     },
     "restorePrompt": {
       "title": "Restore system?",
@@ -132,6 +142,58 @@
       "deleted": "Backup deleted",
       "jobRunning": "Another backup/restore job is already running",
       "requestFailed": "Request failed"
+    },
+    "content": {
+      "hint": "Export/import JSON for articles, products, config, and menu. Excludes accounts, API keys, customers, and orders.",
+      "tablesTitle": "Select tables",
+      "loadingTables": "Loading table list...",
+      "importModeTitle": "Import mode",
+      "exportButton": "Export JSON",
+      "importButton": "Import JSON...",
+      "exportStarted": "JSON export started",
+      "importStarted": "JSON import started",
+      "exportsTitle": "Exported JSON files",
+      "emptyExports": "No JSON exports yet.",
+      "customerSafeNote": "Customer data, accounts, and API keys are always excluded — never modified on import.",
+      "mediaExportWarning": "JSON export only includes image metadata/URLs (card_media, image) — not files under static/. Use full zip backup or copy static/ when moving servers.",
+      "replaceGroupWarning": "Replace auto-expands to the full related table group (e.g. selecting product also includes product_variant, price…). The JSON file must contain all tables in that group.",
+      "groups": {
+        "config": "Configuration",
+        "menu": "Menu",
+        "cards": "Homepage cards",
+        "content": "Articles",
+        "catalog": "Products",
+        "media": "Media library",
+        "events": "Events",
+        "operations": "Operations",
+        "other": "Other"
+      },
+      "presets": {
+        "website": "Website content",
+        "all": "Select all",
+        "none": "Clear selection"
+      },
+      "modes": {
+        "merge": "Merge",
+        "mergeHint": "Upsert by ID. Existing rows not in the file are kept. Recommended for products and articles.",
+        "replace": "Replace",
+        "replaceHint": "Clear selected tables then load from file. Use for config/menu when you want a full sync."
+      },
+      "importPrompt": {
+        "title": "Import content?",
+        "description": "File \"{{file}}\" will import {{count}} tables in {{mode}} mode. A full zip backup runs automatically first. Customer data is not modified.",
+        "confirmText": "IMPORT",
+        "confirm": "Import",
+        "cancel": "Cancel"
+      },
+      "job": {
+        "runningExport": "Exporting JSON...",
+        "runningImport": "Importing JSON — do not close the server...",
+        "completedExport": "Export completed: {{file}}",
+        "completedImport": "Import completed. Previous data was zip-backed up as {{file}}.",
+        "skippedBlocked": "Skipped blocked tables: {{tables}}.",
+        "expandedForReplace": "Replace auto-included related tables: {{tables}}."
+      }
     }
   },
   "care-channels": {

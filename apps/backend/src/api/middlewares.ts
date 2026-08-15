@@ -34,6 +34,11 @@ const backupUpload = multer({
   limits: { fileSize: 4 * 1024 * 1024 * 1024 },
 })
 
+const jsonUpload = multer({
+  dest: path.join(os.tmpdir(), "tlcv-content-import"),
+  limits: { fileSize: 256 * 1024 * 1024 },
+})
+
 export default defineMiddlewares({
   routes: [
     // ── Blocked admin users (metadata.blocked) ──
@@ -164,6 +169,21 @@ export default defineMiddlewares({
       matcher: "/admin/backup/restore",
       method: ["POST"],
       middlewares: [guard("backup", "update"), backupUpload.single("file")],
+    },
+    {
+      matcher: "/admin/backup/tables",
+      method: "GET",
+      middlewares: [guard("backup", "read")],
+    },
+    {
+      matcher: "/admin/backup/export-json",
+      method: ["POST"],
+      middlewares: [guard("backup", "create")],
+    },
+    {
+      matcher: "/admin/backup/import-json",
+      method: ["POST"],
+      middlewares: [guard("backup", "update"), jsonUpload.single("file")],
     },
 
     // ── Zalo webhook (raw body, no RBAC — not admin) ──
