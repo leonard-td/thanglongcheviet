@@ -51,4 +51,4 @@ export function resolveStaticFilePath(rel: string): string {
 }
 
 // Tên file backup do hệ thống sinh ra / người dùng chọn khi thao tác qua API
-export const BACKUP_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.zip$/
+export const BACKUP_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*\.(zip|json)$/

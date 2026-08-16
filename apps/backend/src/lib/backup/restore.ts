@@ -27,6 +27,38 @@ function sameSet(a: string[], b: string[]): boolean {
   return a.every((x) => bs.has(x))
 }
 
+/** Reject manifest paths that escape the staging directory (path traversal). */
+function resolveManifestPath(root: string, rel: string, label: string): string {
+  if (
+    rel.includes("\\") ||
+    path.posix.isAbsolute(rel) ||
+    rel.split("/").some((seg) => seg === ".." || seg === "")
+  ) {
+    throw new Error(`Unsafe ${label} path in manifest: ${rel}`)
+  }
+  const abs = path.resolve(root, ...rel.split("/"))
+  const rootResolved = path.resolve(root)
+  const prefix = rootResolved.endsWith(path.sep)
+    ? rootResolved
+    : rootResolved + path.sep
+  if (abs !== rootResolved && !abs.startsWith(prefix)) {
+    throw new Error(`Unsafe ${label} path in manifest: ${rel}`)
+  }
+  return abs
+}
+
+function validateManifestPaths(
+  staging: string,
+  manifest: BackupManifest
+): void {
+  for (const t of manifest.tables) {
+    resolveManifestPath(staging, t.file, "table data")
+  }
+  for (const f of manifest.static_files) {
+    resolveManifestPath(path.join(staging, "static"), f.path, "static file")
+  }
+}
+
 // Giải nén zip vào staging, chặn path traversal (entry chứa "..", đường dẫn
 // tuyệt đối hoặc backslash đều bị từ chối).
 async function extractZip(zipPath: string, staging: string): Promise<void> {
@@ -265,6 +297,7 @@ export async function restoreBackup(
         "Invalid backup file: manifest.json is missing or malformed."
       )
     }
+    validateManifestPaths(staging, manifest)
     await verifyChecksums(staging, manifest)
 
     setStep("check_compat")
