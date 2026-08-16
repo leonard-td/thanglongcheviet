@@ -15,7 +15,7 @@ import {
 } from "./db"
 import { hashFile, walkFiles } from "./fs-utils"
 import type { BackupManifest } from "./manifest"
-import { BACKUP_DIR, STATIC_DIR, TMP_DIR } from "./paths"
+import { BACKUP_DIR, STATIC_DIR, TMP_DIR, resolveStaticFilePath, resolveStaticSourceDirs } from "./paths"
 
 export type CreateBackupResult = {
   fileName: string
@@ -89,14 +89,19 @@ export async function createBackup(
 
     setStep("collect_static")
     const staticFiles: BackupManifest["static_files"] = []
-    for (const rel of await walkFiles(STATIC_DIR)) {
-      const abs = path.join(STATIC_DIR, rel)
-      const stat = await fsp.stat(abs)
-      staticFiles.push({
-        path: rel,
-        size: stat.size,
-        sha256: await hashFile(abs),
-      })
+    const seenStatic = new Set<string>()
+    for (const root of resolveStaticSourceDirs()) {
+      for (const rel of await walkFiles(root)) {
+        if (seenStatic.has(rel)) continue
+        seenStatic.add(rel)
+        const abs = path.join(root, rel)
+        const stat = await fsp.stat(abs)
+        staticFiles.push({
+          path: rel,
+          size: stat.size,
+          sha256: await hashFile(abs),
+        })
+      }
     }
 
     const manifest: BackupManifest = {
@@ -132,7 +137,7 @@ export async function createBackup(
       archive.file(path.join(staging, t.file), { name: t.file })
     }
     for (const f of manifest.static_files) {
-      archive.file(path.join(STATIC_DIR, f.path), { name: `static/${f.path}` })
+      archive.file(resolveStaticFilePath(f.path), { name: `static/${f.path}` })
     }
     archive.append(JSON.stringify(manifest, null, 2), { name: "manifest.json" })
     await archive.finalize()

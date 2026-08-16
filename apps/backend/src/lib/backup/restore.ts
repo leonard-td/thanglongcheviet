@@ -172,6 +172,20 @@ async function restoreDatabase(
   }
 }
 
+// Một số cột JSON có default DB nhưng COPY CSV có thể ghi NULL tường minh.
+async function fixRestoreDataIssues(): Promise<void> {
+  const client = await connectDb()
+  try {
+    await client.query(`
+      UPDATE site_setting
+      SET hero_images = '[]'::jsonb
+      WHERE hero_images IS NULL
+    `)
+  } finally {
+    await client.end()
+  }
+}
+
 // Hoán đổi nội dung thư mục media. Mọi bước move đều diễn ra BÊN TRONG
 // STATIC_DIR (trong prod đây là một Docker volume riêng — rename ra ngoài sẽ
 // lỗi EXDEV, và bản thân STATIC_DIR là mount point nên không thể rename chính
@@ -261,6 +275,7 @@ export async function restoreBackup(
 
     setStep("restore_db")
     await restoreDatabase(staging, manifest)
+    await fixRestoreDataIssues()
 
     setStep("restore_static")
     await swapStatic(staging, stamp)

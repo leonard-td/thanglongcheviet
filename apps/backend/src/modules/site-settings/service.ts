@@ -11,9 +11,18 @@ class SiteSettingsModuleService extends MedusaService({
   async getSingleton() {
     const [existing] = await this.listSiteSettings({}, { take: 1 })
     if (existing) {
+      // CSV restore / legacy rows may leave hero_images NULL; Medusa rejects that on read.
+      if (existing.hero_images == null) {
+        return await this.updateSiteSettings({
+          id: existing.id,
+          hero_images: [] as unknown as Record<string, unknown>,
+        })
+      }
       return existing
     }
-    return await this.createSiteSettings({})
+    return await this.createSiteSettings({
+      hero_images: [] as unknown as Record<string, unknown>,
+    })
   }
 
   async updateSingleton(data: Record<string, unknown>) {
