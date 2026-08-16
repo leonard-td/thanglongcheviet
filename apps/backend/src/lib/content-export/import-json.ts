@@ -47,14 +47,17 @@ function buildInsertSql(table: string, columns: string[]): string {
   return `INSERT INTO ${quoteIdent(table)} (${colList}) VALUES (${placeholders})`
 }
 
-function rowColumnsForImport(
+export function rowColumnsForImport(
   mode: ContentImportMode,
   columns: string[],
   row: Record<string, unknown>
 ): string[] {
   if (mode === "merge") {
-    return columns.filter((col) =>
-      Object.prototype.hasOwnProperty.call(row, col)
+    return columns.filter(
+      (col) =>
+        Object.prototype.hasOwnProperty.call(row, col) &&
+        row[col] !== null &&
+        row[col] !== undefined
     )
   }
   return columns

@@ -92,7 +92,12 @@ const BackupSettingsPage = () => {
       query.state.data?.job?.status === "running" ? 1500 : false,
   })
 
-  const { data: tablesData } = useQuery<{ tables: ExportTable[] }>({
+  const {
+    data: tablesData,
+    isLoading: tablesLoading,
+    isError: tablesError,
+    refetch: refetchTables,
+  } = useQuery<{ tables: ExportTable[] }>({
     queryKey: TABLES_KEY,
     queryFn: () => sdk.client.fetch("/admin/backup/tables"),
     enabled: tab === "content",
@@ -534,9 +539,22 @@ const BackupSettingsPage = () => {
               <Heading level="h2" className="mb-3">
                 {t("backup.content.tablesTitle")}
               </Heading>
-              {!tablesData?.tables.length ? (
+              {tablesLoading ? (
                 <Text size="small" className="text-ui-fg-muted">
                   {t("backup.content.loadingTables")}
+                </Text>
+              ) : tablesError ? (
+                <div className="flex flex-col gap-y-2">
+                  <Text size="small" className="text-ui-fg-error">
+                    {t("backup.content.loadTablesError")}
+                  </Text>
+                  <Button size="small" variant="secondary" onClick={() => refetchTables()}>
+                    {t("backup.content.retryTables")}
+                  </Button>
+                </div>
+              ) : !tablesData?.tables.length ? (
+                <Text size="small" className="text-ui-fg-muted">
+                  {t("backup.content.emptyTables")}
                 </Text>
               ) : (
                 <div className="flex flex-col gap-y-4 max-h-[480px] overflow-y-auto">
