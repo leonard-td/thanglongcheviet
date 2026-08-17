@@ -9,7 +9,6 @@ const { products, categories } = useProducts()
 
 // Backed by the real "Quà tặng doanh nghiệp" Medusa category (tagged
 // metadata.menu_group = "gift" by sync-menu-categories.ts, same convention
-// AppHeaderProductsMenu.vue uses) instead of guessing gift products from
 // their slug/title text. Handle is a one-time fallback for a category that
 // predates the menu_group tag.
 const giftCategoryId = computed(() =>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
-import LayoutAppHeaderProductsMenu from './AppHeaderProductsMenu.vue'
-import LayoutAppHeaderNewsMenu from './AppHeaderNewsMenu.vue'
+import type { NavLink, NavLinkType } from '~/composables/useNavigation'
+import { FALLBACK_PRODUCT_IMAGE, FALLBACK_POST_IMAGE } from '~/utils/storefront'
+import AppHeaderMegaMenu from './AppHeaderMegaMenu.vue'
+import type { MegaMenuSection, MegaMenuItem } from './AppHeaderMegaMenu.vue'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -27,97 +28,87 @@ const isSolid = computed(() => scrollY.value > solidThreshold.value || isMenuOpe
 
 const { totalItems } = useCart()
 
-// The products nav item gets an image-led mega menu (categories/collections
-// with thumbnails) instead of the plain text dropdown other nav items use.
-// '/san-pham-list' + 'nav.products' match the hardcoded static fallback list
-// below; '/san-pham' is the real "Sản phẩm" item's url as created in
-// Admin > Điều hướng (GET /store/navigations) — the two never share a path,
-// so both must be checked.
-const isProductsLink = (link: NavLink) =>
-  link.path === '/san-pham-list' || link.path === '/san-pham' || link.key === 'nav.products'
-
-// Same treatment for the blog/news nav item — topics + latest post banner
-// instead of a plain text dropdown.
-const isNewsLink = (link: NavLink) => link.path === '/tin-tuc' || link.key === 'nav.blog'
-
-// Nav items that get an image-tile mega menu instead of the plain text
-// dropdown, matched to the component that supplies its data (see
-// AppHeaderMegaMenu.vue for the shared presentational shell both render
-// through). Add a new mega menu type here — one line, no template edits.
-const MEGA_MENU_VARIANTS: { matches: (link: NavLink) => boolean, component: Component }[] = [
-  { matches: isProductsLink, component: LayoutAppHeaderProductsMenu },
-  { matches: isNewsLink, component: LayoutAppHeaderNewsMenu },
+// Products nav items: bucket children into sections by linkType so categories,
+// collections, and other links each get their own labelled group in the grid.
+const PRODUCT_SECTIONS: { linkTypes: NavLinkType[] | null; titleKey: string }[] = [
+  { linkTypes: ['product_category'], titleKey: 'products.browseCategories' },
+  { linkTypes: ['product_collection'], titleKey: 'products.browseCollections' },
+  { linkTypes: null, titleKey: 'nav.productsMenu.moreTitle' },
 ]
 
-const megaMenuFor = (link: NavLink) => MEGA_MENU_VARIANTS.find(v => v.matches(link))?.component ?? null
+function buildMegaMenuSections(link: NavLink): MegaMenuSection[] {
+  const children = link.children ?? []
+  if (!children.length) return []
 
-interface NavLink {
-  key: string
-  path: string
-  label?: string
-  openInNewTab?: boolean
-  thumbnail?: string | null
-  icon?: string | null
-  displayMode?: 'none' | 'icon' | 'image' | null
-  children?: {
-    key: string
-    path: string
-    label?: string
-    openInNewTab?: boolean
-    thumbnail?: string | null
-    linkType?: 'product' | 'product_category' | 'product_collection' | 'product_topic' | 'post' | 'post_topic' | 'event' | 'event_topic' | null
-  }[]
+  const hasProductTypes = children.some(
+    c => c.linkType === 'product_category' || c.linkType === 'product_collection',
+  )
+
+  if (hasProductTypes) {
+    const buckets = new Map<string, MegaMenuItem[]>()
+    for (const child of children) {
+      const section = PRODUCT_SECTIONS.find(
+        s => s.linkTypes === null || (child.linkType && s.linkTypes.includes(child.linkType)),
+      )!
+      const items = buckets.get(section.titleKey) ?? []
+      items.push({
+        key: child.key,
+        path: child.path,
+        label: child.label || t(child.key),
+        image: child.thumbnail || FALLBACK_PRODUCT_IMAGE,
+        openInNewTab: child.openInNewTab,
+      })
+      buckets.set(section.titleKey, items)
+    }
+    return PRODUCT_SECTIONS
+      .filter(s => buckets.has(s.titleKey))
+      .map(s => ({ key: s.titleKey, title: t(s.titleKey), items: buckets.get(s.titleKey)! }))
+  }
+
+  // News / other: single flat section — admin configures children via Điều hướng
+  return [{
+    key: link.key,
+    title: '',
+    items: children.map(child => ({
+      key: child.key,
+      path: child.path,
+      label: child.label || t(child.key),
+      image: child.thumbnail || FALLBACK_POST_IMAGE,
+      openInNewTab: child.openInNewTab,
+    })),
+  }]
 }
 
+function megaMenuConfig(link: NavLink) {
+  const children = link.children ?? []
+  const isProducts = children.some(
+    c => c.linkType === 'product_category' || c.linkType === 'product_collection',
+  )
+  const isNews = children.some(c => c.linkType === 'post' || c.linkType === 'post_topic')
+  return {
+    viewAllPath: link.path,
+    viewAllLabel: isProducts
+      ? t('products.viewAllProducts')
+      : isNews
+        ? t('blog.viewAll')
+        : link.label || t(link.key),
+    minWidth: isProducts ? 'min(720px, 90vw)' : 'min(640px, 90vw)',
+    maxWidth: isProducts ? '920px' : '820px',
+  }
+}
+
+// Fetch nav from GET /store/navigations — backend only returns items with
+// is_active = true (both menu-level and item-level filtering). useAsyncData
+// runs on the server during SSR so nav renders on first paint without a flash.
 const { getStoreNavigation, mapNavigationToNavLinks } = useNavigation()
-const dynamicLinks = ref<NavLink[]>([])
-
-onMounted(async () => {
-  try {
+const { data: navLinks } = await useAsyncData<NavLink[]>(
+  'store-navigation',
+  async () => {
     const rawNav = await getStoreNavigation()
-    if (rawNav && rawNav.length > 0) {
-      dynamicLinks.value = mapNavigationToNavLinks(rawNav)
-    }
-  } catch (e) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[AppHeader] Failed to load dynamic navigation, falling back to static:', e)
-    }
-  }
-})
-
-const navLinks = computed<NavLink[]>(() => {
-  if (dynamicLinks.value.length > 0) {
-    return dynamicLinks.value
-  }
-
-  return [
-    // { key: 'nav.home', path: '/' },
-    { key: 'nav.about', path: '/gioi-thieu' },
-    {
-      key: 'nav.products',
-      path: '/san-pham-list',
-      children: [
-        { key: 'nav.productsMenu.teaViet', path: '/san-pham/danh-muc/thang-long-che-viet' },
-        { key: 'nav.productsMenu.anQuangCaffe', path: '/an-quang-caffe' },
-        { key: 'nav.productsMenu.corporateGifts', path: '/qua-tang-doanh-nghiep' },
-      ],
-    },
-    { key: 'nav.projectsPartners', path: '/du-an-doi-tac' },
-    { key: 'nav.events', path: '/trai-nghiem' },
-    {
-      key: 'nav.blog',
-      path: '/tin-tuc',
-      children: [
-        { key: 'nav.blogMenu.vietTea', path: '/nep-tra-viet' },
-        { key: 'nav.blogMenu.tradition', path: '/van-hoa-viet' },
-        { key: 'nav.blogMenu.teaHeritage', path: '/di-san-tra-cu' },
-        { key: 'nav.blogMenu.anQuangGarden', path: '/vuon-an-quang' },
-      ],
-    },
-    { key: 'nav.library', path: '/thu-vien-van-hoa' },
-    { key: 'nav.contact', path: '/lien-he' },
-  ]
-})
+    return rawNav.length > 0 ? mapNavigationToNavLinks(rawNav) : []
+  },
+  { default: () => [] as NavLink[] },
+)
 
 const toggleMobileGroup = (key: string) => {
   openMobileGroup.value = openMobileGroup.value === key ? null : key
@@ -186,33 +177,13 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             leave-to-class="opacity-0 -translate-y-1"
           >
             <div
-              v-if="link.children && openDropdown === link.key"
-              class="site-dropdown"
-              :class="{ 'site-dropdown-mega': !!megaMenuFor(link) }"
+              v-if="link.children?.length && openDropdown === link.key"
+              class="site-dropdown site-dropdown-mega"
             >
-              <component
-                :is="megaMenuFor(link)"
-                v-if="megaMenuFor(link)"
-                :children="link.children || []"
+              <AppHeaderMegaMenu
+                :sections="buildMegaMenuSections(link)"
+                v-bind="megaMenuConfig(link)"
               />
-              <template v-else>
-                <NuxtLink
-                  v-for="child in link.children"
-                  :key="child.key"
-                  :to="localePath(child.path)"
-                  class="site-dropdown-link"
-                  :target="child.openInNewTab ? '_blank' : undefined"
-                  :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
-                >
-                  <img
-                    v-if="child.thumbnail"
-                    :src="child.thumbnail"
-                    alt=""
-                    class="site-dropdown-link-thumb"
-                  >
-                  {{ child.label || t(child.key) }}
-                </NuxtLink>
-              </template>
             </div>
           </Transition>
         </div>
@@ -471,28 +442,6 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   padding: 0;
 }
 
-.site-dropdown-link {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  padding: .65rem 1.1rem;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: rgba(245, 240, 230, .82);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background .15s ease, color .15s ease;
-}
-
-.site-dropdown-link-thumb {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
 .site-mobile-sublink-thumb {
   width: 24px;
   height: 24px;
@@ -500,11 +449,6 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   object-fit: cover;
   flex-shrink: 0;
   margin-right: .6rem;
-}
-
-.site-dropdown-link:hover {
-  background: rgba(201, 168, 108, .12);
-  color: #e8d5a8;
 }
 
 .site-mobile-caret {

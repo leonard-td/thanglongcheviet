@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Shared presentational shell for the header's image-tile mega menus
-// (currently AppHeaderProductsMenu.vue, AppHeaderNewsMenu.vue). This
 // component owns layout/markup/CSS only — each caller keeps its own data
 // fetching (different backend entities per menu) and just hands over
 // `sections` already shaped for display. Adding a new mega menu type later
