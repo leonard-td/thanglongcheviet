@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FALLBACK_PRODUCT_IMAGE } from '~/utils/storefront'
+import AppHeaderMegaMenu from './AppHeaderMegaMenu.vue'
 import type { MegaMenuSection } from './AppHeaderMegaMenu.vue'
 
 type NavLinkType =

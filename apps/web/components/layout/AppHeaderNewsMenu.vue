@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { FALLBACK_POST_IMAGE, resolveCardImage } from '~/utils/storefront'
+import AppHeaderMegaMenu from './AppHeaderMegaMenu.vue'
 import type { MegaMenuSection } from './AppHeaderMegaMenu.vue'
 
 interface NavChildLink {
