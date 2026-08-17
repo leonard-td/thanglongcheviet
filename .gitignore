@@ -65,3 +65,13 @@ Thumbs.db
 my-medusa-store/
 be/
 .backups/
+
+# Database backups and dumps
+backups/
+*.sql
+*.sql.gz
+*.sql.gpg
+*.dump
+*.pgdump
+backup.log
+daily-backup-*.log
