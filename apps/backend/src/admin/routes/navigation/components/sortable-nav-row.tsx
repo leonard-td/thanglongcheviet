@@ -1,6 +1,7 @@
 import {
   DotsSix,
   EllipsisHorizontal,
+  PhotoSolid,
   TriangleDownMini,
   TriangleRightMini,
 } from "@medusajs/icons"
@@ -13,8 +14,21 @@ import {
 } from "@medusajs/ui"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import type { NavigationItem } from "../../types/navigation"
+import type { NavigationItem, NavLinkType } from "../../../types/navigation"
+import { NavIconOrImagePreview } from "../nav-icons"
+
+const LINK_TYPE_LABEL_KEYS: Record<NavLinkType, string> = {
+  product: "navigation.linkTypes.product",
+  product_category: "navigation.linkTypes.productCategory",
+  product_collection: "navigation.linkTypes.productCollection",
+  product_topic: "navigation.linkTypes.productTopic",
+  post: "navigation.linkTypes.post",
+  post_topic: "navigation.linkTypes.postTopic",
+  event: "navigation.linkTypes.event",
+  event_topic: "navigation.linkTypes.eventTopic",
+}
 
 type SortableNavRowProps = {
   item: NavigationItem
@@ -62,6 +76,10 @@ export const SortableNavRow = ({
   }
 
   const hasChildren = (item.children?.length || 0) > 0
+  const thumbnail = item.thumbnail || item.resolved_thumbnail || null
+
+  const [imageFailed, setImageFailed] = useState(false)
+  useEffect(() => setImageFailed(false), [thumbnail])
 
   return (
     <div
@@ -105,10 +123,49 @@ export const SortableNavRow = ({
         <span className="w-5" />
       )}
 
+      <div className="h-8 w-11 flex-shrink-0 overflow-hidden rounded border border-ui-border-base bg-ui-bg-subtle flex items-center justify-center">
+        {thumbnail && !imageFailed ? (
+          // key={thumbnail} forces a fresh mount per URL so a previous
+          // load failure never carries over onto the next (valid) image.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={thumbnail}
+            src={thumbnail}
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <PhotoSolid className="text-ui-fg-muted" />
+        )}
+      </div>
+
       <div className="min-w-0 flex-1">
-        <Text size="small" weight="plus" className="truncate">
-          {item.label}
-        </Text>
+        <div className="flex items-center gap-x-1.5">
+          <Text size="small" weight="plus" className="truncate">
+            {item.label}
+          </Text>
+          {item.link_type && (
+            <Badge size="2xsmall" color="blue">
+              {t(LINK_TYPE_LABEL_KEYS[item.link_type])}
+            </Badge>
+          )}
+          {item.display_mode === "icon" && item.icon && (
+            <Badge
+              size="2xsmall"
+              color="purple"
+              className="inline-flex items-center gap-x-1"
+            >
+              <NavIconOrImagePreview name={item.icon} className="h-3 w-3" />
+              {t("navigation.fields.displayModeIcon")}
+            </Badge>
+          )}
+          {item.display_mode === "image" && (
+            <Badge size="2xsmall" color="purple">
+              {t("navigation.fields.displayModeImage")}
+            </Badge>
+          )}
+        </div>
         <Text size="xsmall" className="text-ui-fg-subtle truncate">
           {item.url}
         </Text>

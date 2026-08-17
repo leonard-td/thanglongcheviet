@@ -10,6 +10,23 @@ export interface ProductGroup {
   label: string
   /** Banner đầu trang — lưu ở metadata.thumbnail (danh mục/bộ sưu tập không có field ảnh gốc). */
   thumbnail: string | null
+  /**
+   * metadata.menu_group trên category — admin gắn qua Metadata editor của
+   * Medusa như một tag ổn định để tra ra category này bất kể handle đổi tên
+   * (vd. an-quang-caffe.vue tìm category "coffee", qua-tang-doanh-nghiep.vue
+   * tìm category "gift"). KHÔNG còn được dùng để nhóm tile trong mega-menu
+   * sản phẩm — mega-menu (AppHeaderProductsMenu.vue) giờ chỉ vẽ theo children
+   * của nav-item "Sản phẩm" trong Admin > Điều hướng, không tự quét category.
+   */
+  menuGroup: string | null
+  /** metadata.menu_group_label — không còn consumer nào đọc field này (trước đây là tiêu đề section trong mega-menu sản phẩm, đã bỏ). Giữ lại trong metadata/type để không phá dữ liệu cũ. */
+  menuGroupLabel: string | null
+  /**
+   * metadata.menu_hidden — không còn consumer nào đọc field này (mega-menu
+   * sản phẩm hiện chỉ vẽ theo Điều hướng, không quét category nữa nên không
+   * cần cờ ẩn riêng). Giữ lại trong metadata/type để không phá dữ liệu cũ.
+   */
+  menuHidden: boolean
 }
 
 const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
@@ -48,7 +65,10 @@ export function useProducts() {
   const categories = computed<ProductGroup[]>(() =>
     (categoriesData.value?.product_categories ?? []).map((c) => {
       const cat = transformMedusaCategory(c)
-      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail }
+      const menuGroup = typeof c.metadata?.menu_group === 'string' ? c.metadata.menu_group : null
+      const menuGroupLabel = typeof c.metadata?.menu_group_label === 'string' ? c.metadata.menu_group_label : null
+      const menuHidden = c.metadata?.menu_hidden === true
+      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail, menuGroup, menuGroupLabel, menuHidden }
     }),
   )
 
@@ -64,6 +84,9 @@ export function useProducts() {
       slug: c.handle,
       label: categoryLabel(c.title, locale.value),
       thumbnail: typeof c.metadata?.thumbnail === 'string' ? c.metadata.thumbnail : null,
+      menuGroup: null,
+      menuGroupLabel: null,
+      menuHidden: false,
     })),
   )
 

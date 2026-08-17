@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import type { NavLink, NavLinkType } from '~/composables/useNavigation'
+import { FALLBACK_PRODUCT_IMAGE, FALLBACK_POST_IMAGE } from '~/utils/storefront'
+import AppHeaderMegaMenu from './AppHeaderMegaMenu.vue'
+import type { MegaMenuSection, MegaMenuItem } from './AppHeaderMegaMenu.vue'
+
 const { t } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
@@ -23,63 +28,87 @@ const isSolid = computed(() => scrollY.value > solidThreshold.value || isMenuOpe
 
 const { totalItems } = useCart()
 
-interface NavLink {
-  key: string
-  path: string
-  label?: string
-  openInNewTab?: boolean
-  children?: { key: string, path: string, label?: string, openInNewTab?: boolean }[]
+// Products nav items: bucket children into sections by linkType so categories,
+// collections, and other links each get their own labelled group in the grid.
+const PRODUCT_SECTIONS: { linkTypes: NavLinkType[] | null; titleKey: string }[] = [
+  { linkTypes: ['product_category'], titleKey: 'products.browseCategories' },
+  { linkTypes: ['product_collection'], titleKey: 'products.browseCollections' },
+  { linkTypes: null, titleKey: 'nav.productsMenu.moreTitle' },
+]
+
+function buildMegaMenuSections(link: NavLink): MegaMenuSection[] {
+  const children = link.children ?? []
+  if (!children.length) return []
+
+  const hasProductTypes = children.some(
+    c => c.linkType === 'product_category' || c.linkType === 'product_collection',
+  )
+
+  if (hasProductTypes) {
+    const buckets = new Map<string, MegaMenuItem[]>()
+    for (const child of children) {
+      const section = PRODUCT_SECTIONS.find(
+        s => s.linkTypes === null || (child.linkType && s.linkTypes.includes(child.linkType)),
+      )!
+      const items = buckets.get(section.titleKey) ?? []
+      items.push({
+        key: child.key,
+        path: child.path,
+        label: child.label || t(child.key),
+        image: child.thumbnail || FALLBACK_PRODUCT_IMAGE,
+        openInNewTab: child.openInNewTab,
+      })
+      buckets.set(section.titleKey, items)
+    }
+    return PRODUCT_SECTIONS
+      .filter(s => buckets.has(s.titleKey))
+      .map(s => ({ key: s.titleKey, title: t(s.titleKey), items: buckets.get(s.titleKey)! }))
+  }
+
+  // News / other: single flat section — admin configures children via Điều hướng
+  return [{
+    key: link.key,
+    title: '',
+    items: children.map(child => ({
+      key: child.key,
+      path: child.path,
+      label: child.label || t(child.key),
+      image: child.thumbnail || FALLBACK_POST_IMAGE,
+      openInNewTab: child.openInNewTab,
+    })),
+  }]
 }
 
+function megaMenuConfig(link: NavLink) {
+  const children = link.children ?? []
+  const isProducts = children.some(
+    c => c.linkType === 'product_category' || c.linkType === 'product_collection',
+  )
+  const isNews = children.some(c => c.linkType === 'post' || c.linkType === 'post_topic')
+  return {
+    viewAllPath: link.path,
+    viewAllLabel: isProducts
+      ? t('products.viewAllProducts')
+      : isNews
+        ? t('blog.viewAll')
+        : link.label || t(link.key),
+    minWidth: isProducts ? 'min(720px, 90vw)' : 'min(640px, 90vw)',
+    maxWidth: isProducts ? '920px' : '820px',
+  }
+}
+
+// Fetch nav from GET /store/navigations — backend only returns items with
+// is_active = true (both menu-level and item-level filtering). useAsyncData
+// runs on the server during SSR so nav renders on first paint without a flash.
 const { getStoreNavigation, mapNavigationToNavLinks } = useNavigation()
-const dynamicLinks = ref<NavLink[]>([])
-
-onMounted(async () => {
-  try {
+const { data: navLinks } = await useAsyncData<NavLink[]>(
+  'store-navigation',
+  async () => {
     const rawNav = await getStoreNavigation()
-    if (rawNav && rawNav.length > 0) {
-      dynamicLinks.value = mapNavigationToNavLinks(rawNav)
-    }
-  } catch (e) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[AppHeader] Failed to load dynamic navigation, falling back to static:', e)
-    }
-  }
-})
-
-const navLinks = computed<NavLink[]>(() => {
-  if (dynamicLinks.value.length > 0) {
-    return dynamicLinks.value
-  }
-
-  return [
-    // { key: 'nav.home', path: '/' },
-    { key: 'nav.about', path: '/gioi-thieu' },
-    {
-      key: 'nav.products',
-      path: '/san-pham-list',
-      children: [
-        { key: 'nav.productsMenu.teaViet', path: '/san-pham/danh-muc/thang-long-che-viet' },
-        { key: 'nav.productsMenu.anQuangCaffe', path: '/an-quang-caffe' },
-        { key: 'nav.productsMenu.corporateGifts', path: '/qua-tang-doanh-nghiep' },
-      ],
-    },
-    { key: 'nav.projectsPartners', path: '/du-an-doi-tac' },
-    { key: 'nav.events', path: '/trai-nghiem' },
-    {
-      key: 'nav.blog',
-      path: '/tin-tuc',
-      children: [
-        { key: 'nav.blogMenu.vietTea', path: '/nep-tra-viet' },
-        { key: 'nav.blogMenu.tradition', path: '/van-hoa-viet' },
-        { key: 'nav.blogMenu.teaHeritage', path: '/di-san-tra-cu' },
-        { key: 'nav.blogMenu.anQuangGarden', path: '/vuon-an-quang' },
-      ],
-    },
-    { key: 'nav.library', path: '/thu-vien-van-hoa' },
-    { key: 'nav.contact', path: '/lien-he' },
-  ]
-})
+    return rawNav.length > 0 ? mapNavigationToNavLinks(rawNav) : []
+  },
+  { default: () => [] as NavLink[] },
+)
 
 const toggleMobileGroup = (key: string) => {
   openMobileGroup.value = openMobileGroup.value === key ? null : key
@@ -114,6 +143,17 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
               :target="link.openInNewTab ? '_blank' : undefined"
               :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
             >
+              <WidgetsIcon
+                v-if="link.displayMode === 'icon' && link.icon"
+                :name="link.icon as any"
+                class="site-nav-link-icon"
+              />
+              <img
+                v-else-if="link.displayMode === 'image' && link.thumbnail"
+                :src="link.thumbnail"
+                alt=""
+                class="site-nav-link-thumb"
+              >
               {{ link.label || t(link.key) }}
             </NuxtLink>
             <button
@@ -136,17 +176,14 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
             leave-active-class="transition-all duration-100"
             leave-to-class="opacity-0 -translate-y-1"
           >
-            <div v-if="link.children && openDropdown === link.key" class="site-dropdown">
-              <NuxtLink
-                v-for="child in link.children"
-                :key="child.key"
-                :to="localePath(child.path)"
-                class="site-dropdown-link"
-                :target="child.openInNewTab ? '_blank' : undefined"
-                :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
-              >
-                {{ child.label || t(child.key) }}
-              </NuxtLink>
+            <div
+              v-if="link.children?.length && openDropdown === link.key"
+              class="site-dropdown site-dropdown-mega"
+            >
+              <AppHeaderMegaMenu
+                :sections="buildMegaMenuSections(link)"
+                v-bind="megaMenuConfig(link)"
+              />
             </div>
           </Transition>
         </div>
@@ -205,6 +242,17 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :rel="link.openInNewTab ? 'noopener noreferrer' : undefined"
                 @click="isMenuOpen = false"
               >
+                <WidgetsIcon
+                  v-if="link.displayMode === 'icon' && link.icon"
+                  :name="link.icon as any"
+                  class="site-nav-link-icon"
+                />
+                <img
+                  v-else-if="link.displayMode === 'image' && link.thumbnail"
+                  :src="link.thumbnail"
+                  alt=""
+                  class="site-nav-link-thumb"
+                >
                 {{ link.label || t(link.key) }}
               </NuxtLink>
               <button
@@ -234,6 +282,12 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
                 :rel="child.openInNewTab ? 'noopener noreferrer' : undefined"
                 @click="isMenuOpen = false"
               >
+                <img
+                  v-if="child.thumbnail"
+                  :src="child.thumbnail"
+                  alt=""
+                  class="site-mobile-sublink-thumb"
+                >
                 {{ child.label || t(child.key) }}
               </NuxtLink>
             </div>
@@ -296,6 +350,8 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 }
 
 .site-nav-link {
+  display: inline-flex;
+  align-items: center;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: .12em;
@@ -304,6 +360,22 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   text-decoration: none;
   transition: color .2s ease;
   white-space: nowrap;
+}
+
+.site-nav-link-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: .4rem;
+  flex-shrink: 0;
+}
+
+.site-nav-link-thumb {
+  width: 18px;
+  height: 18px;
+  margin-right: .4rem;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 @media (min-width: 1280px) {
@@ -353,21 +425,30 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
   z-index: 10;
 }
 
-.site-dropdown-link {
-  display: block;
-  padding: .65rem 1.1rem;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  color: rgba(245, 240, 230, .82);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background .15s ease, color .15s ease;
+.site-dropdown-mega {
+  /* Centering on the trigger nav-item (like the plain dropdown does)
+     overflows the viewport whenever that item isn't near page-center — e.g.
+     "SẢN PHẨM" sits left-of-center, so a 720-920px mega panel centered under
+     it runs off both edges on anything narrower than ~1400px. Anchor to the
+     viewport instead of the trigger element, and clamp its width so it never
+     exceeds the available space. */
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  min-width: 0;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
 }
 
-.site-dropdown-link:hover {
-  background: rgba(201, 168, 108, .12);
-  color: #e8d5a8;
+.site-mobile-sublink-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-right: .6rem;
 }
 
 .site-mobile-caret {

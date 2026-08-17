@@ -5,10 +5,17 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const priceLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 
-const { products } = useProducts()
+const { products, categories } = useProducts()
 
-const giftProducts = computed(() => 
-  products.value.filter(p => (p.slug && p.slug.includes('qua-')) || (p.title && p.title.toLowerCase().includes('quà')))
+// Backed by the real "Quà tặng doanh nghiệp" Medusa category (tagged
+// metadata.menu_group = "gift" by sync-menu-categories.ts, same convention
+// their slug/title text. Handle is a one-time fallback for a category that
+// predates the menu_group tag.
+const giftCategoryId = computed(() =>
+  categories.value.find(c => c.menuGroup === 'gift' || c.slug === 'qua-tang-doanh-nghiep')?.id ?? null,
+)
+const giftProducts = computed(() =>
+  giftCategoryId.value ? products.value.filter(p => p.categoryIds.includes(giftCategoryId.value!)) : [],
 )
 
 useScrollAnimation()

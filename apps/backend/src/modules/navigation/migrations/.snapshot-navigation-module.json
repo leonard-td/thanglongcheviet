@@ -22,6 +22,22 @@
           "enumItems": [],
           "mappedType": "text"
         },
+        "menu_id": {
+          "name": "menu_id",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
         "label": {
           "name": "label",
           "type": "text",
@@ -118,6 +134,58 @@
           "enumItems": [],
           "mappedType": "boolean"
         },
+        "thumbnail": {
+          "name": "thumbnail",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "icon": {
+          "name": "icon",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "display_mode": {
+          "name": "display_mode",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'none'",
+          "comment": null,
+          "enumItems": [
+            "none",
+            "icon",
+            "image"
+          ],
+          "mappedType": "text"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamptz",
@@ -188,9 +256,25 @@
           "constraint": true,
           "primary": true,
           "unique": true
+        },
+        {
+          "keyName": "IDX_navigation_item_menu_id",
+          "columnNames": [],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "expression": "CREATE INDEX IF NOT EXISTS \"IDX_navigation_item_menu_id\" ON \"navigation_item\" (\"menu_id\") WHERE deleted_at IS NULL"
         }
       ],
-      "checks": [],
+      "checks": [
+        {
+          "name": "navigation_item_display_mode_check",
+          "constraintName": "navigation_item_display_mode_check",
+          "expression": "\"display_mode\" in ('none', 'icon', 'image')",
+          "columnName": "display_mode"
+        }
+      ],
       "foreignKeys": {},
       "nativeEnums": {}
     }

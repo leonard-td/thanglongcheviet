@@ -7,6 +7,9 @@ export type ItemFormState = {
   openInNewTab: boolean
   is_active: boolean
   parent_id: string | null
+  thumbnail: string
+  icon: string
+  display_mode: "none" | "icon" | "image"
 }
 
 export const emptyItemForm = (
@@ -17,6 +20,9 @@ export const emptyItemForm = (
   openInNewTab: false,
   is_active: true,
   parent_id: parentId,
+  thumbnail: "",
+  icon: "",
+  display_mode: "none",
 })
 
 export function flattenForReorder(tree: NavigationItem[]) {

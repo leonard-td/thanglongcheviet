@@ -15,7 +15,9 @@
     "productsMenu": {
       "teaViet": "Thang Long Che Viet",
       "anQuangCaffe": "An Quang Coffee",
-      "corporateGifts": "Corporate gifts"
+      "corporateGifts": "Corporate gifts",
+      "moreTitle": "Explore more",
+      "teaGroup": "Tea"
     },
     "craftVillage": "Craft Village",
     "projectsPartners": "Projects & Partners",
@@ -28,7 +30,8 @@
       "vietTea": "Vietnamese tea heritage",
       "tradition": "Vietnamese culture & traditional craft villages",
       "teaHeritage": "Ancient tea heritage",
-      "anQuangGarden": "An Quang Garden"
+      "anQuangGarden": "An Quang Garden",
+      "moreTitle": "Explore more"
     },
     "library": "Vietnamese Culture Library",
     "contact": "Contact",

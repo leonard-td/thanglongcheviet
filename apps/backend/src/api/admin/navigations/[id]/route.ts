@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
 import { zodValidator } from "../../../utils/zod-validator"
+import { attachNavThumbnails } from "../../../utils/nav-thumbnails"
 import { NAVIGATION_MODULE } from "../../../../modules/navigation"
 import type NavigationModuleService from "../../../../modules/navigation/service"
 
@@ -11,6 +12,9 @@ const UpdateItemSchema = z.object({
   openInNewTab: z.boolean().optional(),
   parent_id: z.string().nullable().optional(),
   is_active: z.boolean().optional(),
+  thumbnail: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+  display_mode: z.enum(["none", "icon", "image"]).optional(),
 })
 
 /**
@@ -19,7 +23,8 @@ const UpdateItemSchema = z.object({
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const service: NavigationModuleService = req.scope.resolve(NAVIGATION_MODULE)
   const item = await service.retrieveNavigationItem(req.params.id)
-  res.json({ navigation: item })
+  const [withThumbnail] = await attachNavThumbnails(req.scope, [item])
+  res.json({ navigation: withThumbnail })
 }
 
 /**
@@ -44,8 +49,9 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     id: req.params.id,
     ...body,
   })
+  const [withThumbnail] = await attachNavThumbnails(req.scope, [item])
 
-  res.json({ navigation: item })
+  res.json({ navigation: withThumbnail })
 }
 
 /**

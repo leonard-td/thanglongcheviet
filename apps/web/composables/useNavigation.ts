@@ -1,3 +1,20 @@
+/**
+ * Matches NavLinkType in apps/backend/src/modules/navigation/nav-link-resolver.ts
+ * — the entity type the backend matched from this item's `url`.
+ */
+export type NavLinkType =
+  | "product"
+  | "product_category"
+  | "product_collection"
+  | "product_topic"
+  | "post"
+  | "post_topic"
+  | "event"
+  | "event_topic"
+
+/** Matches NavIconKey in apps/backend/src/admin/routes/navigation/nav-icons.tsx. */
+export type NavDisplayMode = "none" | "icon" | "image"
+
 export interface NavigationTreeItem {
   id: string
   label?: string
@@ -7,6 +24,13 @@ export interface NavigationTreeItem {
   order: number
   parent_id?: string | null
   openInNewTab?: boolean
+  /** Manual override or auto-resolved from `url` — see GET /store/navigations. */
+  thumbnail?: string | null
+  link_type?: NavLinkType | null
+  /** Icon key rendered via widgets/Icon.vue when display_mode is "icon". */
+  icon?: string | null
+  /** What to show before the label on the main nav bar (top-level items only). */
+  display_mode?: NavDisplayMode | null
   children: NavigationTreeItem[]
 }
 
@@ -15,11 +39,17 @@ export interface NavLink {
   path: string
   label?: string
   openInNewTab?: boolean
+  thumbnail?: string | null
+  linkType?: NavLinkType | null
+  icon?: string | null
+  displayMode?: NavDisplayMode | null
   children?: {
     key: string
     path: string
     label?: string
     openInNewTab?: boolean
+    thumbnail?: string | null
+    linkType?: NavLinkType | null
   }[]
 }
 
@@ -30,6 +60,7 @@ export interface NavLink {
  */
 export function useNavigation() {
   const { fetchMedusa } = useMedusaApi()
+  const { resolveMediaUrl } = useMediaUrl()
 
   const getStoreNavigation = async (): Promise<NavigationTreeItem[]> => {
     try {
@@ -57,6 +88,10 @@ export function useNavigation() {
           path: item.url,
           label: item.label || item.title || item.name,
           openInNewTab: !!item.openInNewTab,
+          thumbnail: resolveMediaUrl(item.thumbnail) || null,
+          linkType: item.link_type ?? null,
+          icon: item.icon ?? null,
+          displayMode: item.display_mode ?? null,
         }
 
         if (item.children && item.children.length > 0) {
@@ -67,6 +102,8 @@ export function useNavigation() {
               path: child.url,
               label: child.label || child.title || child.name,
               openInNewTab: !!child.openInNewTab,
+              thumbnail: resolveMediaUrl(child.thumbnail) || null,
+              linkType: child.link_type ?? null,
             }))
         }
 

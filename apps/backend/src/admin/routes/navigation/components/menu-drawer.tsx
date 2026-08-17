@@ -41,8 +41,8 @@ export const MenuDrawer = ({
         <Drawer.Header>
           <Drawer.Title>{t("navigation.actions.createMenu")}</Drawer.Title>
         </Drawer.Header>
-        <form onSubmit={onSubmit}>
-          <Drawer.Body className="flex flex-col gap-y-4">
+        <form onSubmit={onSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <Drawer.Body className="flex flex-1 flex-col gap-y-4 overflow-y-auto">
             <div className="flex flex-col gap-y-2">
               <Label htmlFor="menu_name">{t("navigation.fields.menuName")}</Label>
               <Input

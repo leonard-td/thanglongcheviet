@@ -165,3 +165,120 @@ fix, not "check file size didn't change" or other polling-based workarounds.
 Revisit this same class of bug if a similar directory-scanning list endpoint
 is ever added elsewhere (e.g. the media library, or the products-excel
 import CLI if it ever grows a progress/output file).
+
+# DONE — Navigation item thumbnails (`src/modules/navigation/`, `src/api/utils/nav-thumbnails.ts`)
+
+**Current task:** Admin nav rows (`/app/navigation` → `SortableNavRow`) show
+a thumbnail next to each item, resolved from whatever the item's `url`
+actually points to — product, product_category, product_collection,
+campaign_post, event, or a campaign_topic — plus a badge naming the matched
+type. `navigation_item.thumbnail` is a manual override column; when empty,
+both admin and storefront fall back to the auto-resolved image.
+
+Resolution is **one shared function**, `attachNavThumbnails()` in
+`src/api/utils/nav-thumbnails.ts`, built on `parseNavUrl()` in
+`src/modules/navigation/nav-link-resolver.ts` — which mirrors the exact same
+path prefixes already used by `apps/web/server/routes/sitemap.xml.ts` and the
+`basePath` convention in `src/admin/widgets/{category,collection,product}-list-links.tsx`
+(`/san-pham/:handle`, `/san-pham/danh-muc/:handle`, `/san-pham/bo-suu-tap/:handle`,
+`/san-pham/chu-de/:slug`, `/tin-tuc/:slug`, `/tin-tuc/chu-de/:slug`,
+`/trai-nghiem/:slug`, `/trai-nghiem/chu-de/:slug`). **Both**
+`GET /admin/navigations*` and `GET /store/navigations` call this same
+function — never resolve a nav URL's thumbnail (or any other "stored URL →
+live entity" mapping) independently in a second place, or the admin preview
+and the storefront's actual menu (`apps/web/components/layout/AppHeader.vue`
+via `composables/useNavigation.ts`) can silently drift apart on what a URL
+means. General rule going forward for this kind of feature: resolve
+dynamically, once, server-side, in a place every consumer shares, and let the
+value flow app (Medusa) → client (storefront) — don't re-implement the
+mapping in the Vue layer.
+
+**Known issues / things to check before touching this again:**
+- This repo's dev stack runs entirely in Docker (`infra/docker-compose.yml`)
+  and Postgres is **not** exposed to the host (`ports:` is commented out on
+  the `postgres` service) — `npx medusa db:migrate` from a bare host shell
+  fails with `ECONNREFUSED` even though the app is reachable at
+  `localhost:8800`. The `tlcv_backend` container already runs `db:migrate` on
+  every startup before `medusa develop`, so a container restart applies
+  pending migrations on its own; to apply one immediately without restarting,
+  run it inside the container instead — on this machine that's
+  `wsl docker exec tlcv_backend npx medusa db:migrate` (Docker Desktop's
+  WSL2 backend means `docker` isn't on PATH in a bare Windows/Git-Bash shell,
+  but `wsl docker ...` reaches it). Forgetting this step shows up in the
+  admin UI as `column "thumbnail" of relation "navigation_item" does not
+  exist` on save.
+- `product_category`/`product_collection` have no native thumbnail field —
+  the resolver falls back to `metadata.thumbnail` (same convention as
+  `category-media.tsx`/`collection-media.tsx`), then the first product's
+  thumbnail. A category/collection nav link only gets an auto thumbnail once
+  one of those exists.
+- No live preview while creating a brand-new item: `resolved_thumbnail` only
+  exists on items the backend has already returned once, so the picker in
+  `routes/navigation/components/item-drawer.tsx` shows nothing for a new,
+  unsaved item until it's saved and the tree refetches.
+
+# DONE — Navigation item icon / leading-visual choice (`icon` + `display_mode`)
+
+`navigation_item` also has `icon` (nullable text — either one of the curated
+keys or any Lucide icon name, see the two-tier breakdown below) and
+`display_mode` (`"none" | "icon" |
+"image"`, default `"none"`). In `item-drawer.tsx`, admins pick what renders
+before an item's label on the storefront's **main navigation bar** (the
+top-level `TRANG CHỦ / SẢN PHẨM / …` row, `apps/web/components/layout/
+AppHeader.vue`) — nothing, one of the fixed icons, or the item's `thumbnail`
+image (the field the thumbnail-resolution feature above already manages).
+Both fields flow through the same shared path as `thumbnail` — create/update
+routes accept them, `GET /store/navigations` returns them as-is (no separate
+resolution needed, unlike thumbnail), and the storefront reads them straight
+off `NavLink.icon`/`NavLink.displayMode` — same "resolve once, flow
+app→client" rule noted above.
+
+**The icon set is now two tiers, only the small tier needs hand-syncing:**
+`icon` is a plain `text` column (no DB enum/check constraint), so it accepts
+any string, not just the curated keys.
+
+1. **Curated/legacy** — `NAV_ICON_KEYS`/`NavIconPreview` in
+   `routes/navigation/nav-icons.tsx` (14 hand-drawn SVGs, admin's quick-pick
+   row) mirror the `AppIconName` legacy branches in
+   `apps/web/components/widgets/Icon.vue` **by necessity** — these are
+   on-brand icons (e.g. the "tea" teapot) no generic library has an
+   equivalent for. Adding one of these still means editing both files with
+   a matching key + hand-drawn path, or the storefront silently renders
+   nothing for that key.
+2. **Everything else** — resolved dynamically from `lucide-react` here
+   (`LUCIDE_ICON_NAMES`/`LucideDynamicIcon` in `nav-icons.tsx`, powering the
+   search field in `item-drawer.tsx` below the quick-pick row) and from
+   `@lucide/vue` on the storefront (`Icon.vue`'s `DynamicIcon`, resolved by
+   converting the stored key to PascalCase, e.g. `"map-pin"` -> `"MapPin"`).
+   Both packages ship the same icon set under matching names for the same
+   major version — **no hand-sync needed** for this tier; picking a new
+   icon in the admin search field just works on the storefront with zero
+   code changes. Keep the two packages' major versions aligned
+   (`lucide-react` here, `@lucide/vue` in `apps/web` — **not**
+   `lucide-vue-next`, which is deprecated/frozen; Lucide renamed its Vue
+   package) since a version drift could rename/remove an icon on one side
+   only.
+3. **Custom uploaded image** — `item-drawer.tsx`'s "Hoặc dùng ảnh riêng"
+   section reuses the same `ImagePicker` (`src/admin/components/
+   image-picker`) as the thumbnail field. There's no separate DB column for
+   this — `isIconImageUrl()` in `nav-icons.tsx` just checks whether the
+   stored `icon` string contains a `/` (every legacy key and Lucide name is
+   a bare word; every uploaded/pasted URL has one), and every icon preview
+   site (`item-drawer.tsx`, the tree row badge in `sortable-nav-row.tsx`)
+   goes through `NavIconOrImagePreview`, which branches on that check before
+   falling back to tier 1/2. **Never call `NavIconPreview` directly for a
+   value that came from the `icon` field** — it only knows tier 1 and
+   renders a blank `<svg>` for anything else; always go through
+   `NavIconOrImagePreview` instead. `apps/web/components/widgets/Icon.vue`
+   mirrors the same `.includes('/')` check as its first branch.
+
+- `display_mode` is a DB-level enum/check constraint (`'none' | 'icon' |
+  'image'`), not just a TS union — see `Migration20260813000000.ts`. Needs
+  the same container-restart-or-manual-`db:migrate` step as the thumbnail
+  migration above.
+- Only the top-level nav row renders the icon/image today (`AppHeader.vue`'s
+  desktop `.site-nav-link` and mobile `.site-mobile-link`) — dropdown/mega
+  menu children still only ever show `thumbnail` (unconditional), since that
+  was the only ask. The DB columns exist on every row (same table), so a
+  child item can have `display_mode`/`icon` set in admin with no visible
+  effect on the storefront yet if this is extended to children later.

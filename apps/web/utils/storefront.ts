@@ -143,6 +143,23 @@ export function localText(field: unknown, locale: string): string {
 export const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1594631252845-29fc4cc8c011?q=80&w=800'
 export const FALLBACK_POST_IMAGE = 'https://images.unsplash.com/photo-1544787219-7f47ccb7fae6?q=80&w=800'
 
+const cardImageModules = import.meta.glob('~/assets/images/*.jpg', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>
+
+/**
+ * Card images (content.cards, admin "Cards") are either an absolute URL,
+ * a backend-relative path (already resolved via useMediaUrl), or a bundled
+ * seed asset filename living in ~/assets/images that needs bundler
+ * resolution — shared by the products/news mega-menu quick links.
+ */
+export function resolveCardImage(image: string | null | undefined): string {
+  if (!image) return ''
+  if (/^https?:\/\//.test(image) || image.startsWith('/')) return image
+  return Object.entries(cardImageModules).find(([k]) => k.endsWith(`/${image}`))?.[1] ?? ''
+}
+
 export function parseApiError(err: unknown, fallback: string): string {
   if (err && typeof err === 'object') {
     const data = (err as { data?: { message?: string } }).data
