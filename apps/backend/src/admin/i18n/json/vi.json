@@ -79,7 +79,12 @@
   },
   "backup": {
     "title": "Sao lưu & Phục hồi",
-    "hint": "Nén toàn bộ database và thư viện media đã upload thành file zip, hoặc khôi phục hệ thống từ file backup. Trước mỗi lần phục hồi, dữ liệu hiện tại luôn được tự động sao lưu (pre-restore).",
+    "hint": "Sao lưu toàn phần (zip) cho phục hồi thảm họa, hoặc export/import JSON cho nội dung website (sản phẩm, bài viết, cấu hình, menu).",
+    "fullHint": "Nén toàn bộ database và thư viện media thành file zip. Trước mỗi lần phục hồi, dữ liệu hiện tại luôn được tự động sao lưu (pre-restore).",
+    "tabs": {
+      "full": "Sao lưu toàn phần",
+      "content": "Export / Import nội dung"
+    },
     "createButton": "Tạo bản sao lưu",
     "restoreUploadButton": "Phục hồi từ file...",
     "listTitle": "Các bản sao lưu",
@@ -110,8 +115,13 @@
       "validate": "Đang kiểm tra toàn vẹn file backup...",
       "check_compat": "Đang kiểm tra tương thích schema...",
       "pre_restore_backup": "Đang tự động sao lưu dữ liệu hiện tại (pre-restore)...",
+      "pre_import_backup": "Đang tự động sao lưu trước khi import...",
       "restore_db": "Đang phục hồi database...",
-      "restore_static": "Đang phục hồi file media..."
+      "restore_static": "Đang phục hồi file media...",
+      "read_schema": "Đang đọc schema database...",
+      "export_tables": "Đang export các bảng đã chọn...",
+      "write_json": "Đang ghi file JSON...",
+      "import_tables": "Đang import dữ liệu..."
     },
     "restorePrompt": {
       "title": "Phục hồi hệ thống?",
@@ -132,6 +142,61 @@
       "deleted": "Đã xóa bản sao lưu",
       "jobRunning": "Đang có tác vụ sao lưu/phục hồi khác chạy",
       "requestFailed": "Yêu cầu thất bại"
+    },
+    "content": {
+      "hint": "Export/import JSON cho bài viết, sản phẩm, cấu hình, menu. Không bao gồm tài khoản, API key, khách hàng hay đơn hàng.",
+      "tablesTitle": "Chọn bảng",
+      "loadingTables": "Đang tải danh sách bảng...",
+      "loadTablesError": "Không tải được danh sách bảng. Hãy tải lại trang hoặc thử lại.",
+      "retryTables": "Thử lại",
+      "emptyTables": "Không có bảng nào để export/import.",
+      "importModeTitle": "Chế độ import",
+      "exportButton": "Export JSON",
+      "importButton": "Import JSON...",
+      "exportStarted": "Đã bắt đầu export JSON",
+      "importStarted": "Đã bắt đầu import JSON",
+      "exportsTitle": "File JSON đã export",
+      "emptyExports": "Chưa có file JSON nào.",
+      "customerSafeNote": "Dữ liệu khách hàng, tài khoản và API key luôn bị loại trừ — không bị thay đổi khi import.",
+      "mediaExportWarning": "Export JSON chỉ ghi metadata/URL ảnh (card_media, image) — không kèm file trong thư mục static/. Dùng bản sao lưu zip đầy đủ hoặc copy static/ khi chuyển server.",
+      "replaceGroupWarning": "Replace tự mở rộng sang toàn bộ nhóm bảng liên quan (vd. chọn product → thêm product_variant, price…). File JSON phải chứa đủ các bảng trong nhóm.",
+      "groups": {
+        "config": "Cấu hình",
+        "menu": "Menu",
+        "cards": "Card trang chủ",
+        "content": "Bài viết",
+        "catalog": "Sản phẩm",
+        "media": "Thư viện ảnh",
+        "events": "Sự kiện",
+        "operations": "Vận hành",
+        "other": "Khác"
+      },
+      "presets": {
+        "website": "Nội dung website",
+        "all": "Chọn tất cả",
+        "none": "Bỏ chọn"
+      },
+      "modes": {
+        "merge": "Merge (gộp)",
+        "mergeHint": "Thêm/cập nhật theo ID. Dữ liệu hiện có không có trong file được giữ nguyên. Khuyên dùng cho sản phẩm và bài viết.",
+        "replace": "Replace (thay thế)",
+        "replaceHint": "Xóa dữ liệu các bảng đã chọn rồi nạp lại từ file. Dùng cho cấu hình/menu khi muốn đồng bộ hoàn toàn."
+      },
+      "importPrompt": {
+        "title": "Import nội dung?",
+        "description": "File \"{{file}}\" sẽ import {{count}} bảng ở chế độ {{mode}}. Hệ thống tự động sao lưu zip trước khi import. Dữ liệu khách hàng không bị thay đổi.",
+        "confirmText": "IMPORT",
+        "confirm": "Import",
+        "cancel": "Hủy"
+      },
+      "job": {
+        "runningExport": "Đang export JSON...",
+        "runningImport": "Đang import JSON — không tắt server...",
+        "completedExport": "Export hoàn tất: {{file}}",
+        "completedImport": "Import hoàn tất. Dữ liệu trước đó đã được sao lưu zip thành {{file}}.",
+        "skippedBlocked": "Đã bỏ qua bảng bị chặn: {{tables}}.",
+        "expandedForReplace": "Replace đã tự thêm bảng liên quan: {{tables}}."
+      }
     }
   },
   "care-channels": {

@@ -8,11 +8,16 @@ import { randomUUID } from "node:crypto"
 export type BackupJobResult = {
   file_name?: string
   pre_restore_file?: string
+  imported_tables?: string[]
+  mode?: string
+  skipped_blocked?: string[]
+  expanded_for_replace?: string[]
+  warns_no_media_files?: boolean
 }
 
 export type BackupJob = {
   id: string
-  type: "backup" | "restore"
+  type: "backup" | "restore" | "export-json" | "import-json"
   status: "running" | "completed" | "failed"
   // mã bước hiện tại — admin UI dịch qua i18n (backup.steps.<step>)
   step: string | null
@@ -23,6 +28,8 @@ export type BackupJob = {
 }
 
 let lastJob: BackupJob | null = null
+/** Synchronous guard — set before any await so two concurrent POSTs cannot both start. */
+let jobLock = false
 
 export function getLastJob(): BackupJob | null {
   return lastJob
@@ -38,9 +45,10 @@ export function startJob(
   type: BackupJob["type"],
   runner: (setStep: (step: string) => void) => Promise<BackupJobResult>
 ): BackupJob {
-  if (lastJob?.status === "running") {
+  if (jobLock || lastJob?.status === "running") {
     throw new JobRunningError()
   }
+  jobLock = true
   const job: BackupJob = {
     id: randomUUID(),
     type,
@@ -63,6 +71,7 @@ export function startJob(
       job.error = e instanceof Error ? e.message : String(e)
     } finally {
       job.finished_at = new Date().toISOString()
+      jobLock = false
     }
   })()
   return job

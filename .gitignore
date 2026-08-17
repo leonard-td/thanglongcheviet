@@ -65,3 +65,12 @@ Thumbs.db
 my-medusa-store/
 be/
 .backups/
+.private-exports/
+**/.private-exports/
+
+# IDE / local overrides
+.idea/
+
+# Local env backups (never commit real keys)
+**/*.local-backup
+.env.prod.local

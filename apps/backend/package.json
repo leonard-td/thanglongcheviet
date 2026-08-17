@@ -20,6 +20,7 @@
     "lint": "medusa lint",
     "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:lib": "TEST_TYPE=integration:lib NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
     "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
     "test:telegram:live": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --runInBand --forceExit --testPathPattern=telegram.live",
     "seed:initial-data": "medusa exec ./src/migration-scripts/initial-data-seed.ts",
