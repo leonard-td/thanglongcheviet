@@ -8,7 +8,7 @@ useScrollAnimation()
 
 const slug = computed(() => String(route.params.slug))
 
-const { data, pending } = useAsyncData(
+const { data, pending } = await useAsyncData(
   () => `topic-${slug.value}`,
   async () => {
     const [topic, posts] = await Promise.all([
@@ -19,6 +19,10 @@ const { data, pending } = useAsyncData(
   },
   { watch: [slug] },
 )
+
+if (!pending.value && !data.value?.topic) {
+  throw createError({ statusCode: 404, statusMessage: 'Topic not found', fatal: true })
+}
 
 watchEffect(() => {
   if (!pending.value && !data.value?.topic) {

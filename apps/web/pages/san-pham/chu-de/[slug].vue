@@ -9,13 +9,17 @@ useScrollAnimation()
 
 const slug = computed(() => String(route.params.slug))
 
-const { data, pending: topicPending } = useAsyncData(
+const { data, pending: topicPending } = await useAsyncData(
   () => `product-topic-${slug.value}`,
   () => getTopicBySlug(slug.value),
   { watch: [slug] },
 )
 
 const pending = computed(() => topicPending.value || productsPending.value)
+
+if (!topicPending.value && !data.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Topic not found', fatal: true })
+}
 
 watchEffect(() => {
   if (!topicPending.value && !data.value) {
