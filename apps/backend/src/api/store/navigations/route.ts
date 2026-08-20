@@ -9,6 +9,7 @@ type StoreNavNode = {
   thumbnail?: string | null
   resolved_thumbnail?: string | null
   link_type?: string | null
+  resolved_path?: string | null
   children?: StoreNavNode[]
   [key: string]: unknown
 }

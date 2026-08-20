@@ -26,9 +26,11 @@ import initialDataSeedJson from "./data/initial-data.json";
 import { CARD_MODULE } from "../modules/card";
 import { CAMPAIGN_MODULE } from "../modules/campaign";
 import { NAVIGATION_MODULE } from "../modules/navigation";
+import { SITE_SETTINGS_MODULE } from "../modules/site-settings";
 import type CardModuleService from "../modules/card/service";
 import type CampaignModuleService from "../modules/campaign/service";
 import type NavigationModuleService from "../modules/navigation/service";
+import type SiteSettingsModuleService from "../modules/site-settings/service";
 
 type LoggerLike = {
   info: (message: string) => void;
@@ -88,6 +90,17 @@ type SeedData = {
         prices: Array<{ amount: number; currency_code: string }>;
       }>;
     }>;
+  };
+  site_settings?: {
+    store_name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    google_map_url?: string;
+    open_hours?: string;
+    facebook_url?: string;
+    zalo_url?: string;
+    instagram_url?: string;
   };
   content: {
     cards: Array<{
@@ -581,6 +594,44 @@ async function seedContentData({
   }
 }
 
+/**
+ * Fills the site-settings singleton with sane defaults so a fresh install
+ * doesn't ship an all-null row (storefront then falls back to the bundled
+ * content/settings.json). Only fills fields the admin has never touched
+ * (still null) — re-running the seed never clobbers real admin edits.
+ */
+async function seedSiteSettings({
+  container,
+  logger,
+  seedData,
+}: {
+  container: MedusaContainer;
+  logger: LoggerLike;
+  seedData: SeedData;
+}) {
+  if (!seedData.site_settings) {
+    return;
+  }
+
+  logger.info("Seeding default site settings...");
+
+  const siteSettingsModuleService = container.resolve(
+    SITE_SETTINGS_MODULE
+  ) as SiteSettingsModuleService;
+
+  const current = await siteSettingsModuleService.getSingleton() as Record<string, unknown>;
+
+  const patch = Object.fromEntries(
+    Object.entries(seedData.site_settings).filter(
+      ([key, value]) => value !== undefined && current[key] == null
+    )
+  );
+
+  if (Object.keys(patch).length > 0) {
+    await siteSettingsModuleService.updateSingleton(patch);
+  }
+}
+
 export default async function initial_data_seed({
   container,
   data,
@@ -606,6 +657,12 @@ export default async function initial_data_seed({
   });
 
   await seedContentData({
+    container,
+    logger,
+    seedData,
+  });
+
+  await seedSiteSettings({
     container,
     logger,
     seedData,

@@ -227,6 +227,17 @@
       }
     ]
   },
+  "site_settings": {
+    "store_name": "Thăng Long Chè Việt",
+    "email": "hello@thanglongcheviet.vn",
+    "phone": "+84 24 3456 7890",
+    "address": "Số 1A, Láng Hạ, Hà Nội",
+    "google_map_url": "https://maps.google.com/maps?q=1A+L%C3%A1ng+H%E1%BA%A1%2C+H%C3%A0+N%E1%BB%99i&output=embed",
+    "open_hours": "Thứ Hai – Thứ Sáu: 08:00–21:00, Thứ Bảy – Chủ Nhật: 08:00–22:00",
+    "facebook_url": "https://facebook.com/thanglongcheviet",
+    "zalo_url": "https://zalo.me/thanglongcheviet",
+    "instagram_url": "https://instagram.com/thanglongcheviet"
+  },
   "content": {
     "cards": [
       { "title": { "vi": "Nếp trà Việt", "en": "Vietnamese Tea Culture" }, "path": "/nep-tra-viet", "image": "/images/cards/tlcv_nep_che_viet.jpg", "type": "link", "rank": 0, "is_active": true, "locked": false },

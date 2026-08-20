@@ -1,7 +1,21 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+// Nuxt DevTools opens its own WebSocket (default port 24678) straight from
+// the browser to the dev server — separate from the page's own origin/port.
+// In the Docker dev stack (see infra/docker-compose.yml) nginx is the only
+// published port; the `web` container's ports are deliberately not exposed,
+// so that socket has nothing to connect to and the client retries forever,
+// flooding the console with net::ERR_CONNECTION_REFUSED. Same class of
+// Docker-only footgun as the admin's `disableAdminHmr` in
+// apps/backend/medusa-config.ts — default off under Docker (same
+// CHOKIDAR_USEPOLLING signal), opt back in with ENABLE_NUXT_DEVTOOLS=true
+// (e.g. when running `npm run dev` directly on the host, outside Docker).
+const isDockerDev = process.env.CHOKIDAR_USEPOLLING === 'true'
+const enableDevtools = process.env.ENABLE_NUXT_DEVTOOLS === 'true' || !isDockerDev
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  devtools: { enabled: enableDevtools },
 
   // Cho phép truy cập dev server qua bất kỳ domain/host nào trỏ vào server
   // này (DDNS, LAN, domain thật...) thay vì phải liệt kê từng domain.
@@ -16,6 +30,13 @@ export default defineNuxtConfig({
       '/api/**': {
         proxy: `${process.env.NUXT_API_PROXY_TARGET || 'http://127.0.0.1:8000'}/api/**`,
       },
+      // Legacy "/bai-viet" blog prefix (pre-rename) -> current "/tin-tuc"
+      // routes. Old nav items / bookmarks / external links may still point
+      // here; redirect instead of 404ing, without touching the /tin-tuc
+      // pages' own logic.
+      '/bai-viet': { redirect: '/tin-tuc' },
+      '/bai-viet/chu-de/**': { redirect: '/tin-tuc/chu-de/**' },
+      '/bai-viet/**': { redirect: '/tin-tuc/**' },
     },
   },
 

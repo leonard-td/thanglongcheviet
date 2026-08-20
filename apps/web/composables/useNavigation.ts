@@ -27,6 +27,8 @@ export interface NavigationTreeItem {
   /** Manual override or auto-resolved from `url` — see GET /store/navigations. */
   thumbnail?: string | null
   link_type?: NavLinkType | null
+  /** Current canonical path for `link_type`, rebuilt server-side; null for static/unrecognized urls — see GET /store/navigations. */
+  resolved_path?: string | null
   /** Icon key rendered via widgets/Icon.vue when display_mode is "icon". */
   icon?: string | null
   /** What to show before the label on the main nav bar (top-level items only). */
@@ -85,7 +87,7 @@ export function useNavigation() {
       .map((item) => {
         const link: NavLink = {
           key: item.id,
-          path: item.url,
+          path: item.resolved_path || item.url,
           label: item.label || item.title || item.name,
           openInNewTab: !!item.openInNewTab,
           thumbnail: resolveMediaUrl(item.thumbnail) || null,
@@ -99,7 +101,7 @@ export function useNavigation() {
             .sort((a, b) => (a.order || 0) - (b.order || 0))
             .map((child) => ({
               key: child.id,
-              path: child.url,
+              path: child.resolved_path || child.url,
               label: child.label || child.title || child.name,
               openInNewTab: !!child.openInNewTab,
               thumbnail: resolveMediaUrl(child.thumbnail) || null,
