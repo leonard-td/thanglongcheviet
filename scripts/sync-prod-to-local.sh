@@ -1,8 +1,9 @@
-# Script-bk
 #!/usr/bin/env bash
 
-# Cách dùng
-# Bước 1: Export dữ liệu từ prod
+# Clone production database and configured files into a local environment.
+#
+# Cách dùng:
+# Bước 1: Export full database từ prod
 # Chạy trên server prod, ở thư mục repo:
 # ```bash
 # ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
@@ -30,21 +31,6 @@ LOCAL_DB_PASSWORD="${LOCAL_DB_PASSWORD:-postgres}"
 
 EXPORT_ARCHIVE_PATH="${EXPORT_ARCHIVE_PATH:-}"
 SYNC_PATHS="${SYNC_PATHS:-apps/backend/static apps/backend/.backups}"
-ALLOW_ACCOUNT_DATA="${ALLOW_ACCOUNT_DATA:-0}"
-ACCOUNT_EXCLUDED_TABLES=(
-  public.auth_users
-  public.auth_user
-  public.auth_provider
-  public.customer
-  public.customer_address
-  public.customer_group
-  public.customer_group_customer
-  public.user
-  public.users
-  public.user_password
-  public.user_token
-  public.user_auth
-)
 
 load_env_file() {
   local env_file="$1"
@@ -89,22 +75,22 @@ print_help() {
   cat <<'EOF'
 Usage:
   ./scripts/sync-prod-to-local.sh export [archive-path]
-    Export DB + configured folders (default: apps/backend/static and apps/backend/.backups) from the CURRENT production environment into a single archive.
+    Export the complete production PostgreSQL schema and data, plus configured folders (default: apps/backend/static and apps/backend/.backups), into a single archive.
 
   ./scripts/sync-prod-to-local.sh import [archive-path]
-    Import the exported archive into the local dockerized database and restore the configured folders.
+    DESTRUCTIVELY replace the local database schema and data, then restore configured folders.
 
 Examples:
   ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
   ./scripts/sync-prod-to-local.sh import /tmp/tlcv-prod-sync.tar.gz
   SYNC_PATHS='apps/backend/static apps/backend/.backups apps/backend/another-folder' ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
-  ALLOW_ACCOUNT_DATA=1 ./scripts/sync-prod-to-local.sh export /tmp/tlcv-prod-sync.tar.gz
 
 Notes:
   - Step 1 should be run on the production server where the prod stack is running.
   - Step 2 should be run on the local machine where the repo is checked out.
-  - Account-related data is excluded by default for security.
-  - The archive contains: a sanitized database dump and any configured folders such as static, .backups, or custom directories.
+  - The archive includes all data, including accounts and migration history. Keep it private.
+  - The local database is replaced. Stop local backend services before importing.
+  - Use the same application commit locally as production before starting the stack.
 EOF
 }
 
@@ -129,14 +115,12 @@ export_data() {
   tmp_dir="$(mktemp -d)"
   trap 'rm -rf "$tmp_dir"' RETURN
 
-  echo "==> Step 1/2: exporting production database"
-  local dump_cmd=(exec -T postgres pg_dump -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-medusa}" --no-owner --no-privileges)
-  if [[ "$ALLOW_ACCOUNT_DATA" != "1" ]]; then
-    for table in "${ACCOUNT_EXCLUDED_TABLES[@]}"; do
-      dump_cmd+=(--exclude-table-data="$table")
-    done
-  fi
-  compose_prod "${dump_cmd[@]}" > "$tmp_dir/db.sql"
+  echo "==> Step 1/2: exporting complete production database"
+  # Custom-format dump includes the schema, all rows, and
+  # mikro_orm_migrations, so local gets the exact production schema history.
+  compose_prod exec -T postgres sh -c \
+    'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' \
+    > "$tmp_dir/db.dump"
 
   echo "==> Step 1/2: collecting configured folders"
   mkdir -p "$tmp_dir/files"
@@ -175,7 +159,8 @@ export_data() {
   "exported_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "db_name": "${POSTGRES_DB:-medusa}",
   "sync_paths": [$json_sync_paths],
-  "account_data_excluded": "$( [[ "$ALLOW_ACCOUNT_DATA" == "1" ]] && echo false || echo true )"
+  "database_dump_format": "pg_dump custom",
+  "includes_schema_and_migration_history": true
 }
 EOF
 
@@ -213,20 +198,24 @@ import_data() {
   echo "==> Step 2/2: extracting archive"
   tar -xzf "$archive_path" -C "$tmp_dir"
 
-  local db_dump="$tmp_dir/db.sql"
+  local db_dump="$tmp_dir/db.dump"
   if [[ ! -f "$db_dump" ]]; then
-    echo "ERROR: archive does not contain db.sql" >&2
+    echo "ERROR: archive does not contain db.dump" >&2
     exit 1
   fi
 
   echo "==> Step 2/2: starting local postgres"
   compose_local up -d postgres
 
-  echo "==> Step 2/2: resetting local database"
-  compose_local exec -T postgres sh -c 'dropdb -U "$POSTGRES_USER" --if-exists "$POSTGRES_DB" || true; createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
-
-  echo "==> Step 2/2: restoring database"
-  cat "$db_dump" | compose_local exec -T -e PGPASSWORD="$LOCAL_DB_PASSWORD" postgres psql -U "$LOCAL_DB_USER" -d "$LOCAL_DB_NAME"
+  echo "==> Step 2/2: replacing local database schema and data"
+  compose_local exec -T postgres pg_restore \
+    -U "$LOCAL_DB_USER" \
+    -d "$LOCAL_DB_NAME" \
+    --clean \
+    --if-exists \
+    --no-owner \
+    --no-privileges \
+    < "$db_dump"
 
   echo "==> Step 2/2: restoring configured folders"
   local raw_sync_paths="$SYNC_PATHS"
