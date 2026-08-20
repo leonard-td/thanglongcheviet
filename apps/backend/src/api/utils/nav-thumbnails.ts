@@ -4,16 +4,25 @@ import { CAMPAIGN_MODULE } from "../../modules/campaign"
 import type CampaignModuleService from "../../modules/campaign/service"
 import { EVENT_MODULE } from "../../modules/event"
 import type EventModuleService from "../../modules/event/service"
-import { parseNavUrl, type NavLinkType } from "../../modules/navigation/nav-link-resolver"
+import { buildNavPath, parseNavUrl, type NavLinkType } from "../../modules/navigation/nav-link-resolver"
 
 export type NavThumbnailInfo = {
   link_type: NavLinkType | null
   resolved_thumbnail: string | null
+  /**
+   * Current canonical path for this item's entity (e.g. `/tin-tuc/chu-de/x`),
+   * rebuilt from the resolved type + slug rather than taken from the stored
+   * `url` — so a nav item saved under an old route prefix (see the
+   * `bai-viet` alt-match in nav-link-resolver.ts) still points somewhere
+   * that resolves on the storefront. `null` for static/unrecognized urls,
+   * where the stored `url` is used as-is.
+   */
+  resolved_path: string | null
 }
 
 type NavItemLike = { id: string; url: string }
 
-const EMPTY_INFO: NavThumbnailInfo = { link_type: null, resolved_thumbnail: null }
+const EMPTY_INFO: NavThumbnailInfo = { link_type: null, resolved_thumbnail: null, resolved_path: null }
 
 /**
  * Batch-resolves a "preview" thumbnail per navigation item by parsing its
@@ -46,7 +55,11 @@ export async function resolveNavThumbnails(
       continue
     }
 
-    result.set(item.id, { link_type: parsed.type, resolved_thumbnail: null })
+    result.set(item.id, {
+      link_type: parsed.type,
+      resolved_thumbnail: null,
+      resolved_path: buildNavPath(parsed),
+    })
     const bucket = bySlug[parsed.type]
     const ids = bucket.get(parsed.slug) ?? []
     ids.push(item.id)
@@ -55,7 +68,13 @@ export async function resolveNavThumbnails(
 
   const setAll = (type: NavLinkType, slug: string, thumbnail: string | null) => {
     const ids = bySlug[type].get(slug)
-    ids?.forEach((id) => result.set(id, { link_type: type, resolved_thumbnail: thumbnail }))
+    ids?.forEach((id) =>
+      result.set(id, {
+        link_type: type,
+        resolved_thumbnail: thumbnail,
+        resolved_path: buildNavPath({ type, slug }),
+      })
+    )
   }
 
   const productSlugs = [...bySlug.product.keys()]
@@ -181,6 +200,7 @@ export async function attachNavThumbnails<T extends NavTreeNodeLike>(
       ...(node as T),
       link_type: info.link_type,
       resolved_thumbnail: info.resolved_thumbnail,
+      resolved_path: info.resolved_path,
       children: node.children?.map(apply),
     }
   }
