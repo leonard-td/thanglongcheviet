@@ -59,6 +59,12 @@ export function useSiteBundle() {
         ...localFallback,
         settings: {
           ...localFallback.settings,
+          site: {
+            ...localFallback.settings.site,
+            name: remoteSettings.store_name
+              ? { vi: remoteSettings.store_name, en: remoteSettings.store_name }
+              : localFallback.settings.site.name,
+          },
           contact: {
             ...localFallback.settings.contact,
             address: remoteSettings.address
