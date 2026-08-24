@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<{
 
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
-const { featuredProducts } = useProducts()
+const { featuredProducts, pending } = useProducts()
 
 const promotions = computed(() =>
   featuredProducts.value.map(p => ({
@@ -31,7 +31,7 @@ const formatPrice = (price: number) =>
   <div class="promotions-card" role="group" :aria-label="t('home.pillars.promotions')">
     <div class="promo-viewport">
       <div v-if="!promotions.length" class="promo-empty">
-        {{ t('common.loading') }}
+        {{ pending ? t('common.loading') : t('home.noFeaturedProducts') }}
       </div>
       <div v-else class="promo-track" :style="{ '--promo-duration': props.duration }">
         <!-- inert trên bản nhân đôi để nút thêm giỏ/mua ngay không nhận tab/click trùng -->

@@ -20,11 +20,15 @@ const form = reactive({
   phone: '',
   email: '',
   address: '',
-  paymentMethod: 'pp_system_default',
+  city: '',
+  paymentMethod: '',
 })
 
 onMounted(async () => {
   await fetchPaymentMethods()
+  // Default to whichever provider the backend actually reports, instead of
+  // assuming a provider id the region may not have enabled.
+  form.paymentMethod = form.paymentMethod || paymentMethods.value[0]?.id || ''
   if (isLoggedIn.value && !customer.value) {
     await fetchProfile()
   }
@@ -67,14 +71,19 @@ const handleCheckout = async () => {
   error.value = ''
   message.value = ''
   couponMessage.value = ''
-  if (!form.name || !form.phone || !form.address) {
+  if (!form.name || !form.phone || !form.address || !form.city) {
     error.value = t('cart.formRequired')
+    return
+  }
+  if (!form.paymentMethod) {
+    error.value = t('cart.noPaymentMethod')
     return
   }
   const res = await checkout({
     name: form.name,
     phone: form.phone,
     address: form.address,
+    city: form.city,
     email: form.email.trim() || undefined,
     payment_provider_id: form.paymentMethod,
   })
@@ -90,6 +99,7 @@ const handleCheckout = async () => {
     form.phone = ''
     form.email = ''
     form.address = ''
+    form.city = ''
     couponCode.value = ''
   } else {
     error.value = res.message
@@ -257,6 +267,14 @@ useSeoMeta({
               class="w-full px-4 py-3 rounded bg-dark border border-white/20"
               required
             />
+            <input
+              v-model="form.city"
+              type="text"
+              autocomplete="address-level2"
+              :placeholder="t('cart.city')"
+              class="w-full px-4 py-3 rounded bg-dark border border-white/20 min-h-[44px]"
+              required
+            >
             <fieldset v-if="paymentMethods.length > 1" class="space-y-2">
               <legend class="text-sm text-white/70 mb-2">{{ t('cart.paymentMethod') }}</legend>
               <label

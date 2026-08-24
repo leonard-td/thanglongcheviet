@@ -71,17 +71,6 @@ export function formatMoney(amount: number, currencyCode: string, locale = 'vi-V
   }
 }
 
-export interface RawPost {
-  id: number
-  slug: string
-  title: unknown
-  short_description?: unknown
-  body?: unknown
-  image?: string | null
-  published_at?: string
-  created_at?: string
-}
-
 export interface BlogTopic {
   id: string
   name: string
@@ -140,8 +129,37 @@ export function localText(field: unknown, locale: string): string {
   return String(field)
 }
 
-export const FALLBACK_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1594631252845-29fc4cc8c011?q=80&w=800'
-export const FALLBACK_POST_IMAGE = 'https://images.unsplash.com/photo-1544787219-7f47ccb7fae6?q=80&w=800'
+/**
+ * Neutral in-repo placeholder for entities the admin hasn't given an image
+ * yet. Deliberately not a stock photo — it must never read as real content.
+ */
+export const PLACEHOLDER_IMAGE = '/images/placeholder.svg'
+
+/**
+ * Medusa requires an email for auth (emailpass) and on every cart, but this
+ * site identifies people by phone — so both are synthesized from the phone
+ * digits.
+ *
+ * This domain is intentionally a fixed constant and NOT the admin-configured
+ * store email: `authEmailFor()` IS the login identity of existing accounts, so
+ * a domain that shifted whenever an admin edited store settings would lock
+ * every customer out. Changing it requires migrating existing customer rows.
+ */
+const SYNTHETIC_EMAIL_DOMAIN = 'customer.thanglongcheviet.vn'
+
+const phoneLocalPart = (phone: string) => `kh${phone.replace(/\D/g, '')}`
+
+/** Login identity for phone + password accounts. Must stay stable forever. */
+export const authEmailFor = (phone: string) =>
+  `${phoneLocalPart(phone)}@${SYNTHETIC_EMAIL_DOMAIN}`
+
+/**
+ * Cart email for guests who left the optional email field blank. Kept on a
+ * separate subdomain so a guest order never collides with a real account's
+ * `authEmailFor()` identity.
+ */
+export const guestCartEmailFor = (phone: string) =>
+  `${phoneLocalPart(phone)}@guest.${SYNTHETIC_EMAIL_DOMAIN}`
 
 const cardImageModules = import.meta.glob('~/assets/images/*.jpg', {
   eager: true,
@@ -166,22 +184,6 @@ export function parseApiError(err: unknown, fallback: string): string {
     if (data?.message) return data.message
   }
   return fallback
-}
-
-export function transformPost(p: RawPost, locale = 'vi'): BlogPost {
-  const content = localText(p.body, locale)
-  const excerptRaw = localText(p.short_description, locale) || stripHtml(content).slice(0, 200)
-
-  return {
-    slug: p.slug,
-    title: localText(p.title, locale),
-    excerpt: excerptRaw,
-    content,
-    image: p.image || FALLBACK_POST_IMAGE,
-    date: p.published_at || p.created_at || '',
-    author: 'Admin',
-    topic: null,
-  }
 }
 
 export function categoryLabel(name: ProductCategory['name'], locale: string): string {

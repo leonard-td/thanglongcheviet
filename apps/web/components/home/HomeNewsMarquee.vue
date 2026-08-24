@@ -27,7 +27,9 @@ const items = computed(() =>
     id: post.slug,
     slug: post.slug,
     title: post.title,
-    category: 'Tin tức', // Fallback
+    // The post's own topic when the admin assigned one, otherwise the generic
+    // section label from the locale files.
+    category: post.topic?.name || t('blog.eyebrow'),
   })),
 )
 

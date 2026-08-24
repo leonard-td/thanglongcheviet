@@ -65,10 +65,7 @@ export default defineNuxtConfig({
       'san-pham-slug': { en: '/products/[slug]', vi: '/san-pham/[slug]' },
       'san-pham-danh-muc-slug': { en: '/products/category/[slug]', vi: '/san-pham/danh-muc/[slug]' },
       'san-pham-bo-suu-tap-slug': { en: '/products/collection/[slug]', vi: '/san-pham/bo-suu-tap/[slug]' },
-      'dich-vu': { en: '/services', vi: '/dich-vu' },
-      'doi-ngu': { en: '/team', vi: '/doi-ngu' },
       'lang-nghe': { en: '/craft-village', vi: '/lang-nghe' },
-      gallery: { en: '/gallery', vi: '/gallery' },
       'tin-tuc': { en: '/blog', vi: '/tin-tuc' },
       'tin-tuc-slug': { en: '/blog/[slug]', vi: '/tin-tuc/[slug]' },
       'trai-nghiem': { en: '/events', vi: '/trai-nghiem' },
@@ -98,7 +95,7 @@ export default defineNuxtConfig({
   image: {
     quality: 85,
     formats: ['webp', 'avif'],
-    domains: ['images.unsplash.com', 'localhost', '127.0.0.1'],
+    domains: ['localhost', '127.0.0.1'],
     screens: {
       xs: 375,
       sm: 640,
@@ -118,7 +115,6 @@ export default defineNuxtConfig({
     // NUXT_MEDUSA_BACKEND_URL_SERVER there. Empty = use the public URL.
     medusaBackendUrlServer: process.env.NUXT_MEDUSA_BACKEND_URL_SERVER || '',
     public: {
-      siteName: 'Thăng Long Chè Việt',
       googleMapsApiKey: process.env.NUXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
       // Medusa commerce backend (products + cart/checkout). Publishable key
       // and region id are auto-provisioned by

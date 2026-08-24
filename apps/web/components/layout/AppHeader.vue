@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { NavLink, NavLinkType } from '~/composables/useNavigation'
-import { FALLBACK_PRODUCT_IMAGE, FALLBACK_POST_IMAGE } from '~/utils/storefront'
+import { PLACEHOLDER_IMAGE } from '~/utils/storefront'
 import AppHeaderMegaMenu from './AppHeaderMegaMenu.vue'
 import type { MegaMenuSection, MegaMenuItem } from './AppHeaderMegaMenu.vue'
 
@@ -55,7 +55,7 @@ function buildMegaMenuSections(link: NavLink): MegaMenuSection[] {
         key: child.key,
         path: child.path,
         label: child.label || t(child.key),
-        image: child.thumbnail || FALLBACK_PRODUCT_IMAGE,
+        image: child.thumbnail || PLACEHOLDER_IMAGE,
         openInNewTab: child.openInNewTab,
       })
       buckets.set(section.titleKey, items)
@@ -73,7 +73,7 @@ function buildMegaMenuSections(link: NavLink): MegaMenuSection[] {
       key: child.key,
       path: child.path,
       label: child.label || t(child.key),
-      image: child.thumbnail || FALLBACK_POST_IMAGE,
+      image: child.thumbnail || PLACEHOLDER_IMAGE,
       openInNewTab: child.openInNewTab,
     })),
   }]
@@ -210,7 +210,7 @@ onClickOutside(desktopNavEl, () => { openDropdown.value = null })
 
       <button
         class="lg:hidden p-2 text-[#f5f0e6] min-h-[44px] min-w-[44px] flex items-center justify-center"
-        :aria-label="isMenuOpen ? 'Đóng menu' : 'Mở menu'"
+        :aria-label="t(isMenuOpen ? 'nav.closeMenu' : 'nav.openMenu')"
         :aria-expanded="isMenuOpen"
         @click="isMenuOpen = !isMenuOpen"
       >

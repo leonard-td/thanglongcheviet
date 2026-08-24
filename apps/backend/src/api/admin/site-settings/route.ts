@@ -2,16 +2,27 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { z } from "zod"
 import { SITE_SETTINGS_MODULE } from "../../../modules/site-settings"
 import type SiteSettingsModuleService from "../../../modules/site-settings/service"
+import { mergeSiteSettingTranslations } from "../../../modules/site-settings/translations"
 import {
   normalizeTiptapImageUrls,
   toRelativeMediaUrl,
 } from "../../utils/media-url"
 
+const TranslationSchema = z.object({
+  tagline: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+})
+
 const UpdateSiteSettingsSchema = z.object({
   store_name: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
+  hotline: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
+  website_url: z.string().nullable().optional(),
+  translations: z
+    .object({ vi: TranslationSchema.optional(), en: TranslationSchema.optional() })
+    .optional(),
   google_map_url: z.string().nullable().optional(),
   open_hours: z.string().nullable().optional(),
   facebook_url: z.string().nullable().optional(),
@@ -41,6 +52,13 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const body = UpdateSiteSettingsSchema.parse(req.body)
 
   const data: Record<string, unknown> = { ...body }
+  if (body.translations) {
+    const existing = await service.getSingleton()
+    data.translations = mergeSiteSettingTranslations(
+      existing,
+      body.translations
+    )
+  }
   if (body.hero_images) {
     data.hero_images = body.hero_images
       .map((url) => toRelativeMediaUrl(url))

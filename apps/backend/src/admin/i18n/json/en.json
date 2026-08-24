@@ -42,7 +42,9 @@
       "homeVideo": "Homepage intro video",
       "homeVideoHint": "YouTube video shown in the homepage left column (poster image with a play button).",
       "about": "About article",
-      "aboutHint": "Content of the store's about page on the website."
+      "aboutHint": "Content of the store's about page on the website.",
+      "brand": "Brand & SEO",
+      "brandHint": "Tagline and short description used for the title/description tags and social sharing. Vietnamese is required; leaving English blank falls back to Vietnamese."
     },
     "fields": {
       "storeName": "Store name",
@@ -60,14 +62,21 @@
       "heroImage2": "Background image 2",
       "homeVideoUrl": "YouTube video link",
       "homeVideoUrlPlaceholder": "E.g. https://youtu.be/xxxxxxxxxxx",
-      "homeVideoUrlHint": "Paste a YouTube link (or just the video ID). Leave blank to use the default video.",
+      "homeVideoUrlHint": "Paste a YouTube link (or just the video ID). Leave blank to hide the homepage video block.",
       "aboutTitle": "About article title",
       "aboutThumbnail": "Thumbnail image",
       "aboutContent": "Article content",
       "aboutCollection": "Accompanying collection",
       "aboutCollectionPlaceholder": "Select a collection",
       "aboutCollectionHint": "Products of this collection are shown in the right-hand menu of the about page.",
-      "noCollection": "None"
+      "noCollection": "None",
+      "hotline": "Hotline",
+      "websiteUrl": "Website address",
+      "websiteUrlHint": "Shown in the website footer. E.g. https://thanglongcheviet.vn",
+      "taglineVi": "Tagline (Vietnamese)",
+      "taglineEn": "Tagline (English)",
+      "descriptionVi": "Short description (Vietnamese)",
+      "descriptionEn": "Short description (English)"
     },
     "actions": {
       "save": "Save"
@@ -1105,5 +1114,13 @@
       "cancelDelete": "Cancel",
       "reorderFailed": "Failed to reorder"
     }
+  },
+  "productFeatured": {
+    "title": "Featured product",
+    "hint": "Enable to show this product in the website homepage promotions block.",
+    "label": "Mark as featured",
+    "save": "Save",
+    "saved": "Saved",
+    "saveFailed": "Save failed"
   }
 }

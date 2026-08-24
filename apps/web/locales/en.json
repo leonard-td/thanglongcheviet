@@ -1,7 +1,6 @@
 {
   "site": {
-    "name": "Thăng Long Chè Việt",
-    "tagline": "The Essence of Vietnamese Tea"
+    "name": "Thăng Long Chè Việt"
   },
   "about": {
     "title": "About us",
@@ -35,7 +34,9 @@
     },
     "library": "Vietnamese Culture Library",
     "contact": "Contact",
-    "bookNow": "Book Now"
+    "bookNow": "Book Now",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
     "cta": "Book Now",
@@ -103,7 +104,8 @@
       "success": "Thank you! We will contact you shortly.",
       "error": "An error occurred. Please try again or call us directly.",
       "bookingHint": "Sign up with the same phone on the Account page to track your booking."
-    }
+    },
+    "hotline": "Hotline"
   },
   "orderLookup": {
     "title": "Order tracking",
@@ -234,7 +236,9 @@
     "couponError": "Could not validate coupon.",
     "discount": "Discount",
     "subtotal": "Subtotal",
-    "shipping": "Shipping"
+    "shipping": "Shipping",
+    "city": "City / Province",
+    "noPaymentMethod": "No payment method is available. Please contact the store."
   },
   "booking": {
     "preferredDate": "Preferred date",
@@ -312,6 +316,20 @@
       "quantity": "Estimated Quantity",
       "quantityPlaceholder": "Select quantity",
       "submit": "Get Quote Now"
+    },
+    "gifts": {
+      "eyebrow": "Gift samples",
+      "title": "Featured products",
+      "placeholder": "Gift box"
+    },
+    "banner": {
+      "heading": "A gift of gratitude,\nwholehearted and sincere"
+    },
+    "quantities": {
+      "under50": "Under 50 boxes",
+      "from50To100": "50 – 100 boxes",
+      "from100To500": "100 – 500 boxes",
+      "over500": "Over 500 boxes"
     }
   },
   "footer": {
@@ -331,7 +349,8 @@
     "viewMore": "View More",
     "close": "Close",
     "back": "Back",
-    "currency": "VND"
+    "currency": "VND",
+    "notProvided": "Not provided"
   },
   "skills": {
     "eyebrow": "Expertise",
@@ -426,12 +445,23 @@
       "library": "Vietnamese Cultural Library",
       "projects": "Projects & Partners",
       "promotions": "Monthly Promotions"
-    }
+    },
+    "featuredNews": "Featured news",
+    "viewAllNews": "View all news",
+    "playIntroVideo": "Play intro video",
+    "noFeaturedProducts": "No featured products yet"
   },
   "gallery": {
     "eyebrow": "Our Works",
     "title": "Gallery",
     "subtitle": "Our space and works from our expert team",
     "comingSoon": "More photos will be added soon."
+  },
+  "motion": {
+    "pause": "Pause motion",
+    "resume": "Resume motion"
+  },
+  "lang": {
+    "switch": "Language"
   }
 }

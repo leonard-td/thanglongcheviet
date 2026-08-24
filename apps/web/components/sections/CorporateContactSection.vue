@@ -14,11 +14,18 @@ const form = reactive({
 const status = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
 const feedbackMessage = ref('')
 
+const QUANTITY_TIERS = ['under50', 'from50To100', 'from100To500', 'over500'] as const
+
 async function handleSubmit() {
   if (!form.contactName || !form.phone) return
   status.value = 'submitting'
 
-  const messageStr = `Công ty: ${form.companyName || 'N/A'}\nSố lượng: ${form.quantity || 'N/A'}\nGhi chú: ${form.notes || 'Không có'}`
+  const blank = t('common.notProvided')
+  const messageStr = [
+    `${t('corporate.form.company')}: ${form.companyName || blank}`,
+    `${t('corporate.form.quantity')}: ${form.quantity || blank}`,
+    `${t('contact.form.message')}: ${form.notes || blank}`,
+  ].join('\n')
 
   const res = await submitContact({
     name: form.contactName,
@@ -106,10 +113,9 @@ async function handleSubmit() {
           <select id="corp-quantity" v-model="form.quantity"
             class="w-full px-4 py-3 bg-dark border border-white/15 text-white/70 text-sm focus:outline-none focus:border-primary-500 transition-colors min-h-[44px]">
             <option value="">{{ t('corporate.form.quantityPlaceholder') }}</option>
-            <option value="Dưới 50 hộp">Dưới 50 hộp / Under 50 boxes</option>
-            <option value="50 - 100 hộp">50 - 100 hộp / 50-100 boxes</option>
-            <option value="100 - 500 hộp">100 - 500 hộp / 100-500 boxes</option>
-            <option value="Trên 500 hộp">Trên 500 hộp / 500+ boxes</option>
+            <option v-for="tier in QUANTITY_TIERS" :key="tier" :value="t(`corporate.quantities.${tier}`)">
+              {{ t(`corporate.quantities.${tier}`) }}
+            </option>
           </select>
         </div>
 

@@ -1,4 +1,4 @@
-import { parseApiError } from '~/utils/storefront'
+import { authEmailFor, parseApiError } from '~/utils/storefront'
 
 export interface CustomerProfile {
   id: string
@@ -34,12 +34,11 @@ interface MedusaCustomer {
 }
 
 /**
- * Customer accounts on Medusa's auth (emailpass provider). The site signs
- * users in by PHONE + password: a deterministic auth email is derived from
- * the phone digits, the real (optional) email is kept in customer metadata.
+ * Customer accounts run on Medusa's auth (emailpass provider). The site signs
+ * users in by PHONE + password: `authEmailFor()` derives a deterministic auth
+ * email from the phone digits, while the real (optional) email is kept in
+ * customer metadata.
  */
-const authEmailFor = (phone: string) =>
-  `kh${phone.replace(/\D/g, '')}@customer.thanglongcheviet.vn`
 
 export function useCustomerAuth() {
   const { fetchMedusa, customerToken: token } = useMedusaApi()

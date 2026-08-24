@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import brandBackdrop from '~/assets/images/tlcv_bg_home_001.jpg'
 import { formatMoney } from '~/utils/storefront'
 
 const { t, locale } = useI18n()
@@ -6,6 +7,14 @@ const localePath = useLocalePath()
 const priceLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'vi-VN'))
 
 const { products, categories } = useProducts()
+const { site } = useSettings()
+const { heroImages } = useSiteSettings()
+
+// Both banners reuse the admin-managed homepage background images. These are
+// decorative page chrome rather than content, so they fall back to the same
+// bundled brand backdrop the homepage uses instead of rendering a bare band.
+const heroImage = computed(() => heroImages.value[1] || heroImages.value[0] || brandBackdrop)
+const bannerImage = computed(() => heroImages.value[0] || brandBackdrop)
 
 // Backed by the real "Quà tặng doanh nghiệp" Medusa category (tagged
 // metadata.menu_group = "gift" by sync-menu-categories.ts, same convention
@@ -32,7 +41,7 @@ useSeoMeta({
     <section class="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden">
       <!-- Background Image -->
       <div class="absolute inset-0 z-0">
-        <NuxtImg src="/images/hero/hero-2.jpg" alt="Corporate Gifts" class="w-full h-full object-cover object-center" priority />
+        <NuxtImg v-if="heroImage" :src="heroImage" :alt="t('corporate.title')" class="w-full h-full object-cover object-center" priority />
         <div class="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
       </div>
       
@@ -101,10 +110,10 @@ useSeoMeta({
       <div class="container-page overflow-hidden">
         <div class="text-center mb-12 animate-on-scroll">
           <h3 class="text-xs uppercase tracking-widest text-primary-400 mb-2 mt-1">
-            Mẫu quà tặng
+            {{ t('corporate.gifts.eyebrow') }}
           </h3>
           <h2 class="text-3xl lg:text-4xl font-light">
-            Sản phẩm tiêu biểu
+            {{ t('corporate.gifts.title') }}
           </h2>
         </div>
 
@@ -130,7 +139,7 @@ useSeoMeta({
               />
               <div v-else class="h-full w-full bg-dark flex flex-col items-center justify-center text-white/30 border-2 border-dashed border-white/10">
                 <span class="text-5xl mb-2">🎁</span>
-                <span class="text-sm">Gift Box</span>
+                <span class="text-sm">{{ t('corporate.gifts.placeholder') }}</span>
               </div>
               <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
@@ -149,12 +158,12 @@ useSeoMeta({
     </section>
 
     <!-- 3. Showcase Banner -->
-    <section class="w-full h-[50vh] min-h-[400px] relative overflow-hidden group">
-      <NuxtImg src="/images/hero/hero-1.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[20s]" loading="lazy" alt="Corporate Gifts Banner" />
+    <section v-if="bannerImage" class="w-full h-[50vh] min-h-[400px] relative overflow-hidden group">
+      <NuxtImg :src="bannerImage" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[20s]" loading="lazy" :alt="t('corporate.title')" />
       <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
         <div class="text-center px-4 animate-on-scroll">
-          <p class="text-primary-400 text-sm md:text-lg uppercase tracking-[0.3em] mb-4 font-medium drop-shadow-lg">Thăng Long Chè Việt</p>
-          <h3 class="text-4xl md:text-6xl font-heading font-bold text-white leading-tight drop-shadow-xl">Món quà tri ân<br/>trọn vẹn tâm tình</h3>
+          <p class="text-primary-400 text-sm md:text-lg uppercase tracking-[0.3em] mb-4 font-medium drop-shadow-lg">{{ site.name }}</p>
+          <h3 class="text-4xl md:text-6xl font-heading font-bold text-white leading-tight drop-shadow-xl whitespace-pre-line">{{ t('corporate.banner.heading') }}</h3>
         </div>
       </div>
     </section>

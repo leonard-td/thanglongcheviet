@@ -1,10 +1,4 @@
 <script setup lang="ts">
-// Trang chủ (bản v3) — cải tiến từ bố cục cũ dựa trên `HomePillarList`:
-//   1. Lưới 3 cột phân bổ lại -> card đạt đúng 346px thay vì ~269px.
-//   2. Cột trái chia chiều cao bằng flex thay cho `max-height: 50vh` tuỳ tiện.
-//   3. Chỉ còn 2 khối chuyển động (marquee + card khuyến mãi) + nút tạm dừng thật.
-//   4. Sửa `--site-marquee-h` để cột trái sticky không chui dưới thanh marquee.
-// Bố cục cũ vẫn nằm ở `components/home/HomePillarList.vue` (hiện không dùng).
 definePageMeta({ layout: false })
 
 // Nền đặt trên lớp fixed riêng (không dùng body background-attachment:fixed)
@@ -17,19 +11,27 @@ useHead({
 
 const { paused } = useMotionPause()
 
-const { site, heroSlides } = useSettings()
+const { site } = useSettings()
+const { heroImages } = useSiteSettings()
+
+// Crawlers need an absolute og:image, and hero_images is empty until an admin
+// uploads one — so fall back to the bundled brand card in public/.
+const origin = useRequestURL().origin
+const shareImage = computed(
+  () => heroImages.value[0] || `${origin}/images/og-image.jpg`,
+)
 
 useSeoMeta({
   title: () => site.value.tagline,
   description: () => site.value.description,
   ogTitle: () => site.value.tagline,
   ogDescription: () => site.value.description,
-  ogImage: () => heroSlides.value[0]?.image,
+  ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => site.value.tagline,
   twitterDescription: () => site.value.description,
-  twitterImage: () => heroSlides.value[0]?.image,
+  twitterImage: () => shareImage.value,
 })
 </script>
 

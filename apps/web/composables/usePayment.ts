@@ -21,6 +21,11 @@ export function usePayment() {
     return providerId.replace(/^pp_/, '')
   }
 
+  /**
+   * Only providers the region actually reports are offered — an empty list
+   * means the region has none enabled, which the checkout form surfaces as an
+   * error rather than papering over with an assumed provider id.
+   */
   const fetchPaymentMethods = async () => {
     if (loaded.value) return methods.value
     try {
@@ -31,11 +36,9 @@ export function usePayment() {
         .filter(p => p.is_enabled !== false)
         .map(p => ({ id: p.id, label: labelFor(p.id) }))
       loaded.value = true
-    } catch {
-      methods.value = [{ id: 'pp_system_default', label: t('paymentMethod.cod') }]
-    }
-    if (!methods.value.length) {
-      methods.value = [{ id: 'pp_system_default', label: t('paymentMethod.cod') }]
+    } catch (e) {
+      console.warn('Payment providers API unavailable', e)
+      methods.value = []
     }
     return methods.value
   }

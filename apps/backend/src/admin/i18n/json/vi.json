@@ -42,7 +42,9 @@
       "homeVideo": "Video giới thiệu (trang chủ)",
       "homeVideoHint": "Video YouTube hiển thị ở cột trái trang chủ (dạng ảnh bìa kèm nút phát).",
       "about": "Bài giới thiệu",
-      "aboutHint": "Nội dung trang giới thiệu cửa hàng trên website."
+      "aboutHint": "Nội dung trang giới thiệu cửa hàng trên website.",
+      "brand": "Thương hiệu & SEO",
+      "brandHint": "Slogan và mô tả ngắn dùng cho thẻ title/description và chia sẻ mạng xã hội. Tiếng Việt là bắt buộc, tiếng Anh để trống sẽ tự dùng bản tiếng Việt."
     },
     "fields": {
       "storeName": "Tên cửa hàng",
@@ -60,14 +62,21 @@
       "heroImage2": "Ảnh nền 2",
       "homeVideoUrl": "Link video YouTube",
       "homeVideoUrlPlaceholder": "VD: https://youtu.be/xxxxxxxxxxx",
-      "homeVideoUrlHint": "Dán link YouTube (hoặc chỉ mã video). Để trống sẽ dùng video mặc định.",
+      "homeVideoUrlHint": "Dán link YouTube (hoặc chỉ mã video). Để trống sẽ ẩn khối video trên trang chủ.",
       "aboutTitle": "Tiêu đề bài giới thiệu",
       "aboutThumbnail": "Ảnh thumbnail",
       "aboutContent": "Nội dung bài viết",
       "aboutCollection": "Bộ sưu tập hiển thị kèm",
       "aboutCollectionPlaceholder": "Chọn bộ sưu tập",
       "aboutCollectionHint": "Sản phẩm của bộ sưu tập này hiển thị ở menu bên phải trang giới thiệu.",
-      "noCollection": "Không chọn"
+      "noCollection": "Không chọn",
+      "hotline": "Hotline",
+      "websiteUrl": "Địa chỉ website",
+      "websiteUrlHint": "Hiển thị ở chân trang website. VD: https://thanglongcheviet.vn",
+      "taglineVi": "Slogan (Tiếng Việt)",
+      "taglineEn": "Slogan (English)",
+      "descriptionVi": "Mô tả ngắn (Tiếng Việt)",
+      "descriptionEn": "Mô tả ngắn (English)"
     },
     "actions": {
       "save": "Lưu"
@@ -1280,5 +1289,13 @@
       "cancelDelete": "Hủy",
       "reorderFailed": "Sắp xếp lại thất bại"
     }
+  },
+  "productFeatured": {
+    "title": "Sản phẩm nổi bật",
+    "hint": "Bật để sản phẩm này xuất hiện ở khối \"Khuyến mãi / nổi bật\" trên trang chủ website.",
+    "label": "Đánh dấu là sản phẩm nổi bật",
+    "save": "Lưu",
+    "saved": "Đã lưu",
+    "saveFailed": "Lưu thất bại"
   }
 }

@@ -1,7 +1,6 @@
 {
   "site": {
-    "name": "Thăng Long Chè Việt",
-    "tagline": "Tinh hoa trà Việt"
+    "name": "Thăng Long Chè Việt"
   },
   "about": {
     "title": "Giới thiệu",
@@ -35,7 +34,9 @@
     },
     "library": "Thư viện văn hóa Việt",
     "contact": "Liên hệ",
-    "bookNow": "Đặt lịch ngay"
+    "bookNow": "Đặt lịch ngay",
+    "openMenu": "Mở menu",
+    "closeMenu": "Đóng menu"
   },
   "hero": {
     "cta": "Đặt lịch ngay",
@@ -103,7 +104,8 @@
       "success": "Cảm ơn! Chúng tôi sẽ liên hệ với bạn sớm.",
       "error": "Có lỗi xảy ra. Vui lòng thử lại hoặc gọi trực tiếp.",
       "bookingHint": "Đăng ký tài khoản cùng SĐT tại trang Tài khoản để theo dõi lịch hẹn."
-    }
+    },
+    "hotline": "Hotline"
   },
   "orderLookup": {
     "title": "Tra cứu đơn hàng",
@@ -234,7 +236,9 @@
     "couponError": "Không thể kiểm tra mã giảm giá.",
     "discount": "Giảm giá",
     "subtotal": "Tạm tính",
-    "shipping": "Phí vận chuyển"
+    "shipping": "Phí vận chuyển",
+    "city": "Tỉnh / Thành phố",
+    "noPaymentMethod": "Chưa có phương thức thanh toán khả dụng. Vui lòng liên hệ cửa hàng."
   },
   "booking": {
     "preferredDate": "Ngày hẹn",
@@ -312,6 +316,20 @@
       "quantity": "Số lượng dự kiến",
       "quantityPlaceholder": "Chọn số lượng",
       "submit": "Nhận báo giá ngay"
+    },
+    "gifts": {
+      "eyebrow": "Mẫu quà tặng",
+      "title": "Sản phẩm tiêu biểu",
+      "placeholder": "Hộp quà"
+    },
+    "banner": {
+      "heading": "Món quà tri ân\ntrọn vẹn tâm tình"
+    },
+    "quantities": {
+      "under50": "Dưới 50 hộp",
+      "from50To100": "50 – 100 hộp",
+      "from100To500": "100 – 500 hộp",
+      "over500": "Trên 500 hộp"
     }
   },
   "footer": {
@@ -331,7 +349,8 @@
     "viewMore": "Xem thêm",
     "close": "Đóng",
     "back": "Quay lại",
-    "currency": "VNĐ"
+    "currency": "VNĐ",
+    "notProvided": "Không có"
   },
   "skills": {
     "eyebrow": "Chuyên môn",
@@ -426,12 +445,23 @@
       "library": "Thư viện văn hóa Việt",
       "projects": "Dự án & Đối tác",
       "promotions": "Ưu đãi trong tháng"
-    }
+    },
+    "featuredNews": "Tin tức nổi bật",
+    "viewAllNews": "Xem tất cả tin tức",
+    "playIntroVideo": "Phát video giới thiệu",
+    "noFeaturedProducts": "Chưa có sản phẩm nổi bật"
   },
   "gallery": {
     "eyebrow": "Tác phẩm của chúng tôi",
     "title": "Bộ sưu tập",
     "subtitle": "Không gian và tác phẩm từ đội ngũ chuyên gia",
     "comingSoon": "Nhiều hình ảnh hơn sẽ được cập nhật sớm."
+  },
+  "motion": {
+    "pause": "Tạm dừng chuyển động",
+    "resume": "Tiếp tục chuyển động"
+  },
+  "lang": {
+    "switch": "Ngôn ngữ"
   }
 }

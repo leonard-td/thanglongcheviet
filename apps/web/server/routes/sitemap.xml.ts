@@ -26,9 +26,6 @@ const STATIC_PAGES: UrlPair[] = [
   { vi: '/trai-nghiem', en: '/events' },
   { vi: '/lien-he', en: '/contact' },
   { vi: '/lang-nghe', en: '/craft-village' },
-  { vi: '/doi-ngu', en: '/team' },
-  { vi: '/dich-vu', en: '/services' },
-  { vi: '/gallery', en: '/gallery' },
   { vi: '/qua-tang-doanh-nghiep', en: '/qua-tang-doanh-nghiep' },
 ]
 

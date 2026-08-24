@@ -3,6 +3,11 @@ import logoUrl from '~/assets/images/tlcv_logo.png'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const { site } = useSettings()
+
+// Store name comes from admin; the locale string only covers the window
+// before site settings resolve.
+const label = computed(() => site.value.name || t('site.name'))
 
 withDefaults(defineProps<{
   variant?: 'header' | 'home' | 'marquee'
@@ -12,8 +17,8 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-  <NuxtLink :to="localePath('/')" class="site-logo" :class="`site-logo--${variant}`" :aria-label="t('site.name')">
-    <img :src="logoUrl" :alt="t('site.name')" class="site-logo__img" width="120" height="120" decoding="async"
+  <NuxtLink :to="localePath('/')" class="site-logo" :class="`site-logo--${variant}`" :aria-label="label">
+    <img :src="logoUrl" :alt="label" class="site-logo__img" width="120" height="120" decoding="async"
       fetchpriority="high">
   </NuxtLink>
 </template>

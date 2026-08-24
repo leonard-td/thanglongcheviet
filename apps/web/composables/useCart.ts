@@ -1,5 +1,5 @@
 import type { Product } from '~/utils/storefront'
-import { parseApiError } from '~/utils/storefront'
+import { guestCartEmailFor, parseApiError } from '~/utils/storefront'
 
 export interface CartItem {
   id: string
@@ -241,6 +241,7 @@ export function useCart() {
     name: string
     phone: string
     address: string
+    city: string
     email?: string
     payment_provider_id?: string
   }) => {
@@ -261,12 +262,12 @@ export function useCart() {
       await fetchMedusa(`/store/carts/${current.id}`, {
         method: 'POST',
         body: {
-          email: data.email || 'khach@thanglongcheviet.vn',
+          email: data.email || guestCartEmailFor(data.phone),
           shipping_address: {
             first_name: firstName || data.name,
             last_name: rest.join(' ') || data.name,
             address_1: data.address,
-            city: 'Hà Nội',
+            city: data.city,
             country_code: countryCode,
             phone: data.phone,
           },
@@ -289,7 +290,7 @@ export function useCart() {
       )
       await fetchMedusa(`/store/payment-collections/${payment_collection.id}/payment-sessions`, {
         method: 'POST',
-        body: { provider_id: data.payment_provider_id || 'pp_system_default' },
+        body: { provider_id: data.payment_provider_id },
       })
 
       const result = await fetchMedusa<{ type: string, order?: { display_id: number }, error?: { message: string } }>(

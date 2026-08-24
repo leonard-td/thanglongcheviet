@@ -1,8 +1,7 @@
 import type { BlogPost, BlogTopic } from '~/utils/storefront'
-import { FALLBACK_POST_IMAGE } from '~/utils/storefront'
+import { PLACEHOLDER_IMAGE } from '~/utils/storefront'
 import { tiptapFirstImage, tiptapToHtml, tiptapToText } from '~/utils/tiptap'
 import { isNotFoundError } from '~/utils/fetch-status'
-import fallbackPosts from '~/content/blog.json'
 
 interface CampaignPost {
   id: string
@@ -29,7 +28,11 @@ interface CampaignTopic {
   post_count?: number
 }
 
-function transformCampaignPost(p: CampaignPost, resolveUrl: (url: string | null | undefined) => string): BlogPost {
+function transformCampaignPost(
+  p: CampaignPost,
+  resolveUrl: (url: string | null | undefined) => string,
+  siteName: string,
+): BlogPost {
   const content = tiptapToHtml(p.content, resolveUrl)
   // Ưu tiên mô tả ngắn do admin nhập; nếu bỏ trống thì rơi về đoạn trích
   // tự động từ nội dung (hành vi cũ, giữ cho các bài viết đã tạo trước đó).
@@ -42,9 +45,9 @@ function transformCampaignPost(p: CampaignPost, resolveUrl: (url: string | null 
     title: p.title,
     excerpt,
     content,
-    image: resolveUrl(p.thumbnail) || tiptapFirstImage(p.content, resolveUrl) || FALLBACK_POST_IMAGE,
+    image: resolveUrl(p.thumbnail) || tiptapFirstImage(p.content, resolveUrl) || PLACEHOLDER_IMAGE,
     date: p.publish_at || p.created_at || '',
-    author: 'Thăng Long Chè Việt',
+    author: siteName,
     topic: p.topic ? { name: p.topic.name, slug: p.topic.slug } : null,
     source: p.source || null,
     seoTitle: p.seo_title || null,
@@ -67,26 +70,14 @@ function transformCampaignTopic(t: CampaignTopic, resolveUrl: (url: string | nul
 /**
  * Blog posts come from the Medusa backend's campaign-posts module
  * (GET /store/campaign-posts, content authored with TipTap in the admin).
- * Falls back to the bundled ~/content/blog.json when the API is unreachable
- * or has no published posts yet.
+ * There is no local fallback content — an unreachable or empty API yields an
+ * empty list and callers render their own empty state.
  */
 export function useBlog() {
   const { fetchMedusa } = useMedusaApi()
   const { locale } = useI18n()
   const { resolveMediaUrl } = useMediaUrl()
-
-  const localFallback = computed<BlogPost[]>(() =>
-    (fallbackPosts as any[]).map(p => ({
-      slug: p.slug,
-      title: p.title?.[locale.value] ?? p.title?.vi ?? '',
-      excerpt: p.excerpt?.[locale.value] ?? p.excerpt?.vi ?? '',
-      content: '',
-      image: FALLBACK_POST_IMAGE,
-      date: p.date ?? '',
-      author: 'Thăng Long Chè Việt',
-      topic: null,
-    })),
-  )
+  const { site } = useSettings()
 
   const { data: postsData, pending } = useAsyncData(
     'campaign-posts',
@@ -97,17 +88,18 @@ export function useBlog() {
         )
         return res.campaign_posts ?? []
       } catch (e) {
-        console.warn('Campaign posts API unavailable, using local fallback', e)
+        console.warn('Campaign posts API unavailable', e)
         return [] as CampaignPost[]
       }
     },
     { default: () => [] as CampaignPost[], watch: [locale] },
   )
 
-  const posts = computed<BlogPost[]>(() => {
-    const fromApi = (postsData.value ?? []).map(p => transformCampaignPost(p, resolveMediaUrl))
-    return fromApi.length ? fromApi : localFallback.value
-  })
+  const posts = computed<BlogPost[]>(() =>
+    (postsData.value ?? []).map(p =>
+      transformCampaignPost(p, resolveMediaUrl, site.value.name),
+    ),
+  )
 
   const latestPosts = computed<BlogPost[]>(() => posts.value.slice(0, 4))
 
@@ -116,14 +108,16 @@ export function useBlog() {
       const res = await fetchMedusa<{ campaign_post: CampaignPost }>(
         `/store/campaign-posts/${encodeURIComponent(slug)}?lang=${encodeURIComponent(locale.value)}`,
       )
-      if (res.campaign_post) return transformCampaignPost(res.campaign_post, resolveMediaUrl)
+      if (res.campaign_post) {
+        return transformCampaignPost(res.campaign_post, resolveMediaUrl, site.value.name)
+      }
     } catch (e) {
-      // True 404 → try list / JSON fallback. Transport/SSR failures rethrow
-      // so the page can show an error instead of a false "not found".
+      // True 404 → fall through to the already-listed posts. Transport/SSR
+      // failures rethrow so the page can show an error instead of a false
+      // "not found".
       if (!isNotFoundError(e)) throw e
       console.error(e)
     }
-    // Fallback: the already-listed posts (covers the local JSON fallback too)
     return posts.value.find(p => p.slug === slug) ?? null
   }
 
@@ -138,6 +132,7 @@ export function useBlogTopics() {
   const { fetchMedusa } = useMedusaApi()
   const { locale } = useI18n()
   const { resolveMediaUrl } = useMediaUrl()
+  const { site } = useSettings()
 
   const { data, pending } = useAsyncData(
     'campaign-topics',
@@ -179,7 +174,9 @@ export function useBlogTopics() {
       const res = await fetchMedusa<{ campaign_posts: CampaignPost[] }>(
         `/store/campaign-posts?limit=100&topic_slug=${encodeURIComponent(slug)}&lang=${encodeURIComponent(locale.value)}`,
       )
-      return (res.campaign_posts ?? []).map(p => transformCampaignPost(p, resolveMediaUrl))
+      return (res.campaign_posts ?? []).map(p =>
+        transformCampaignPost(p, resolveMediaUrl, site.value.name),
+      )
     } catch (e) {
       console.warn('Campaign posts by topic unavailable', e)
       return []

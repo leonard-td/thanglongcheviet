@@ -5,7 +5,12 @@ export interface SiteSettingsDto {
   store_name: string | null
   email: string | null
   phone: string | null
+  hotline: string | null
   address: string | null
+  website_url: string | null
+  /** Resolved for the requested `?lang=` by the store route, not raw JSONB. */
+  tagline: string | null
+  description: string | null
   google_map_url: string | null
   open_hours: string | null
   facebook_url: string | null
@@ -47,23 +52,14 @@ function extractYoutubeId(raw: string | null | undefined): string | null {
 export function useSiteSettings() {
   const { fetchMedusa } = useMedusaApi()
   const { resolveMediaUrl } = useMediaUrl()
+  const { locale } = useAppI18n()
 
   const { data, pending } = useAsyncData(
-    // Deliberately distinct from useSiteBundle.ts's 'site-settings' key —
-    // that composable fetches a different, incompatible shape (the full
-    // settings bundle vs. this flat SiteSettingsDto) from a different
-    // endpoint. Sharing the literal key made Nuxt's useAsyncData payload
-    // cache treat both as the *same* entry (a single shared `data` ref),
-    // so whichever handler resolved last silently overwrote the other's
-    // data with an incompatible shape wherever both composables were used
-    // on the same page (e.g. the homepage's HomeV3PillarList component,
-    // which calls both) — breaking whichever one lost the race, sometimes
-    // hard enough to throw during render and blank out that whole section.
-    'store-site-settings',
+    () => `store-site-settings-${locale.value}`,
     async () => {
       try {
         const res = await fetchMedusa<{ site_settings: SiteSettingsDto }>(
-          '/store/site-settings',
+          `/store/site-settings?lang=${locale.value}`,
         )
         return res.site_settings ?? null
       } catch (e) {
@@ -71,7 +67,9 @@ export function useSiteSettings() {
         return null
       }
     },
-    { default: () => null },
+    // `tagline`/`description` are resolved server-side per locale, so the
+    // response is locale-specific and must be refetched on a language switch.
+    { default: () => null, watch: [locale] },
   )
 
   const settings = computed(() => data.value)

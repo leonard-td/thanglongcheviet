@@ -12,7 +12,7 @@ const props = withDefaults(defineProps<{
   inline: false,
 })
 
-const { locale, locales, setLocale } = useI18n()
+const { t, locale, locales, setLocale } = useI18n()
 const { setOpen, closeEpoch } = useUiOverlay()
 
 const open = ref(false)
@@ -41,7 +41,7 @@ function choose(code: string) {
       :class="{ on: open }"
       :aria-expanded="open"
       aria-haspopup="listbox"
-      aria-label="Language / Ngôn ngữ"
+      :aria-label="t('lang.switch')"
       @click="open = !open"
     >
       <svg class="globe" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

@@ -81,6 +81,8 @@ type SeedData = {
       handle: string;
       weight: number;
       status: string;
+      /** Storefront flags (e.g. `featured`) read from product.metadata. */
+      metadata?: Record<string, unknown>;
       images: Array<{ url: string }>;
       options: string[];
       variants: Array<{
@@ -95,7 +97,10 @@ type SeedData = {
     store_name?: string;
     email?: string;
     phone?: string;
+    hotline?: string;
     address?: string;
+    website_url?: string;
+    translations?: Record<string, { tagline?: string; description?: string }>;
     google_map_url?: string;
     open_hours?: string;
     facebook_url?: string;
@@ -393,6 +398,7 @@ async function seedProductData({
     handle: item.handle,
     weight: item.weight,
     status: item.status === "published" ? ProductStatus.PUBLISHED : ProductStatus.DRAFT,
+    metadata: item.metadata ?? undefined,
     shipping_profile_id: shippingProfile.id,
     images: item.images,
     options: item.options.map((optionName) => ({ id: optionLookup.get(optionName)!.id })),
@@ -596,9 +602,10 @@ async function seedContentData({
 
 /**
  * Fills the site-settings singleton with sane defaults so a fresh install
- * doesn't ship an all-null row (storefront then falls back to the bundled
- * content/settings.json). Only fills fields the admin has never touched
- * (still null) — re-running the seed never clobbers real admin edits.
+ * doesn't ship an all-null row — the storefront has no local fallback content,
+ * so a null row renders empty contact/brand blocks. Only fills fields the admin
+ * has never touched (still null) — re-running the seed never clobbers real
+ * admin edits.
  */
 async function seedSiteSettings({
   container,

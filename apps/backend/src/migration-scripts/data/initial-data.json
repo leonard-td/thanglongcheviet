@@ -12,15 +12,22 @@
     "store": {
       "name": "Default Store",
       "supported_currencies": [
-        { "currency_code": "vnd", "is_default": true }
+        {
+          "currency_code": "vnd",
+          "is_default": true
+        }
       ]
     }
   },
   "region": {
     "name": "Vietnam",
     "currency_code": "vnd",
-    "countries": ["vn"],
-    "payment_providers": ["pp_system_default"]
+    "countries": [
+      "vn"
+    ],
+    "payment_providers": [
+      "pp_system_default"
+    ]
   },
   "stock_location": {
     "name": "Kho mặc định",
@@ -37,7 +44,10 @@
       {
         "name": "Vietnam",
         "geo_zones": [
-          { "country_code": "vn", "type": "country" }
+          {
+            "country_code": "vn",
+            "type": "country"
+          }
         ]
       }
     ],
@@ -52,21 +62,41 @@
           "code": "standard"
         },
         "prices": [
-          { "currency_code": "vnd", "amount": 30000 }
+          {
+            "currency_code": "vnd",
+            "amount": 30000
+          }
         ],
         "rules": [
-          { "attribute": "enabled_in_store", "value": "true", "operator": "eq" },
-          { "attribute": "is_return", "value": "false", "operator": "eq" }
+          {
+            "attribute": "enabled_in_store",
+            "value": "true",
+            "operator": "eq"
+          },
+          {
+            "attribute": "is_return",
+            "value": "false",
+            "operator": "eq"
+          }
         ]
       }
     ]
   },
   "products": {
     "categories": [
-      { "name": "Thăng Long Chè Việt", "is_active": true }
+      {
+        "name": "Thăng Long Chè Việt",
+        "is_active": true
+      }
     ],
     "options": [
-      { "title": "Loại", "values": ["Nguyên hộp (10 gói)", "Bán lẻ (1 gói 10g)"] }
+      {
+        "title": "Loại",
+        "values": [
+          "Nguyên hộp (10 gói)",
+          "Bán lẻ (1 gói 10g)"
+        ]
+      }
     ],
     "items": [
       {
@@ -77,28 +107,47 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/private-1785419114459-che_tom.jpg" },
-          { "url": "/static/private-1785419114464-che_tom_ban_le.jpg" }
+          {
+            "url": "/static/private-1785419114459-che_tom.jpg"
+          },
+          {
+            "url": "/static/private-1785419114464-che_tom_ban_le.jpg"
+          }
         ],
-        "options": ["Loại"],
+        "options": [
+          "Loại"
+        ],
         "variants": [
           {
             "title": "Nguyên hộp (10 gói)",
             "sku": "che-tom-nguyen-hop",
-            "options": { "Loại": "Nguyên hộp (10 gói)" },
+            "options": {
+              "Loại": "Nguyên hộp (10 gói)"
+            },
             "prices": [
-              { "amount": 250000, "currency_code": "vnd" }
+              {
+                "amount": 250000,
+                "currency_code": "vnd"
+              }
             ]
           },
           {
             "title": "Bán lẻ (1 gói 10g)",
             "sku": "che-tom-ban-le",
-            "options": { "Loại": "Bán lẻ (1 gói 10g)" },
+            "options": {
+              "Loại": "Bán lẻ (1 gói 10g)"
+            },
             "prices": [
-              { "amount": 30000, "currency_code": "vnd" }
+              {
+                "amount": 30000,
+                "currency_code": "vnd"
+              }
             ]
           }
-        ]
+        ],
+        "metadata": {
+          "featured": true
+        }
       },
       {
         "title": "Chè Ướp Gạo Sen",
@@ -108,29 +157,50 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/private-1785419115048-che_uop_gao_sen.jpg" },
-          { "url": "/static/private-1785419115050-che_uop_gao_sen_ban_le.jpg" },
-          { "url": "/static/private-1785419115051-che_uop_gao_sen_ban_le (2).jpg" }
+          {
+            "url": "/static/private-1785419115048-che_uop_gao_sen.jpg"
+          },
+          {
+            "url": "/static/private-1785419115050-che_uop_gao_sen_ban_le.jpg"
+          },
+          {
+            "url": "/static/private-1785419115051-che_uop_gao_sen_ban_le (2).jpg"
+          }
         ],
-        "options": ["Loại"],
+        "options": [
+          "Loại"
+        ],
         "variants": [
           {
             "title": "Nguyên hộp (10 gói)",
             "sku": "che-uop-gao-sen-nguyen-hop",
-            "options": { "Loại": "Nguyên hộp (10 gói)" },
+            "options": {
+              "Loại": "Nguyên hộp (10 gói)"
+            },
             "prices": [
-              { "amount": 250000, "currency_code": "vnd" }
+              {
+                "amount": 250000,
+                "currency_code": "vnd"
+              }
             ]
           },
           {
             "title": "Bán lẻ (1 gói 10g)",
             "sku": "che-uop-gao-sen-ban-le",
-            "options": { "Loại": "Bán lẻ (1 gói 10g)" },
+            "options": {
+              "Loại": "Bán lẻ (1 gói 10g)"
+            },
             "prices": [
-              { "amount": 30000, "currency_code": "vnd" }
+              {
+                "amount": 30000,
+                "currency_code": "vnd"
+              }
             ]
           }
-        ]
+        ],
+        "metadata": {
+          "featured": true
+        }
       },
       {
         "title": "Chè Ướp Hoa Bưởi",
@@ -140,28 +210,47 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/private-1785640918925-che_uop_hoa_buoi.jpg" },
-          { "url": "/static/private-1785640918932-che_uop_hoa_buoi_ban_le.jpg" }
+          {
+            "url": "/static/private-1785640918925-che_uop_hoa_buoi.jpg"
+          },
+          {
+            "url": "/static/private-1785640918932-che_uop_hoa_buoi_ban_le.jpg"
+          }
         ],
-        "options": ["Loại"],
+        "options": [
+          "Loại"
+        ],
         "variants": [
           {
             "title": "Nguyên hộp (10 gói)",
             "sku": "che-uop-hoa-buoi-nguyen-hop",
-            "options": { "Loại": "Nguyên hộp (10 gói)" },
+            "options": {
+              "Loại": "Nguyên hộp (10 gói)"
+            },
             "prices": [
-              { "amount": 250000, "currency_code": "vnd" }
+              {
+                "amount": 250000,
+                "currency_code": "vnd"
+              }
             ]
           },
           {
             "title": "Bán lẻ (1 gói 10g)",
             "sku": "che-uop-hoa-buoi-ban-le",
-            "options": { "Loại": "Bán lẻ (1 gói 10g)" },
+            "options": {
+              "Loại": "Bán lẻ (1 gói 10g)"
+            },
             "prices": [
-              { "amount": 30000, "currency_code": "vnd" }
+              {
+                "amount": 30000,
+                "currency_code": "vnd"
+              }
             ]
           }
-        ]
+        ],
+        "metadata": {
+          "featured": true
+        }
       },
       {
         "title": "Chè Ướp Hoa Mộc Hương",
@@ -171,29 +260,50 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/private-1785419116274-che_uop_hoa_moc_huong.jpg" },
-          { "url": "/static/private-1785419116276-che_uop_hoa_moc_huong (2).jpg" },
-          { "url": "/static/private-1785419116283-che_uop_hoa_moc_huong_ban_le.jpg" }
+          {
+            "url": "/static/private-1785419116274-che_uop_hoa_moc_huong.jpg"
+          },
+          {
+            "url": "/static/private-1785419116276-che_uop_hoa_moc_huong (2).jpg"
+          },
+          {
+            "url": "/static/private-1785419116283-che_uop_hoa_moc_huong_ban_le.jpg"
+          }
         ],
-        "options": ["Loại"],
+        "options": [
+          "Loại"
+        ],
         "variants": [
           {
             "title": "Nguyên hộp (10 gói)",
             "sku": "che-uop-hoa-moc-huong-nguyen-hop",
-            "options": { "Loại": "Nguyên hộp (10 gói)" },
+            "options": {
+              "Loại": "Nguyên hộp (10 gói)"
+            },
             "prices": [
-              { "amount": 250000, "currency_code": "vnd" }
+              {
+                "amount": 250000,
+                "currency_code": "vnd"
+              }
             ]
           },
           {
             "title": "Bán lẻ (1 gói 10g)",
             "sku": "che-uop-hoa-moc-huong-ban-le",
-            "options": { "Loại": "Bán lẻ (1 gói 10g)" },
+            "options": {
+              "Loại": "Bán lẻ (1 gói 10g)"
+            },
             "prices": [
-              { "amount": 30000, "currency_code": "vnd" }
+              {
+                "amount": 30000,
+                "currency_code": "vnd"
+              }
             ]
           }
-        ]
+        ],
+        "metadata": {
+          "featured": true
+        }
       },
       {
         "title": "Chè Ướp Hoa Nhài",
@@ -203,27 +313,44 @@
         "weight": 0.2,
         "status": "published",
         "images": [
-          { "url": "/static/private-1785419116815-che_uop_nhai.jpg" }
+          {
+            "url": "/static/private-1785419116815-che_uop_nhai.jpg"
+          }
         ],
-        "options": ["Loại"],
+        "options": [
+          "Loại"
+        ],
         "variants": [
           {
             "title": "Nguyên hộp (10 gói)",
             "sku": "che-uop-hoa-nhai-nguyen-hop",
-            "options": { "Loại": "Nguyên hộp (10 gói)" },
+            "options": {
+              "Loại": "Nguyên hộp (10 gói)"
+            },
             "prices": [
-              { "amount": 250000, "currency_code": "vnd" }
+              {
+                "amount": 250000,
+                "currency_code": "vnd"
+              }
             ]
           },
           {
             "title": "Bán lẻ (1 gói 10g)",
             "sku": "che-uop-hoa-nhai-ban-le",
-            "options": { "Loại": "Bán lẻ (1 gói 10g)" },
+            "options": {
+              "Loại": "Bán lẻ (1 gói 10g)"
+            },
             "prices": [
-              { "amount": 30000, "currency_code": "vnd" }
+              {
+                "amount": 30000,
+                "currency_code": "vnd"
+              }
             ]
           }
-        ]
+        ],
+        "metadata": {
+          "featured": true
+        }
       }
     ]
   },
@@ -236,23 +363,160 @@
     "open_hours": "Thứ Hai – Thứ Sáu: 08:00–21:00, Thứ Bảy – Chủ Nhật: 08:00–22:00",
     "facebook_url": "https://facebook.com/thanglongcheviet",
     "zalo_url": "https://zalo.me/thanglongcheviet",
-    "instagram_url": "https://instagram.com/thanglongcheviet"
+    "instagram_url": "https://instagram.com/thanglongcheviet",
+    "hotline": "+84 901 234 567",
+    "website_url": "https://thanglongcheviet.vn",
+    "translations": {
+      "vi": {
+        "tagline": "Tinh hoa trà Việt",
+        "description": "Thăng Long Chè Việt — trà đặc sản tuyển chọn từ những vùng trà danh tiếng, chế biến thủ công, mang hương vị trà Việt nguyên bản đến mọi nhà."
+      },
+      "en": {
+        "tagline": "The Essence of Vietnamese Tea",
+        "description": "Thăng Long Chè Việt — premium specialty tea, handcrafted from Vietnam's renowned tea regions, bringing authentic Vietnamese tea to every home."
+      }
+    }
   },
   "content": {
     "cards": [
-      { "title": { "vi": "Nếp trà Việt", "en": "Vietnamese Tea Culture" }, "path": "/nep-tra-viet", "image": "/images/cards/tlcv_nep_che_viet.jpg", "type": "link", "rank": 0, "is_active": true, "locked": false },
-      { "title": { "vi": "Văn hóa Việt & Làng nghề truyền thống", "en": "Vietnamese Culture & Traditional Craft Villages" }, "path": "/van-hoa-viet", "image": "/images/cards/tlcv_van_hoa_truyen_thong_001.jpg", "type": "link", "rank": 1, "is_active": true, "locked": false },
-      { "title": { "vi": "Thăng Long Chè Việt (sản phẩm)", "en": "Thang Long Che Viet (Products)" }, "path": "/san-pham-list", "image": "/images/cards/tlcv_san_pham.jpg", "type": "link", "rank": 2, "is_active": true, "locked": false },
-      { "title": { "vi": "Di sản trà cụ Việt", "en": "Vietnamese Tea Heritage" }, "path": "/di-san-tra-cu", "image": "/images/cards/tlcv_can_tinh_viet_001.jpg", "type": "link", "rank": 3, "is_active": true, "locked": false },
-      { "title": { "vi": "Quà tặng doanh nghiệp", "en": "Corporate Gifts" }, "path": "/qua-tang-doanh-nghiep", "image": "/images/cards/kp_thang_long_che_viet.jpg", "type": "link", "rank": 4, "is_active": true, "locked": false },
-      { "title": { "vi": "Vườn Ân Quang", "en": "An Quang Garden" }, "path": "/vuon-an-quang", "image": "/images/cards/tlcv_van_hoa_truyen_thong_001.jpg", "type": "link", "rank": 5, "is_active": true, "locked": false },
-      { "title": { "vi": "Ân Quang Caffe", "en": "An Quang Caffe" }, "path": "/an-quang-caffe", "image": "/images/cards/tlcv_nep_che_viet.jpg", "type": "link", "rank": 6, "is_active": true, "locked": false },
-      { "title": { "vi": "Trải nghiệm (Workshop & Sự kiện)", "en": "Experiences (Workshops & Events)" }, "path": "/trai-nghiem", "image": "/images/cards/tlcv_can_tinh_viet_001.jpg", "type": "link", "rank": 7, "is_active": true, "locked": false },
-      { "title": { "vi": "Thư viện văn hóa Việt", "en": "Vietnamese Cultural Library" }, "path": "/thu-vien-van-hoa", "image": "/images/cards/tlcv_san_pham.jpg", "type": "link", "rank": 8, "is_active": true, "locked": false },
-      { "title": { "vi": "Dự án & Đối tác", "en": "Projects & Partners" }, "path": "/du-an-doi-tac", "image": "/images/cards/kp_thang_long_che_viet.jpg", "type": "link", "rank": 9, "is_active": true, "locked": false },
-      { "type": "promotions", "rank": 10, "is_active": true, "locked": true },
-      { "type": "contact", "rank": 11, "is_active": true, "locked": true },
-      { "type": "map", "rank": 12, "is_active": true, "locked": true }
+      {
+        "title": {
+          "vi": "Nếp trà Việt",
+          "en": "Vietnamese Tea Culture"
+        },
+        "path": "/nep-tra-viet",
+        "image": "/images/cards/tlcv_nep_che_viet.jpg",
+        "type": "link",
+        "rank": 0,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Văn hóa Việt & Làng nghề truyền thống",
+          "en": "Vietnamese Culture & Traditional Craft Villages"
+        },
+        "path": "/van-hoa-viet",
+        "image": "/images/cards/tlcv_van_hoa_truyen_thong_001.jpg",
+        "type": "link",
+        "rank": 1,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Thăng Long Chè Việt (sản phẩm)",
+          "en": "Thang Long Che Viet (Products)"
+        },
+        "path": "/san-pham-list",
+        "image": "/images/cards/tlcv_san_pham.jpg",
+        "type": "link",
+        "rank": 2,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Di sản trà cụ Việt",
+          "en": "Vietnamese Tea Heritage"
+        },
+        "path": "/di-san-tra-cu",
+        "image": "/images/cards/tlcv_can_tinh_viet_001.jpg",
+        "type": "link",
+        "rank": 3,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Quà tặng doanh nghiệp",
+          "en": "Corporate Gifts"
+        },
+        "path": "/qua-tang-doanh-nghiep",
+        "image": "/images/cards/kp_thang_long_che_viet.jpg",
+        "type": "link",
+        "rank": 4,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Vườn Ân Quang",
+          "en": "An Quang Garden"
+        },
+        "path": "/vuon-an-quang",
+        "image": "/images/cards/tlcv_van_hoa_truyen_thong_001.jpg",
+        "type": "link",
+        "rank": 5,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Ân Quang Caffe",
+          "en": "An Quang Caffe"
+        },
+        "path": "/an-quang-caffe",
+        "image": "/images/cards/tlcv_nep_che_viet.jpg",
+        "type": "link",
+        "rank": 6,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Trải nghiệm (Workshop & Sự kiện)",
+          "en": "Experiences (Workshops & Events)"
+        },
+        "path": "/trai-nghiem",
+        "image": "/images/cards/tlcv_can_tinh_viet_001.jpg",
+        "type": "link",
+        "rank": 7,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Thư viện văn hóa Việt",
+          "en": "Vietnamese Cultural Library"
+        },
+        "path": "/thu-vien-van-hoa",
+        "image": "/images/cards/tlcv_san_pham.jpg",
+        "type": "link",
+        "rank": 8,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "title": {
+          "vi": "Dự án & Đối tác",
+          "en": "Projects & Partners"
+        },
+        "path": "/du-an-doi-tac",
+        "image": "/images/cards/kp_thang_long_che_viet.jpg",
+        "type": "link",
+        "rank": 9,
+        "is_active": true,
+        "locked": false
+      },
+      {
+        "type": "promotions",
+        "rank": 10,
+        "is_active": true,
+        "locked": true
+      },
+      {
+        "type": "contact",
+        "rank": 11,
+        "is_active": true,
+        "locked": true
+      },
+      {
+        "type": "map",
+        "rank": 12,
+        "is_active": true,
+        "locked": true
+      }
     ],
     "campaign_topics": [
       {
@@ -295,8 +559,27 @@
         "content": {
           "type": "doc",
           "content": [
-            { "type": "heading", "attrs": { "level": 2 }, "content": [ { "type": "text", "text": "Welcome to Our Store" } ] },
-            { "type": "paragraph", "content": [ { "type": "text", "text": "This is a sample campaign post created by the seed script. You can edit or delete it from the Medusa Admin under Campaign Posts." } ] }
+            {
+              "type": "heading",
+              "attrs": {
+                "level": 2
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Welcome to Our Store"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "This is a sample campaign post created by the seed script. You can edit or delete it from the Medusa Admin under Campaign Posts."
+                }
+              ]
+            }
           ]
         }
       }
@@ -308,30 +591,66 @@
         "slug": "storefront-header"
       },
       "tree": [
-        { "label": "Trang chủ", "url": "/" },
+        {
+          "label": "Trang chủ",
+          "url": "/"
+        },
         {
           "label": "Sản phẩm",
           "url": "/san-pham-list",
           "children": [
-            { "label": "Trà Việt", "url": "/san-pham-list" },
-            { "label": "An Quang Caffé", "url": "/an-quang-caffe" },
-            { "label": "Quà tặng doanh nghiệp", "url": "/qua-tang-doanh-nghiep" }
+            {
+              "label": "Trà Việt",
+              "url": "/san-pham-list"
+            },
+            {
+              "label": "An Quang Caffé",
+              "url": "/an-quang-caffe"
+            },
+            {
+              "label": "Quà tặng doanh nghiệp",
+              "url": "/qua-tang-doanh-nghiep"
+            }
           ]
         },
-        { "label": "Dự án & Đối tác", "url": "/du-an-doi-tac" },
-        { "label": "Sự kiện", "url": "/trai-nghiem" },
+        {
+          "label": "Dự án & Đối tác",
+          "url": "/du-an-doi-tac"
+        },
+        {
+          "label": "Sự kiện",
+          "url": "/trai-nghiem"
+        },
         {
           "label": "Tin tức",
           "url": "/tin-tuc",
           "children": [
-            { "label": "Nếp Trà Việt", "url": "/nep-tra-viet" },
-            { "label": "Văn hoá Việt", "url": "/van-hoa-viet" },
-            { "label": "Di sản trà cũ", "url": "/di-san-tra-cu" },
-            { "label": "Vườn An Quang", "url": "/vuon-an-quang" }
+            {
+              "label": "Nếp Trà Việt",
+              "url": "/nep-tra-viet"
+            },
+            {
+              "label": "Văn hoá Việt",
+              "url": "/van-hoa-viet"
+            },
+            {
+              "label": "Di sản trà cũ",
+              "url": "/di-san-tra-cu"
+            },
+            {
+              "label": "Vườn An Quang",
+              "url": "/vuon-an-quang"
+            }
           ]
         },
-        { "label": "Thư viện văn hóa", "url": "/thu-vien-van-hoa" },
-        { "label": "Liên hệ", "url": "/lien-he" }
+        {
+          "label": "Thư viện văn hóa",
+          "url": "/thu-vien-van-hoa"
+        },
+        {
+          "label": "Liên hệ",
+          "url": "/lien-he"
+        }
       ]
     }
   }

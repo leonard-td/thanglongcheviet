@@ -1,5 +1,5 @@
 import { parseApiError } from '~/utils/storefront'
-import { FALLBACK_POST_IMAGE } from '~/utils/storefront'
+import { PLACEHOLDER_IMAGE } from '~/utils/storefront'
 import { tiptapFirstImage, tiptapToHtml, tiptapToText } from '~/utils/tiptap'
 
 interface StoreEvent {
@@ -61,7 +61,7 @@ function transformStoreEvent(e: StoreEvent, resolveUrl: (url: string | null | un
     title: e.title,
     excerpt: plain.slice(0, 200) + (plain.length > 200 ? '…' : ''),
     content,
-    image: resolveUrl(e.thumbnail) || tiptapFirstImage(e.content, resolveUrl) || FALLBACK_POST_IMAGE,
+    image: resolveUrl(e.thumbnail) || tiptapFirstImage(e.content, resolveUrl) || PLACEHOLDER_IMAGE,
     location: e.location || null,
     startAt: e.start_at,
     endAt: e.end_at,

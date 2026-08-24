@@ -19,12 +19,23 @@ import PageLayout from "../../../components/page-layout"
 import TiptapEditor from "../../../components/tiptap-editor"
 import { sdk } from "../../../lib/sdk"
 
+type SiteSettingTranslation = {
+  tagline?: string | null
+  description?: string | null
+}
+
 type SiteSettings = {
   id: string
   store_name: string | null
   email: string | null
   phone: string | null
+  hotline: string | null
   address: string | null
+  website_url: string | null
+  translations: {
+    vi?: SiteSettingTranslation
+    en?: SiteSettingTranslation
+  } | null
   google_map_url: string | null
   open_hours: string | null
   facebook_url: string | null
@@ -67,7 +78,13 @@ const StoreInfoPage = () => {
   const [storeName, setStoreName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
+  const [hotline, setHotline] = useState("")
   const [address, setAddress] = useState("")
+  const [websiteUrl, setWebsiteUrl] = useState("")
+  const [taglineVi, setTaglineVi] = useState("")
+  const [taglineEn, setTaglineEn] = useState("")
+  const [descriptionVi, setDescriptionVi] = useState("")
+  const [descriptionEn, setDescriptionEn] = useState("")
   const [googleMapUrl, setGoogleMapUrl] = useState("")
   const [openHours, setOpenHours] = useState("")
   const [facebookUrl, setFacebookUrl] = useState("")
@@ -90,7 +107,13 @@ const StoreInfoPage = () => {
     setStoreName(settings.store_name ?? "")
     setEmail(settings.email ?? "")
     setPhone(settings.phone ?? "")
+    setHotline(settings.hotline ?? "")
     setAddress(settings.address ?? "")
+    setWebsiteUrl(settings.website_url ?? "")
+    setTaglineVi(settings.translations?.vi?.tagline ?? "")
+    setTaglineEn(settings.translations?.en?.tagline ?? "")
+    setDescriptionVi(settings.translations?.vi?.description ?? "")
+    setDescriptionEn(settings.translations?.en?.description ?? "")
     setGoogleMapUrl(settings.google_map_url ?? "")
     setOpenHours(settings.open_hours ?? "")
     setFacebookUrl(settings.facebook_url ?? "")
@@ -122,7 +145,13 @@ const StoreInfoPage = () => {
         store_name: storeName || null,
         email: email || null,
         phone: phone || null,
+        hotline: hotline || null,
         address: address || null,
+        website_url: websiteUrl || null,
+        translations: {
+          vi: { tagline: taglineVi || null, description: descriptionVi || null },
+          en: { tagline: taglineEn || null, description: descriptionEn || null },
+        },
         google_map_url: googleMapUrl || null,
         open_hours: openHours || null,
         facebook_url: facebookUrl || null,
@@ -198,6 +227,16 @@ const StoreInfoPage = () => {
             />
           </div>
           <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-hotline">
+              {t("storeInfo.fields.hotline")}
+            </Label>
+            <Input
+              id="store-hotline"
+              value={hotline}
+              onChange={(e) => setHotline(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
             <Label htmlFor="store-open-hours">
               {t("storeInfo.fields.openHours")}
             </Label>
@@ -207,6 +246,19 @@ const StoreInfoPage = () => {
               value={openHours}
               onChange={(e) => setOpenHours(e.target.value)}
             />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="store-website">
+              {t("storeInfo.fields.websiteUrl")}
+            </Label>
+            <Input
+              id="store-website"
+              value={websiteUrl}
+              onChange={(e) => setWebsiteUrl(e.target.value)}
+            />
+            <Text className="text-ui-fg-subtle" size="xsmall">
+              {t("storeInfo.fields.websiteUrlHint")}
+            </Text>
           </div>
         </div>
 
@@ -259,6 +311,57 @@ const StoreInfoPage = () => {
               id="store-instagram"
               value={instagramUrl}
               onChange={(e) => setInstagramUrl(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="border-t border-ui-border-base" />
+        <Heading level="h2">{t("storeInfo.sections.brand")}</Heading>
+        <Text className="text-ui-fg-subtle" size="small">
+          {t("storeInfo.sections.brandHint")}
+        </Text>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="tagline-vi">
+              {t("storeInfo.fields.taglineVi")}
+            </Label>
+            <Input
+              id="tagline-vi"
+              value={taglineVi}
+              onChange={(e) => setTaglineVi(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="tagline-en">
+              {t("storeInfo.fields.taglineEn")}
+            </Label>
+            <Input
+              id="tagline-en"
+              value={taglineEn}
+              onChange={(e) => setTaglineEn(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="description-vi">
+              {t("storeInfo.fields.descriptionVi")}
+            </Label>
+            <Textarea
+              id="description-vi"
+              rows={3}
+              value={descriptionVi}
+              onChange={(e) => setDescriptionVi(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-y-2">
+            <Label htmlFor="description-en">
+              {t("storeInfo.fields.descriptionEn")}
+            </Label>
+            <Textarea
+              id="description-en"
+              rows={3}
+              value={descriptionEn}
+              onChange={(e) => setDescriptionEn(e.target.value)}
             />
           </div>
         </div>

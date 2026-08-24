@@ -49,10 +49,13 @@ export function useProducts() {
     (productsData.value?.products ?? []).map(transformMedusaProduct),
   )
 
-  // Medusa has no built-in "featured" flag out of the box — surface the
-  // first few products instead. Curate via a real flag (e.g. metadata.featured)
-  // once real product data replaces the seeded demo catalog.
-  const featuredProducts = computed<Product[]>(() => products.value.slice(0, 6))
+  // Medusa has no built-in "featured" flag — admins toggle
+  // metadata.featured per product (see the product-featured admin widget).
+  const featuredProducts = computed<Product[]>(() =>
+    (productsData.value?.products ?? [])
+      .filter(p => p.metadata?.featured === true)
+      .map(transformMedusaProduct),
+  )
 
   const { data: categoriesData } = useAsyncData(
     'medusa-product-categories',

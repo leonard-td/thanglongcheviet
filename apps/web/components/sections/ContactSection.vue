@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const localePath = useLocalePath()
 const { contact, hours } = useSettings()
 const { categories: productCategories } = useProducts()
@@ -20,17 +20,9 @@ const status = ref<'idle' | 'submitting' | 'success' | 'error'>('idle')
 const lastWasBooking = ref(false)
 const feedbackMessage = ref('')
 
-const serviceOptions = computed(() => {
-  if (productCategories.value.length) {
-    return productCategories.value.map(c => ({ value: c.slug, label: c.label }))
-  }
-  return [
-    { value: 'tra-xanh', label: locale.value === 'vi' ? 'Trà xanh' : 'Green tea' },
-    { value: 'tra-sen', label: locale.value === 'vi' ? 'Trà sen' : 'Lotus tea' },
-    { value: 'qua-tang', label: locale.value === 'vi' ? 'Quà tặng trà' : 'Tea gifts' },
-    { value: 'workshop', label: locale.value === 'vi' ? 'Trải nghiệm / Workshop' : 'Workshop & experiences' },
-  ]
-})
+const serviceOptions = computed(() =>
+  productCategories.value.map(c => ({ value: c.slug, label: c.label })),
+)
 
 watch(() => form.preferredDate, async (date) => {
   form.preferredTime = ''
@@ -78,8 +70,6 @@ async function handleSubmit() {
   }
 }
 
-const localText = (field: Record<string, string> | undefined) =>
-  field?.[locale.value] ?? field?.vi ?? ''
 </script>
 
 <template>
@@ -91,7 +81,7 @@ const localText = (field: Record<string, string> | undefined) =>
         <!-- Left: info -->
         <div class="animate-on-scroll space-y-6 flex flex-col">
 
-          <div class="flex items-start gap-4">
+          <div v-if="contact.address" class="flex items-start gap-4">
             <div class="w-10 h-10 flex-shrink-0 bg-primary-500/20 border border-primary-500/30
                         flex items-center justify-center text-primary-400">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -104,12 +94,12 @@ const localText = (field: Record<string, string> | undefined) =>
                 {{ t('contact.address') }}
               </h3>
               <p class="text-white/70 text-sm leading-relaxed">
-                {{ localText(contact.address as Record<string, string>) }}
+                {{ contact.address }}
               </p>
             </div>
           </div>
 
-          <div class="flex items-start gap-4">
+          <div v-if="contact.phone" class="flex items-start gap-4">
             <div class="w-10 h-10 flex-shrink-0 bg-primary-500/20 border border-primary-500/30
                         flex items-center justify-center text-primary-400">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -122,12 +112,16 @@ const localText = (field: Record<string, string> | undefined) =>
               </h3>
               <a :href="`tel:${contact.phone}`"
                 class="text-white font-semibold hover:text-primary-400 transition-colors text-lg">
-                {{ contact.phoneDisplay }}
+                {{ contact.phone }}
+              </a>
+              <a v-if="contact.hotline" :href="`tel:${contact.hotline}`"
+                class="block text-white/70 hover:text-primary-400 transition-colors text-sm">
+                {{ contact.hotline }}
               </a>
             </div>
           </div>
 
-          <div class="flex items-start gap-4">
+          <div v-if="hours.length" class="flex items-start gap-4">
             <div class="w-10 h-10 flex-shrink-0 bg-primary-500/20 border border-primary-500/30
                         flex items-center justify-center text-primary-400">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -141,13 +135,13 @@ const localText = (field: Record<string, string> | undefined) =>
               </h3>
               <ul class="space-y-0.5">
                 <li v-for="h in hours" :key="h.days" class="text-sm text-white/70">
-                  <span class="text-white">{{ h.days }}:</span> {{ h.time }}
+                  <span class="text-white">{{ h.days }}</span><template v-if="h.time">: {{ h.time }}</template>
                 </li>
               </ul>
             </div>
           </div>
 
-          <div class="flex items-start gap-4">
+          <div v-if="contact.email" class="flex items-start gap-4">
             <div class="w-10 h-10 flex-shrink-0 bg-primary-500/20 border border-primary-500/30
                         flex items-center justify-center text-primary-400">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
@@ -167,12 +161,9 @@ const localText = (field: Record<string, string> | undefined) =>
           </div>
 
           <!-- Map — stretch to fill remaining height so it aligns with the form column -->
-          <div class="mt-6 flex-1 min-h-[200px] bg-white/5 border border-white/10 overflow-hidden">
-            <iframe v-if="contact.mapEmbed" :src="contact.mapEmbed" class="w-full h-full border-0" loading="lazy"
+          <div v-if="contact.mapEmbed" class="mt-6 flex-1 min-h-[200px] bg-white/5 border border-white/10 overflow-hidden">
+            <iframe :src="contact.mapEmbed" class="w-full h-full border-0" loading="lazy"
               referrerpolicy="no-referrer-when-downgrade" :title="t('contact.map')" />
-            <div v-else class="h-full flex items-center justify-center">
-              <p class="text-white/30 text-sm">📍 Google Maps</p>
-            </div>
           </div>
         </div>
 
@@ -210,8 +201,9 @@ const localText = (field: Record<string, string> | undefined) =>
                        text-sm focus:outline-none focus:border-primary-500 transition-colors min-h-[44px]">
             </div>
 
-            <!-- Service -->
-            <div>
+            <!-- Service — options come from the Medusa product categories, so
+                 hide the field entirely until the catalog has any -->
+            <div v-if="serviceOptions.length">
               <label for="contact-service" class="block text-xs uppercase tracking-widest text-primary-400 mb-1.5">
                 {{ t('contact.form.service') }}
               </label>

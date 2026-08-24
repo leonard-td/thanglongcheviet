@@ -1,5 +1,5 @@
 import type { Product, ProductCategory, ProductOption, ProductVariant } from '~/utils/storefront'
-import { FALLBACK_PRODUCT_IMAGE, stripHtml } from '~/utils/storefront'
+import { PLACEHOLDER_IMAGE, stripHtml } from '~/utils/storefront'
 
 export interface MedusaOptionValue {
   value: string
@@ -92,8 +92,8 @@ export function transformMedusaProduct(p: MedusaProduct): Product {
     slug: p.handle,
     price: firstVariant?.price ?? 0,
     currencyCode: p.variants?.[0]?.calculated_price?.currency_code ?? 'vnd',
-    image: p.thumbnail || gallery[0] || FALLBACK_PRODUCT_IMAGE,
-    gallery: gallery.length ? gallery : [p.thumbnail || FALLBACK_PRODUCT_IMAGE],
+    image: p.thumbnail || gallery[0] || PLACEHOLDER_IMAGE,
+    gallery: gallery.length ? gallery : [p.thumbnail || PLACEHOLDER_IMAGE],
     title: p.title,
     shortDesc: plain.slice(0, 160) + (plain.length > 160 ? '…' : ''),
     description,

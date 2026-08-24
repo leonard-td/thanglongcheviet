@@ -1,32 +1,29 @@
-# Storefront data-fetching — two different reliability contracts
+# Storefront data-fetching — backend is the only source of content
 
 Every feature composable in `composables/` calls the Medusa Store API through
 `useMedusaApi().fetchMedusa()` (adds the `x-publishable-api-key` header + the
-logged-in customer's JWT). What happens when that call fails or a field is
-simply missing on the backend **differs by composable** — check which
-contract applies before assuming a field is "live from admin":
+logged-in customer's JWT). **There is no local fallback content anywhere** —
+no `content/*.json` seed blobs, no bundled stock imagery. A failed or empty
+API response yields empty state, which is intentional: a blank block signals
+"the admin hasn't filled this in" instead of silently showing invented copy.
 
-- **Real Medusa entities — no local fallback.** `useProducts.ts`
-  (products/categories/collections), cart, orders, customers: these hit
+- Products/categories/collections, cart, orders, customers hit
   `/store/products`, `/store/product-categories`, `/store/collections`
-  directly and are fully admin-managed already (created/edited in the Medusa
-  admin, not a settings blob). `content/products.json` exists in the repo but
-  is **dead code** — nothing imports it — don't assume editing it does
-  anything.
-- **Settings/content composed from a single-row admin form — local JSON
-  fallback, field-by-field merge.** `useSiteBundle.ts` (site-wide settings:
-  contact info, hours, social links, hero images) and `useBlog.ts`
-  (`campaign-posts`/`campaign-topics`) fall back to `content/settings.json` /
-  `content/blog.json` when the API errors *and* `useSiteBundle` always starts
-  from that local fallback object and overlays only the specific remote
-  fields it explicitly lists (see the `settings.contact = { ...fallback,
-  address: remote.address || fallback.address, ... }` shape). **Any field the
-  merge doesn't explicitly mention stays hardcoded to the fallback forever,
-  even though it renders next to other fields that *are* admin-driven** — this
-  silently bit the footer's "Hotline" line (`contact.mobile`), which had no
-  matching admin field at all and always showed the seed value. When adding a
-  new admin-editable field anywhere that reads from `useSiteBundle`/
-  `useSettings`, add it to that merge block or it won't actually be live.
+  directly and are fully admin-managed.
+- Site-wide settings (contact info, hours, social links, hero images, brand
+  tagline/description) come from `useSiteSettings.ts` → `GET
+  /store/site-settings?lang=`. `useSettings.ts` is a thin presentation layer
+  over it (splits `open_hours` into rows, groups contact/social) and does
+  **not** inject defaults. Adding an admin-editable field means: model column
+  + migration + admin form + admin/store route (see `apps/backend`
+  CLAUDE.md), then read it through `useSiteSettings`.
+- Blog/events come from `campaign-posts`/`campaign-topics`; an unreachable or
+  empty API renders the empty state.
+- When a record has no image, use `PLACEHOLDER_IMAGE` from
+  `utils/storefront.ts` (a neutral in-repo SVG). Never a stock photo — the
+  placeholder must never read as real content.
+- User-facing strings belong in `locales/{vi,en}.json`, never inline in a
+  template. Anything that is *content* (not UI chrome) belongs in the backend.
 
 # Products domain
 
@@ -35,9 +32,11 @@ contract applies before assuming a field is "live from admin":
   `related`, `byCategory`, `byCollection`. `PRODUCT_FIELDS` in that file is
   the one place the Store API field selection lives — extend it there rather
   than re-querying with a different field list elsewhere.
-- No real "featured" flag exists in Medusa yet — `featuredProducts` is just
-  `products.slice(0, 6)`. Wire up a real flag (e.g. `metadata.featured`)
-  before relying on this for anything curated.
+- Medusa has no native "featured" flag, so `featuredProducts` filters on
+  `metadata.featured === true`, toggled per product by the
+  `product-featured.tsx` admin widget. Nothing is featured until an admin says
+  so — `HomePromotionsList` shows an empty state rather than backfilling with
+  arbitrary products.
 - A category's banner/related collection is set by admins as
   `metadata.related_collection_id` on the **product category** (see
   `apps/backend` CLAUDE.md's Product admin extensions section) — read here via

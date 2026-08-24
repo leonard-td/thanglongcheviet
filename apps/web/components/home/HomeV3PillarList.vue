@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// Bản v3 của HomePillarList: cùng nguồn dữ liệu và cùng layout card bên phải,
-// khác ở phân bổ lưới 3 cột, cách chia chiều cao cột trái, và số lượng chuyển
-// động (chỉ còn marquee + card khuyến mãi). Xem `pages/trang-chu-v3.vue`.
 import type { CardItem } from '~/composables/useCards'
 
 const { t, locale } = useI18n()
@@ -32,29 +29,26 @@ const cardTitle = (card: CardItem) =>
 
 // Pillar "Giờ mở cửa + Liên hệ & Đặt lịch": v3 hiển thị tĩnh, khách tự cuộn
 // trong khung nếu nội dung dài hơn 346×197 (khung card giữ nguyên theo v1).
-const contactRows = computed(() => {
-  const address = (contact.value.address as Record<string, string>)
-  return [
-    { key: 'address', label: t('contact.address'), value: address[locale.value] ?? address.vi, href: '' },
-    { key: 'phone', label: t('contact.phone'), value: contact.value.phoneDisplay, href: `tel:${contact.value.phone.replace(/\s+/g, '')}` },
+const contactRows = computed(() =>
+  [
+    { key: 'address', label: t('contact.address'), value: contact.value.address, href: '' },
+    { key: 'phone', label: t('contact.phone'), value: contact.value.phone, href: `tel:${contact.value.phone.replace(/\s+/g, '')}` },
+    { key: 'hotline', label: t('contact.hotline'), value: contact.value.hotline, href: `tel:${contact.value.hotline.replace(/\s+/g, '')}` },
     { key: 'email', label: t('contact.email'), value: contact.value.email, href: `mailto:${contact.value.email}` },
-  ]
-})
+  ].filter(row => row.value),
+)
 
 // Bản đồ tới địa chỉ công ty: nhúng Google Maps + nút chỉ đường mở app/maps.
 const mapEmbed = computed(() => contact.value.mapEmbed)
-const directionsUrl = computed(() => {
-  const address = contact.value.address as Record<string, string>
-  const q = encodeURIComponent(address[locale.value] ?? address.vi ?? '')
-  return `https://www.google.com/maps/search/?api=1&query=${q}`
-})
+const directionsUrl = computed(
+  () => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.value.address)}`,
+)
 
 // Video giới thiệu: dùng "facade" (ảnh poster + nút play) thay vì nhúng iframe
 // autoplay ngay từ đầu. Vừa bớt một khối chuyển động tự chạy, vừa không kéo
 // ~1MB JS của YouTube vào lần render đầu.
-// ID mặc định dùng khi admin chưa cấu hình (Settings → Thông tin cửa hàng → Video giới thiệu).
-const DEFAULT_VIDEO_ID = '7igBpDPreSU'
-const reviewVideoId = computed(() => homeVideoId.value || DEFAULT_VIDEO_ID)
+// Khối video chỉ hiện khi admin đã cấu hình (Settings → Thông tin cửa hàng).
+const reviewVideoId = computed(() => homeVideoId.value || '')
 const reviewUrl = computed(() => `https://youtu.be/${reviewVideoId.value}`)
 const videoPlaying = ref(true)
 // maxresdefault không tồn tại với mọi video -> lùi về hqdefault (luôn có).
@@ -74,7 +68,7 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
   <div class="home-pillars">
     <div class="home-pillars-grid">
       <aside class="home-pillars-col home-pillars-col--left">
-        <div class="home-side-card home-side-card--media">
+        <div v-if="reviewVideoId" class="home-side-card home-side-card--media">
           <div class="home-video-preview">
             <div v-if="videoPlaying" class="home-video-preview__media">
               <iframe
@@ -93,7 +87,7 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
               v-else
               type="button"
               class="home-video-preview__media home-video-preview__facade"
-              aria-label="Phát video giới thiệu"
+              :aria-label="t('home.playIntroVideo')"
               @click="videoPlaying = true"
             >
               <img :src="videoPoster" alt="" loading="lazy" @error="onPosterError">
@@ -104,9 +98,9 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
           </div>
         </div>
 
-        <div class="home-side-card home-side-card--news">
+        <div v-if="featuredPosts.length" class="home-side-card home-side-card--news">
           <div class="home-side-card__head">
-            <p class="home-side-card__eyebrow">Tin tức nổi bật</p>
+            <p class="home-side-card__eyebrow">{{ t('home.featuredNews') }}</p>
           </div>
           <div class="home-featured-news" data-lenis-prevent>
             <ul class="home-featured-news__list">
@@ -124,7 +118,7 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
             </ul>
           </div>
           <NuxtLink :to="localePath('/tin-tuc')" class="home-featured-news__all">
-            Xem tất cả tin tức ›
+            {{ t('home.viewAllNews') }} ›
           </NuxtLink>
         </div>
       </aside>
@@ -154,7 +148,7 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
               <div v-else-if="card.type === 'contact'" class="info-card" role="group" :aria-label="`${t('contact.hours')} · ${t('contact.title')}`">
                 <div class="info-viewport" data-lenis-prevent tabindex="0">
                   <div class="info-set">
-                    <section class="info-block">
+                    <section v-if="hours.length" class="info-block">
                       <h3 class="info-heading"><span class="info-ic" aria-hidden="true">🕒</span>{{ t('contact.hours') }}</h3>
                       <ul class="info-rows">
                         <li v-for="h in hours" :key="h.days" class="info-row">
@@ -164,7 +158,7 @@ const featuredPosts = computed(() => posts.value.slice(0, 5))
                       </ul>
                     </section>
 
-                    <section class="info-block">
+                    <section v-if="contactRows.length" class="info-block">
                       <h3 class="info-heading"><span class="info-ic" aria-hidden="true">📞</span>{{ t('contact.title') }}</h3>
                       <ul class="info-rows">
                         <li v-for="r in contactRows" :key="r.key" class="info-row info-row--stack">

@@ -4,10 +4,9 @@
 // tối thiểu 40px — vượt ngưỡng 24×24px của WCAG 2.5.8; không thể đạt 44px
 // (mức AAA) vì bị giới hạn bởi chiều cao thanh.
 const { paused, toggle } = useMotionPause()
+const { t } = useI18n()
 
-const label = computed(() =>
-  paused.value ? 'Tiếp tục chuyển động' : 'Tạm dừng chuyển động',
-)
+const label = computed(() => t(paused.value ? 'motion.resume' : 'motion.pause'))
 </script>
 
 <template>
