@@ -54,13 +54,13 @@ API response yields empty state, which is intentional: a blank block signals
   `apps/backend` CLAUDE.md's "Navigation item thumbnails". Admin doesn't pick
   a section manually; adding/reordering tiles is purely an Admin > Điều
   hướng change, not a Medusa product/category metadata change.
-- Pages: `pages/san-pham-list.vue` (catalog, uses `ProductCatalog.vue`),
+- Pages: `pages/san-pham-list.vue` (catalog — category grid + `FeaturedProducts`
+  for `metadata.featured` items, then collections/blog),
   `pages/san-pham/[slug].vue` (detail).
-- `ProductCatalog.vue` renders **every** product permanently and toggles
-  category filters with `v-show`, never by changing the `v-for` source array.
-  `useScrollAnimation()` only observes elements present at mount — swapping
-  the `v-for` array on filter change would create fresh `.animate-on-scroll`
-  nodes that never get observed and stay stuck at `opacity: 0`.
+- Catalog filters live in `CategoryGrid` / related showcase components. Do not
+  swap a `v-for` source array on pages that use `useScrollAnimation()` without
+  checking that new `.animate-on-scroll` nodes get observed (the composable
+  now has a MutationObserver, but `v-show` is still the safer pattern).
 
 # Checking "is the frontend clean" — use typecheck, not lint
 

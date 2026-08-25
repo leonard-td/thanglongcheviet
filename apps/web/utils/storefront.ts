@@ -136,6 +136,20 @@ export function localText(field: unknown, locale: string): string {
 export const PLACEHOLDER_IMAGE = '/images/placeholder.svg'
 
 /**
+ * Public share image when Admin has not uploaded homepage hero images yet.
+ * Uses a bundled tea product photo — never the leftover salon og-image.jpg.
+ */
+export const DEFAULT_SHARE_IMAGE = '/images/cards/tlcv_san_pham.jpg'
+
+/** Turns a site-relative path into an absolute URL for crawlers. */
+export function absoluteUrl(origin: string, pathOrUrl: string): string {
+  if (!pathOrUrl) return ''
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl
+  const originBare = origin.replace(/\/$/, '')
+  return pathOrUrl.startsWith('/') ? `${originBare}${pathOrUrl}` : `${originBare}/${pathOrUrl}`
+}
+
+/**
  * Medusa requires an email for auth (emailpass) and on every cart, but this
  * site identifies people by phone — so both are synthesized from the phone
  * digits.

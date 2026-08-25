@@ -249,17 +249,20 @@ const specs = computed(() => {
   return rows
 })
 
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() => toAbsoluteShareImage(product.value?.image))
+
 useSeoMeta({
   title: () => product.value?.title,
   description: () => product.value?.shortDesc,
   ogTitle: () => product.value?.title,
   ogDescription: () => product.value?.shortDesc,
-  ogImage: () => product.value?.image,
+  ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => product.value?.title,
   twitterDescription: () => product.value?.shortDesc,
-  twitterImage: () => product.value?.image,
+  twitterImage: () => shareImage.value,
 })
 
 useProductStructuredData(product)

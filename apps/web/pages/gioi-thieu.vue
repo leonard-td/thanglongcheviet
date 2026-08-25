@@ -37,18 +37,20 @@ const sidebarItems = computed(() => {
 })
 
 const seoDescription = computed(() => stripHtml(aboutHtml.value).slice(0, 160) || site.value.description)
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() => toAbsoluteShareImage(aboutThumbnail.value))
 
 useSeoMeta({
   title: () => title.value,
   description: () => seoDescription.value,
   ogTitle: () => title.value,
   ogDescription: () => seoDescription.value,
-  ogImage: () => aboutThumbnail.value || undefined,
+  ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => title.value,
   twitterDescription: () => seoDescription.value,
-  twitterImage: () => aboutThumbnail.value || undefined,
+  twitterImage: () => shareImage.value,
 })
 </script>
 

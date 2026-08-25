@@ -53,18 +53,20 @@ const posts = computed(() =>
 const seoTitle = computed(() => `${topic.value?.name ?? ''} | ${t('nav.blog')}`)
 const seoDescription = computed(() => topic.value?.description || t('blog.subtitle'))
 const seoImage = computed(() => topic.value?.image || undefined)
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() => toAbsoluteShareImage(seoImage.value))
 
 useSeoMeta({
   title: () => seoTitle.value,
   description: () => seoDescription.value,
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
-  ogImage: () => seoImage.value,
+  ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoTitle.value,
   twitterDescription: () => seoDescription.value,
-  twitterImage: () => seoImage.value,
+  twitterImage: () => shareImage.value,
 })
 </script>
 
