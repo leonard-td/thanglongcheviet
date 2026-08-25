@@ -44,3 +44,6 @@ echo "==> Provisioning store base data + publishable key (idempotent)..."
 # else
 #   echo "==> .env.prod unchanged — no need to restart web."
 # fi
+
+# docker compose -f infra/docker-compose.prod.yml --env-file .env.prod \
+# exec backend npx medusa exec ./src/migration-scripts/initial-data-seed.js

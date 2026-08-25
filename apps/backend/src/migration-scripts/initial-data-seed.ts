@@ -3,7 +3,6 @@ import path from "node:path";
 import { MedusaContainer } from "@medusajs/framework";
 import {
   ContainerRegistrationKeys,
-  ModuleRegistrationName,
   Modules,
   ProductStatus,
 } from "@medusajs/framework/utils";
@@ -22,7 +21,22 @@ import {
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
 } from "@medusajs/core-flows";
+import type {
+  IFulfillmentModuleService,
+  IPricingModuleService,
+  IProductModuleService,
+  IRegionModuleService,
+  IStockLocationService,
+  ITaxModuleService,
+  RegionCountryDTO,
+} from "@medusajs/framework/types";
 import initialDataSeedJson from "./data/initial-data.json";
+import { normalizeSeedKey, partitionSeedItems } from "./partition-seed-items";
+import { planRegionSeed } from "./plan-region-seed";
+import {
+  buildAddRegionPriceInput,
+  splitShippingOptionPrices,
+} from "./plan-region-shipping-prices";
 import { CARD_MODULE } from "../modules/card";
 import { CAMPAIGN_MODULE } from "../modules/campaign";
 import { NAVIGATION_MODULE } from "../modules/navigation";
@@ -183,6 +197,175 @@ export async function loadSeedData(
   return source;
 }
 
+/**
+ * Creating a region whose countries already belong to another region throws
+ * ("Countries with codes ... are already assigned to a region") — this makes
+ * the seed crash whenever it's re-run against a database that already has
+ * the region. planRegionSeed() inspects the countries' current assignment
+ * first so we can either create fresh, reuse the exact existing region
+ * (idempotent re-run), or fail loudly instead of guessing at a
+ * partial/conflicting assignment.
+ *
+ * Runs LAST in the overall seed (see initial_data_seed below), after the
+ * store/product/content/site-settings data — nothing else in this script
+ * actually needs the region to exist except the region-scoped shipping
+ * price, which is deferred and applied separately via
+ * applyPendingRegionShippingPrices() once this function returns.
+ */
+async function seedRegion({
+  container,
+  logger,
+  seedData,
+}: {
+  container: MedusaContainer;
+  logger: LoggerLike;
+  seedData: SeedData;
+}) {
+  logger.info("Seeding region data...");
+
+  const regionModuleService = container.resolve<IRegionModuleService>(
+    Modules.REGION
+  );
+
+  // `region_id` is a real column on region_country but isn't part of the
+  // public RegionCountryDTO (it's normally reached via the `region`
+  // relation) — the cast reflects what `select: ["iso_2", "region_id"]`
+  // actually returns at runtime.
+  const existingAssignments = (await regionModuleService.listCountries(
+    { iso_2: seedData.region.countries },
+    { select: ["iso_2", "region_id"] }
+  )) as Array<RegionCountryDTO & { region_id: string | null }>;
+
+  const plan = planRegionSeed(seedData.region.countries, existingAssignments);
+
+  if (plan.action === "error") {
+    throw new Error(plan.message);
+  }
+
+  let region: { id: string; name: string; currency_code: string };
+  if (plan.action === "reuse") {
+    logger.info(
+      `Countries [${seedData.region.countries.join(", ")}] already belong to region "${plan.regionId}" — reusing it.`
+    );
+    region = await regionModuleService.retrieveRegion(plan.regionId);
+  } else {
+    const { result: regionResult } = await createRegionsWorkflow(
+      container
+    ).run({
+      input: {
+        regions: [
+          {
+            name: seedData.region.name,
+            currency_code: seedData.region.currency_code,
+            countries: seedData.region.countries,
+            payment_providers: seedData.region.payment_providers,
+          },
+        ],
+      },
+    });
+    region = regionResult[0];
+  }
+
+  // tax_region has a unique constraint per country (no province_code) — when
+  // the region above is reused, its tax regions already exist too, and
+  // unconditionally recreating them crashes with "Tax region with
+  // country_code: vn, already exists.". Only create the ones still missing.
+  const taxModuleService = container.resolve<ITaxModuleService>(Modules.TAX);
+  const existingTaxRegions = await taxModuleService.listTaxRegions(
+    { country_code: seedData.region.countries },
+    { select: ["id", "country_code"] }
+  );
+  const { existing: matchedExistingTaxRegions, missing: missingTaxRegionCountries } =
+    partitionSeedItems(
+      seedData.region.countries.map((country_code) => ({ country_code })),
+      existingTaxRegions.map((taxRegion) => taxRegion.country_code),
+      (item) => item.country_code
+    );
+
+  if (matchedExistingTaxRegions.length) {
+    logger.info(
+      `Tax regions for [${matchedExistingTaxRegions.map((item) => item.country_code).join(", ")}] already exist — reusing them.`
+    );
+  }
+
+  if (missingTaxRegionCountries.length) {
+    logger.info("Seeding tax regions...");
+    await createTaxRegionsWorkflow(container).run({
+      input: missingTaxRegionCountries.map(({ country_code }) => ({
+        country_code,
+        provider_id: "tp_system",
+      })),
+    });
+  }
+
+  return region;
+}
+
+/**
+ * The seed data marks a shipping option's region-scoped price with the
+ * "__region__" placeholder (see splitShippingOptionPrices) because the
+ * region doesn't exist yet when shipping options are created — seedRegion()
+ * now runs last. This attaches that deferred price to each shipping
+ * option's existing price set once the real region is available, using the
+ * same shipping_option -> price_set link Medusa's own shipping-option
+ * workflows rely on internally.
+ */
+async function applyPendingRegionShippingPrices({
+  container,
+  logger,
+  region,
+  pending,
+}: {
+  container: MedusaContainer;
+  logger: LoggerLike;
+  region: { id: string; currency_code: string };
+  pending: Array<{ shippingOptionId: string; amount: number }>;
+}) {
+  if (!pending.length) {
+    return;
+  }
+
+  logger.info("Applying region-scoped shipping prices...");
+
+  const shippingOptionIds = [
+    ...new Set(pending.map((item) => item.shippingOptionId)),
+  ];
+
+  // The shipping_option <-> price_set link module (registered by the
+  // fulfillment module as "shipping_option_price_set") is what Medusa's own
+  // shipping-option workflows use internally to attach prices — querying it
+  // directly here is the supported way to find an existing price set id
+  // without a documented "add region price to shipping option" workflow.
+  const query = container.resolve(ContainerRegistrationKeys.QUERY);
+  const { data: links } = await query.graph({
+    entity: "shipping_option_price_set",
+    fields: ["shipping_option_id", "price_set_id"],
+    filters: { shipping_option_id: shippingOptionIds },
+  });
+
+  const priceSetIdByOption = new Map(
+    (links as Array<{ shipping_option_id: string; price_set_id: string }>).map(
+      (link) => [link.shipping_option_id, link.price_set_id]
+    )
+  );
+
+  const pricingModuleService = container.resolve<IPricingModuleService>(
+    Modules.PRICING
+  );
+
+  for (const item of pending) {
+    const priceSetId = priceSetIdByOption.get(item.shippingOptionId);
+    if (!priceSetId) {
+      throw new Error(
+        `Cannot find a price set for shipping option "${item.shippingOptionId}" — was it created successfully?`
+      );
+    }
+    await pricingModuleService.addPrices(
+      buildAddRegionPriceInput(priceSetId, region, item)
+    );
+  }
+}
+
 async function seedStoreData({
   container,
   logger,
@@ -240,91 +423,138 @@ async function seedStoreData({
     },
   });
 
-  logger.info("Seeding region data...");
-  const { result: regionResult } = await createRegionsWorkflow(container).run({
-    input: {
-      regions: [
-        {
-          name: seedData.region.name,
-          currency_code: seedData.region.currency_code,
-          countries: seedData.region.countries,
-          payment_providers: seedData.region.payment_providers,
-        },
-      ],
-    },
-  });
-  const region = regionResult[0];
-
-  logger.info("Seeding tax regions...");
-  await createTaxRegionsWorkflow(container).run({
-    input: seedData.region.countries.map((country_code) => ({
-      country_code,
-      provider_id: "tp_system",
-    })),
-  });
-
   logger.info("Seeding stock location data...");
-  const { result: stockLocationResult } = await createStockLocationsWorkflow(
-    container
-  ).run({
-    input: {
-      locations: [
-        {
-          name: seedData.stock_location.name,
-          address: seedData.stock_location.address,
-        },
-      ],
-    },
-  });
-  const stockLocation = stockLocationResult[0];
+  // A stock location can only be linked to a single fulfillment set
+  // (LocationFulfillmentSet is a 1-1 link) — creating a new stock location
+  // on every deploy would try to link it to the same reused fulfillment
+  // set and crash with "Cannot create multiple links between
+  // 'stock_location' and 'fulfillment'". Reuse the existing location
+  // (matched by name) instead of creating a new one every run.
+  const stockLocationModuleService = container.resolve<IStockLocationService>(
+    Modules.STOCK_LOCATION
+  );
+  // No `name` filter — see the fulfillment set lookup above for why.
+  const allStockLocations = await stockLocationModuleService.listStockLocations(
+    {},
+    { select: ["id", "name"], take: 1000 }
+  );
+  const existingStockLocation = allStockLocations.find(
+    (location) =>
+      normalizeSeedKey(location.name) === normalizeSeedKey(seedData.stock_location.name)
+  );
+
+  let stockLocation: { id: string };
+  if (existingStockLocation) {
+    logger.info(
+      `Stock location "${seedData.stock_location.name}" already exists — reusing it.`
+    );
+    stockLocation = existingStockLocation;
+  } else {
+    const { result: stockLocationResult } = await createStockLocationsWorkflow(
+      container
+    ).run({
+      input: {
+        locations: [
+          {
+            name: seedData.stock_location.name,
+            address: seedData.stock_location.address,
+          },
+        ],
+      },
+    });
+    stockLocation = stockLocationResult[0];
+  }
 
   const link = container.resolve(ContainerRegistrationKeys.LINK);
-  await link.create({
-    [Modules.STOCK_LOCATION]: {
-      stock_location_id: stockLocation.id,
-    },
-    [Modules.FULFILLMENT]: {
-      fulfillment_provider_id: "manual_manual",
-    },
+
+  const existingProviderLinks = await link.list({
+    [Modules.STOCK_LOCATION]: { stock_location_id: stockLocation.id },
+    [Modules.FULFILLMENT]: { fulfillment_provider_id: "manual_manual" },
   });
+  if (!existingProviderLinks.length) {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: stockLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_provider_id: "manual_manual",
+      },
+    });
+  }
 
   logger.info("Seeding fulfillment data...");
-  const fulfillmentModuleService = container.resolve(
-    ModuleRegistrationName.FULFILLMENT
-  ) as {
-    createFulfillmentSets: (input: any) => Promise<{ id: string; service_zones: Array<{ id: string }> }>;
-  };
+  const fulfillmentModuleService = container.resolve<IFulfillmentModuleService>(
+    Modules.FULFILLMENT
+  );
 
-  const fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
-    name: seedData.fulfillment.name,
-    type: seedData.fulfillment.type,
-    service_zones: seedData.fulfillment.service_zones,
+  // fulfillment_set.name has a unique DB constraint — re-running the seed
+  // against an already-seeded database (this script runs on every deploy,
+  // see deploy.sh) would otherwise crash with "Fulfillment set with name:
+  // ..., already exists." Reuse the existing set instead of recreating it.
+  // Fetch all sets and match client-side (normalized) rather than filtering
+  // by `name` server-side — Vietnamese text can reach the DB in a different
+  // Unicode normalization form (NFC vs. NFD) than the seed JSON, which would
+  // make an exact-match DB filter silently miss an existing row (see the
+  // same issue with product categories: normalizeSeedKey()'s doc comment).
+  const allFulfillmentSets = await fulfillmentModuleService.listFulfillmentSets(
+    {},
+    { select: ["id", "name"], take: 1000, relations: ["service_zones"] }
+  );
+  const existingFulfillmentSet = allFulfillmentSets.find(
+    (set) => normalizeSeedKey(set.name) === normalizeSeedKey(seedData.fulfillment.name)
+  );
+
+  let fulfillmentSet: { id: string; service_zones: Array<{ id: string }> };
+  if (existingFulfillmentSet) {
+    if (!existingFulfillmentSet.service_zones?.length) {
+      throw new Error(
+        `Fulfillment set "${seedData.fulfillment.name}" already exists but has no service zones — resolve manually before re-running the seed.`
+      );
+    }
+    logger.info(
+      `Fulfillment set "${seedData.fulfillment.name}" already exists — reusing it.`
+    );
+    fulfillmentSet = existingFulfillmentSet;
+  } else {
+    fulfillmentSet = await fulfillmentModuleService.createFulfillmentSets({
+      name: seedData.fulfillment.name,
+      type: seedData.fulfillment.type,
+      service_zones: seedData.fulfillment.service_zones.map((zone) => ({
+        name: zone.name,
+        geo_zones: zone.geo_zones.map((geoZone) => ({
+          country_code: geoZone.country_code,
+          type: "country" as const,
+        })),
+      })),
+    });
+  }
+
+  const existingFulfillmentSetLinks = await link.list({
+    [Modules.STOCK_LOCATION]: { stock_location_id: stockLocation.id },
+    [Modules.FULFILLMENT]: { fulfillment_set_id: fulfillmentSet.id },
   });
+  if (!existingFulfillmentSetLinks.length) {
+    await link.create({
+      [Modules.STOCK_LOCATION]: {
+        stock_location_id: stockLocation.id,
+      },
+      [Modules.FULFILLMENT]: {
+        fulfillment_set_id: fulfillmentSet.id,
+      },
+    });
+  }
 
-  await link.create({
-    [Modules.STOCK_LOCATION]: {
-      stock_location_id: stockLocation.id,
-    },
-    [Modules.FULFILLMENT]: {
-      fulfillment_set_id: fulfillmentSet.id,
-    },
-  });
-
-  const shippingOptions = seedData.fulfillment.shipping_options.map((option) => ({
-    ...option,
-    service_zone_id: fulfillmentSet.service_zones[0].id,
-    shipping_profile_id: undefined,
-    prices: option.prices.map((price) => ({
-      ...price,
-      ...(price.region_id === "__region__"
-        ? { region_id: region.id }
-        : {}),
-    })),
-    rules: option.rules.map((rule) => ({
-      ...rule,
-      operator: rule.operator as "eq" | "in",
-    })),
-  }));
+  // The region doesn't exist yet (seedRegion() runs last — see
+  // initial_data_seed) so any "__region__"-placeholder price is deferred:
+  // the shipping option is created with only its currency-based prices, and
+  // the deferred one is applied afterwards by
+  // applyPendingRegionShippingPrices() once the region is available.
+  const shippingOptionsWithSplitPrices = seedData.fulfillment.shipping_options.map(
+    (option) => ({
+      option,
+      ...splitShippingOptionPrices(option.prices),
+    })
+  );
 
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
   const { data: shippingProfileResult } = await query.graph({
@@ -333,12 +563,61 @@ async function seedStoreData({
   });
   const shippingProfile = shippingProfileResult[0];
 
-  await createShippingOptionsWorkflow(container).run({
-    input: shippingOptions.map((option) => ({
-      ...option,
-      shipping_profile_id: shippingProfile.id,
-    })) as any,
-  });
+  // shipping_option.name has no unique DB constraint, so a naive re-run
+  // wouldn't crash here — it would silently create duplicate shipping
+  // options that customers then see twice at checkout. Reuse existing ones
+  // (matched by name within this service zone) instead.
+  const allShippingOptions = await fulfillmentModuleService.listShippingOptions(
+    {},
+    { select: ["id", "name", "service_zone_id"], take: 1000 }
+  );
+  const existingShippingOptionsInZone = allShippingOptions.filter(
+    (option) => option.service_zone_id === fulfillmentSet.service_zones[0].id
+  );
+  const { existing: matchedExistingShippingOptions, missing: missingShippingOptionDefs } =
+    partitionSeedItems(
+      shippingOptionsWithSplitPrices,
+      existingShippingOptionsInZone.map((option) => option.name),
+      (def) => def.option.name
+    );
+
+  if (matchedExistingShippingOptions.length) {
+    logger.info(
+      `${matchedExistingShippingOptions.length} shipping options already exist — leaving them untouched.`
+    );
+  }
+
+  let pendingRegionShippingPrices: Array<{ shippingOptionId: string; amount: number }> =
+    [];
+
+  if (missingShippingOptionDefs.length) {
+    const shippingOptionsInput = missingShippingOptionDefs.map(
+      ({ option, immediate }) => ({
+        ...option,
+        service_zone_id: fulfillmentSet.service_zones[0].id,
+        shipping_profile_id: shippingProfile.id,
+        prices: immediate,
+        rules: option.rules.map((rule) => ({
+          ...rule,
+          operator: rule.operator as "eq" | "in",
+        })),
+      })
+    );
+
+    const { result: createdShippingOptions } = await createShippingOptionsWorkflow(
+      container
+    ).run({
+      input: shippingOptionsInput as any,
+    });
+
+    pendingRegionShippingPrices = createdShippingOptions.flatMap(
+      (created, index) =>
+        missingShippingOptionDefs[index].deferred.map((price) => ({
+          shippingOptionId: created.id,
+          amount: price.amount,
+        }))
+    );
+  }
 
   await linkSalesChannelsToStockLocationWorkflow(container).run({
     input: {
@@ -347,7 +626,12 @@ async function seedStoreData({
     },
   });
 
-  return { defaultSalesChannel, region, stockLocation, shippingProfile };
+  return {
+    defaultSalesChannel,
+    stockLocation,
+    shippingProfile,
+    pendingRegionShippingPrices,
+  };
 }
 
 async function seedProductData({
@@ -365,13 +649,51 @@ async function seedProductData({
 }) {
   logger.info("Seeding product data...");
 
-  const { result: categoryResult } = await createProductCategoriesWorkflow(
-    container
-  ).run({
-    input: {
-      product_categories: seedData.products.categories,
-    },
-  });
+  // product_category.handle and product.handle both have unique DB
+  // constraints — this script runs on every deploy (see deploy.sh), so a
+  // re-run against an already-seeded database must reuse existing
+  // categories/products instead of recreating them, or it crashes with
+  // "... already exists.".
+  const productModuleService = container.resolve<IProductModuleService>(
+    Modules.PRODUCT
+  );
+
+  // No `name` filter — see the fulfillment set lookup in seedStoreData for
+  // why (Unicode normalization mismatch made an exact `name` filter miss
+  // this exact category and crash with "already exists.").
+  const existingCategories = await productModuleService.listProductCategories(
+    {},
+    { select: ["id", "name", "handle"], take: 1000 }
+  );
+  const { existing: matchedExistingCategories, missing: missingCategories } =
+    partitionSeedItems(
+      seedData.products.categories,
+      existingCategories.map((category) => category.name),
+      (category) => category.name
+    );
+
+  let createdCategories: Array<{ id: string; name: string }> = [];
+  if (missingCategories.length) {
+    const { result } = await createProductCategoriesWorkflow(container).run({
+      input: {
+        product_categories: missingCategories,
+      },
+    });
+    createdCategories = result;
+  }
+  if (matchedExistingCategories.length) {
+    logger.info(
+      `${matchedExistingCategories.length} product categories already exist — reusing them.`
+    );
+  }
+
+  const categoryLookup = new Map<string, { id: string }>();
+  for (const category of existingCategories) {
+    categoryLookup.set(normalizeSeedKey(category.name), category);
+  }
+  for (const category of createdCategories) {
+    categoryLookup.set(normalizeSeedKey(category.name), category);
+  }
 
   const { result: productOptionsResult } = await createProductOptionsWorkflow(
     container
@@ -386,14 +708,29 @@ async function seedProductData({
     optionLookup.set(option.title, option);
   }
 
-  const categoryLookup = new Map<string, { id: string }>();
-  for (const category of categoryResult) {
-    categoryLookup.set(category.name, category);
+  const existingProducts = await productModuleService.listProducts(
+    { handle: seedData.products.items.map((item) => item.handle) },
+    { select: ["id", "handle"] }
+  );
+  const { missing: missingProductItems } = partitionSeedItems(
+    seedData.products.items,
+    existingProducts.map((product) => product.handle),
+    (item) => item.handle
+  );
+
+  if (existingProducts.length) {
+    logger.info(
+      `${existingProducts.length} products already exist (matched by handle) — leaving them untouched.`
+    );
   }
 
-  const products = seedData.products.items.map((item) => ({
+  if (!missingProductItems.length) {
+    return;
+  }
+
+  const products = missingProductItems.map((item) => ({
     title: item.title,
-    category_ids: [categoryLookup.get(item.category)!.id],
+    category_ids: [categoryLookup.get(normalizeSeedKey(item.category))!.id],
     description: item.description,
     handle: item.handle,
     weight: item.weight,
@@ -649,7 +986,11 @@ export default async function initial_data_seed({
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const seedData = await loadSeedData(data ?? undefined);
 
-  const { defaultSalesChannel, region, shippingProfile } = await seedStoreData({
+  const {
+    defaultSalesChannel,
+    shippingProfile,
+    pendingRegionShippingPrices,
+  } = await seedStoreData({
     container,
     logger,
     seedData,
@@ -673,6 +1014,18 @@ export default async function initial_data_seed({
     container,
     logger,
     seedData,
+  });
+
+  // Runs last on purpose — see seedRegion()'s docstring. Everything above
+  // only needed the store/sales-channel/product/content pieces; the region
+  // itself, and the one shipping price that depends on it, are finalized
+  // here at the very end.
+  const region = await seedRegion({ container, logger, seedData });
+  await applyPendingRegionShippingPrices({
+    container,
+    logger,
+    region,
+    pending: pendingRegionShippingPrices,
   });
 
   logger.info("Finished seeding initial data from JSON.");
