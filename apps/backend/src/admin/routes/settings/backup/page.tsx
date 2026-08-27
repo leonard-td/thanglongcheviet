@@ -28,7 +28,13 @@ type BackupFile = {
 
 type BackupJob = {
   id: string
-  type: "backup" | "restore" | "export-json" | "import-json"
+  type:
+    | "backup"
+    | "restore"
+    | "export-json"
+    | "import-json"
+    | "export-initial-data"
+    | "import-initial-data"
   status: "running" | "completed" | "failed"
   step: string | null
   error: string | null
@@ -80,7 +86,8 @@ const BackupSettingsPage = () => {
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const jsonImportRef = useRef<HTMLInputElement>(null)
-  const [tab, setTab] = useState<"full" | "content">("full")
+  const initialDataImportRef = useRef<HTMLInputElement>(null)
+  const [tab, setTab] = useState<"full" | "content" | "seed">("full")
   const [importMode, setImportMode] = useState<"merge" | "replace">("merge")
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [tablesInitialized, setTablesInitialized] = useState(false)
@@ -216,6 +223,36 @@ const BackupSettingsPage = () => {
     onError: onApiError,
   })
 
+  const exportInitialDataMutation = useMutation({
+    mutationFn: () =>
+      sdk.client.fetch("/admin/backup/export-initial-data", { method: "POST" }),
+    onSuccess: () => {
+      toast.success(t("backup.seed.job.runningExport"))
+      refresh()
+    },
+    onError: onApiError,
+  })
+
+  const importInitialDataMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await fetch("/admin/backup/import-initial-data", {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      })
+      if (!res.ok) {
+        throw Object.assign(new Error("upload failed"), { status: res.status })
+      }
+    },
+    onSuccess: () => {
+      toast.success(t("backup.seed.job.runningImport"))
+      refresh()
+    },
+    onError: onApiError,
+  })
+
   const deleteMutation = useMutation({
     mutationFn: (fileName: string) =>
       sdk.client.fetch(`/admin/backup/files/${encodeURIComponent(fileName)}`, {
@@ -292,6 +329,15 @@ const BackupSettingsPage = () => {
       cancelText: t("backup.content.importPrompt.cancel"),
     })
 
+  const confirmImportInitialData = async (fileLabel: string): Promise<boolean> =>
+    prompt({
+      title: t("backup.seed.importPrompt.title"),
+      description: t("backup.seed.importPrompt.description", { file: fileLabel }),
+      verificationText: t("backup.seed.importPrompt.confirmText"),
+      confirmText: t("backup.seed.importPrompt.confirm"),
+      cancelText: t("backup.seed.importPrompt.cancel"),
+    })
+
   const handleUploadChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -315,6 +361,17 @@ const BackupSettingsPage = () => {
         tables: [...selectedTables],
         mode: importMode,
       })
+    }
+  }
+
+  const handleInitialDataImportChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+    if (await confirmImportInitialData(file.name)) {
+      importInitialDataMutation.mutate(file)
     }
   }
 
@@ -345,6 +402,10 @@ const BackupSettingsPage = () => {
         return "backup.content.job.runningExport"
       case "import-json":
         return "backup.content.job.runningImport"
+      case "export-initial-data":
+        return "backup.seed.job.runningExport"
+      case "import-initial-data":
+        return "backup.seed.job.runningImport"
       default:
         return "backup.job.runningBackup"
     }
@@ -381,6 +442,14 @@ const BackupSettingsPage = () => {
         })
         return [base, skipped, expanded].filter(Boolean).join(" ")
       }
+      case "export-initial-data":
+        return t("backup.seed.job.completedExport", {
+          file: job.result?.file_name ?? "",
+        })
+      case "import-initial-data":
+        return t("backup.seed.job.completedImport", {
+          file: job.result?.pre_restore_file ?? "",
+        })
       default:
         return null
     }
@@ -425,7 +494,10 @@ const BackupSettingsPage = () => {
     b.file_name.endsWith(".zip")
   )
   const jsonExports = (data?.backups ?? []).filter((b) =>
-    b.file_name.endsWith(".json")
+    b.file_name.startsWith("content-export-")
+  )
+  const initialDataExports = (data?.backups ?? []).filter((b) =>
+    b.file_name.startsWith("initial-data-")
   )
 
   return (
@@ -449,6 +521,13 @@ const BackupSettingsPage = () => {
             onClick={() => setTab("content")}
           >
             {t("backup.tabs.content")}
+          </Button>
+          <Button
+            size="small"
+            variant={tab === "seed" ? "primary" : "secondary"}
+            onClick={() => setTab("seed")}
+          >
+            {t("backup.tabs.seed")}
           </Button>
         </div>
       </div>
@@ -515,7 +594,7 @@ const BackupSettingsPage = () => {
             )}
           </div>
         </>
-      ) : (
+      ) : tab === "content" ? (
         <>
           <div className="px-6 pb-4">
             <Text size="small" className="text-ui-fg-subtle max-w-3xl">
@@ -679,6 +758,66 @@ const BackupSettingsPage = () => {
             ) : (
               <BackupFileTable
                 backups={jsonExports}
+                busy={busy}
+                locale={locale}
+                t={t}
+                onDownload={(name) =>
+                  window.open(
+                    `/admin/backup/files/${encodeURIComponent(name)}`,
+                    "_blank"
+                  )
+                }
+                onRestore={() => {}}
+                onDelete={handleDelete}
+                showRestore={false}
+              />
+            )}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col gap-y-2 px-6 pb-4 md:flex-row md:items-center md:justify-between">
+            <Text size="small" className="text-ui-fg-subtle max-w-2xl">
+              {t("backup.seed.hint")}
+            </Text>
+            <div className="flex flex-none items-center gap-x-2">
+              <Button
+                size="small"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => initialDataImportRef.current?.click()}
+              >
+                {t("backup.seed.importButton")}
+              </Button>
+              <Button
+                size="small"
+                disabled={busy}
+                isLoading={exportInitialDataMutation.isPending}
+                onClick={() => exportInitialDataMutation.mutate()}
+              >
+                {t("backup.seed.exportButton")}
+              </Button>
+              <input
+                ref={initialDataImportRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleInitialDataImportChange}
+              />
+            </div>
+          </div>
+
+          <div className="px-6 py-4">
+            <Heading level="h2" className="mb-3">
+              {t("backup.seed.exportsTitle")}
+            </Heading>
+            {initialDataExports.length === 0 ? (
+              <Text size="small" className="text-ui-fg-muted">
+                {t("backup.seed.emptyExports")}
+              </Text>
+            ) : (
+              <BackupFileTable
+                backups={initialDataExports}
                 busy={busy}
                 locale={locale}
                 t={t}

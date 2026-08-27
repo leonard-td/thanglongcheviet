@@ -92,7 +92,8 @@
     "fullHint": "Nén toàn bộ database và thư viện media thành file zip. Trước mỗi lần phục hồi, dữ liệu hiện tại luôn được tự động sao lưu (pre-restore).",
     "tabs": {
       "full": "Sao lưu toàn phần",
-      "content": "Export / Import nội dung"
+      "content": "Export / Import nội dung",
+      "seed": "Dữ liệu khởi tạo"
     },
     "createButton": "Tạo bản sao lưu",
     "restoreUploadButton": "Phục hồi từ file...",
@@ -205,6 +206,26 @@
         "completedImport": "Import hoàn tất. Dữ liệu trước đó đã được sao lưu zip thành {{file}}.",
         "skippedBlocked": "Đã bỏ qua bảng bị chặn: {{tables}}.",
         "expandedForReplace": "Replace đã tự thêm bảng liên quan: {{tables}}."
+      }
+    },
+    "seed": {
+      "hint": "Export/import dữ liệu khởi tạo (store, khu vực, vận chuyển, sản phẩm, nội dung, menu) — dùng chung export-initial-data.ts / initial-data-seed.ts. Import chạy idempotent: sản phẩm/khu vực/vận chuyển còn thiếu sẽ được tạo mới, còn card/bài viết/menu sẽ được cập nhật theo file.",
+      "exportButton": "Export dữ liệu khởi tạo",
+      "importButton": "Import dữ liệu khởi tạo...",
+      "exportsTitle": "File dữ liệu khởi tạo đã export",
+      "emptyExports": "Chưa có file nào.",
+      "importPrompt": {
+        "title": "Import dữ liệu khởi tạo?",
+        "description": "File \"{{file}}\" sẽ được nạp qua initial-data-seed.ts: sản phẩm/khu vực/vận chuyển còn thiếu sẽ được tạo mới, còn card/bài viết/menu sẽ được cập nhật theo nội dung file. Hệ thống tự động sao lưu zip trước khi import.",
+        "confirmText": "IMPORT",
+        "confirm": "Import",
+        "cancel": "Hủy"
+      },
+      "job": {
+        "runningExport": "Đang export dữ liệu khởi tạo...",
+        "runningImport": "Đang import dữ liệu khởi tạo — không tắt server...",
+        "completedExport": "Export hoàn tất: {{file}}",
+        "completedImport": "Import hoàn tất. Dữ liệu trước đó đã được sao lưu zip thành {{file}}."
       }
     }
   },

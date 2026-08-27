@@ -120,6 +120,7 @@ type SeedData = {
     facebook_url?: string;
     zalo_url?: string;
     instagram_url?: string;
+    home_video_url?: string;
   };
   content: {
     cards: Array<{

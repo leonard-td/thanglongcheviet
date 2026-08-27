@@ -185,6 +185,16 @@ export default defineMiddlewares({
       method: ["POST"],
       middlewares: [guard("backup", "update"), jsonUpload.single("file")],
     },
+    {
+      matcher: "/admin/backup/export-initial-data",
+      method: ["POST"],
+      middlewares: [guard("backup", "create")],
+    },
+    {
+      matcher: "/admin/backup/import-initial-data",
+      method: ["POST"],
+      middlewares: [guard("backup", "update"), jsonUpload.single("file")],
+    },
 
     // ── Zalo webhook (raw body, no RBAC — not admin) ──
     {

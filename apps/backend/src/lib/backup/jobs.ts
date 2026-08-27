@@ -17,7 +17,13 @@ export type BackupJobResult = {
 
 export type BackupJob = {
   id: string
-  type: "backup" | "restore" | "export-json" | "import-json"
+  type:
+    | "backup"
+    | "restore"
+    | "export-json"
+    | "import-json"
+    | "export-initial-data"
+    | "import-initial-data"
   status: "running" | "completed" | "failed"
   // mã bước hiện tại — admin UI dịch qua i18n (backup.steps.<step>)
   step: string | null

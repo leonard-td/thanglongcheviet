@@ -92,7 +92,8 @@
     "fullHint": "Compress the entire database and uploaded media into a zip file. Before every restore, the current state is automatically backed up (pre-restore).",
     "tabs": {
       "full": "Full backup",
-      "content": "Content export / import"
+      "content": "Content export / import",
+      "seed": "Seed data"
     },
     "createButton": "Create backup",
     "restoreUploadButton": "Restore from file...",
@@ -205,6 +206,26 @@
         "completedImport": "Import completed. Previous data was zip-backed up as {{file}}.",
         "skippedBlocked": "Skipped blocked tables: {{tables}}.",
         "expandedForReplace": "Replace auto-included related tables: {{tables}}."
+      }
+    },
+    "seed": {
+      "hint": "Export/import the seed dataset (store, region, shipping, products, content, menu) — shared with export-initial-data.ts / initial-data-seed.ts. Import runs idempotently: missing products/regions/shipping are created, while cards/posts/menu are updated to match the file.",
+      "exportButton": "Export seed data",
+      "importButton": "Import seed data...",
+      "exportsTitle": "Exported seed data files",
+      "emptyExports": "No files yet.",
+      "importPrompt": {
+        "title": "Import seed data?",
+        "description": "File \"{{file}}\" will be loaded through initial-data-seed.ts: missing products/regions/shipping are created, while cards/posts/menu are updated to match the file content. A full zip backup runs automatically first.",
+        "confirmText": "IMPORT",
+        "confirm": "Import",
+        "cancel": "Cancel"
+      },
+      "job": {
+        "runningExport": "Exporting seed data...",
+        "runningImport": "Importing seed data — do not close the server...",
+        "completedExport": "Export completed: {{file}}",
+        "completedImport": "Import completed. Previous data was zip-backed up as {{file}}."
       }
     }
   },

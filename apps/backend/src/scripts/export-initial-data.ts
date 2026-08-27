@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { MedusaContainer } from "@medusajs/framework";
 import type { ExecArgs } from "@medusajs/framework/types";
 import {
   ContainerRegistrationKeys,
@@ -393,19 +394,20 @@ async function readGraphData(query: any, entity: string, fields: string[]) {
   }
 }
 
-export default async function exportInitialData({ container, args }: ExecArgs) {
-  const logger = container.resolve(ContainerRegistrationKeys.LOGGER) as LoggerLike;
+/**
+ * Reads every entity `buildInitialDataPayload` needs, straight off the
+ * container. Shared by the CLI entrypoint below and by the admin
+ * Backup & Restore "seed data" export, so both stay backed by the exact
+ * same query logic.
+ */
+export async function collectInitialDataInput(
+  container: MedusaContainer
+): Promise<ExportInput> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY) as any;
   const productModule = container.resolve(Modules.PRODUCT) as any;
   const cardModule = container.resolve(CARD_MODULE) as any;
   const campaignModule = container.resolve(CAMPAIGN_MODULE) as any;
   const navigationModule = container.resolve(NAVIGATION_MODULE) as any;
-
-  const outputPath = args[0]
-    ? path.resolve(process.cwd(), args[0])
-    : path.resolve(process.cwd(), "src/migration-scripts/data/initial-data.exported.json");
-
-  logger.info(`export-initial-data: collecting data from the database...`);
 
   const salesChannels = await readGraphData(query, "sales_channel", ["id", "name", "description"]);
   const publishableApiKeys = await readGraphData(query, "api_key", ["id", "title", "type", "created_by"]);
@@ -429,7 +431,7 @@ export default async function exportInitialData({ container, args }: ExecArgs) {
     ? await navigationModule.listItemsByMenu(menu.id)
     : [];
 
-  const payload = buildInitialDataPayload({
+  return {
     salesChannels,
     publishableApiKeys,
     stores,
@@ -445,7 +447,20 @@ export default async function exportInitialData({ container, args }: ExecArgs) {
     campaignPosts,
     navigationMenus: menus ?? [],
     navigationItems,
-  });
+  };
+}
+
+export default async function exportInitialData({ container, args }: ExecArgs) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER) as LoggerLike;
+
+  const outputPath = args[0]
+    ? path.resolve(process.cwd(), args[0])
+    : path.resolve(process.cwd(), "src/migration-scripts/data/initial-data.exported.json");
+
+  logger.info(`export-initial-data: collecting data from the database...`);
+
+  const input = await collectInitialDataInput(container);
+  const payload = buildInitialDataPayload(input);
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
