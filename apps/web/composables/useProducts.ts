@@ -32,9 +32,22 @@ export interface ProductGroup {
 const PRODUCT_FIELDS = 'id,title,handle,description,thumbnail,material,weight,metadata,*images,*categories,'
   + '*collection,*options,*options.values,*variants,*variants.options,*variants.calculated_price'
 
+function resolveProduct(
+  raw: MedusaProduct,
+  resolveMediaUrl: (url: string | null | undefined) => string,
+): Product {
+  const product = transformMedusaProduct(raw)
+  return {
+    ...product,
+    image: resolveMediaUrl(product.image) || product.image,
+    gallery: product.gallery.map(url => resolveMediaUrl(url) || url),
+  }
+}
+
 export function useProducts() {
   const { locale } = useI18n()
   const { fetchMedusa, regionId } = useMedusaApi()
+  const { resolveMediaUrl } = useMediaUrl()
 
   const productsAsync = useAsyncData(
     'medusa-products',
@@ -46,7 +59,7 @@ export function useProducts() {
   const { data: productsData, pending } = productsAsync
 
   const products = computed<Product[]>(() =>
-    (productsData.value?.products ?? []).map(transformMedusaProduct),
+    (productsData.value?.products ?? []).map(p => resolveProduct(p, resolveMediaUrl)),
   )
 
   // Medusa has no built-in "featured" flag — admins toggle
@@ -54,7 +67,7 @@ export function useProducts() {
   const featuredProducts = computed<Product[]>(() =>
     (productsData.value?.products ?? [])
       .filter(p => p.metadata?.featured === true)
-      .map(transformMedusaProduct),
+      .map(p => resolveProduct(p, resolveMediaUrl)),
   )
 
   const { data: categoriesData } = useAsyncData(
@@ -71,7 +84,15 @@ export function useProducts() {
       const menuGroup = typeof c.metadata?.menu_group === 'string' ? c.metadata.menu_group : null
       const menuGroupLabel = typeof c.metadata?.menu_group_label === 'string' ? c.metadata.menu_group_label : null
       const menuHidden = c.metadata?.menu_hidden === true
-      return { id: cat.id, slug: cat.slug, label: categoryLabel(cat.name, locale.value), thumbnail: cat.thumbnail, menuGroup, menuGroupLabel, menuHidden }
+      return {
+        id: cat.id,
+        slug: cat.slug,
+        label: categoryLabel(cat.name, locale.value),
+        thumbnail: cat.thumbnail ? resolveMediaUrl(cat.thumbnail) : null,
+        menuGroup,
+        menuGroupLabel,
+        menuHidden,
+      }
     }),
   )
 
@@ -86,7 +107,9 @@ export function useProducts() {
       id: c.id,
       slug: c.handle,
       label: categoryLabel(c.title, locale.value),
-      thumbnail: typeof c.metadata?.thumbnail === 'string' ? c.metadata.thumbnail : null,
+      thumbnail: typeof c.metadata?.thumbnail === 'string'
+        ? resolveMediaUrl(c.metadata.thumbnail) || null
+        : null,
       menuGroup: null,
       menuGroupLabel: null,
       menuHidden: false,
@@ -100,7 +123,7 @@ export function useProducts() {
       )
       const raw = res.products?.[0]
       if (raw) {
-        const product = transformMedusaProduct(raw)
+        const product = resolveProduct(raw, resolveMediaUrl)
         // Do not block SSR on the parallel catalog fetch (can hang nginx → 504).
         // Related items populate when the catalog is already ready.
         const relatedFromApi = productsAsync.pending.value

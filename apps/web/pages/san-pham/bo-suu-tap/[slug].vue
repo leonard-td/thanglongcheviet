@@ -18,18 +18,20 @@ watchEffect(() => {
 const seoTitle = computed(() => `${collection.value?.label ?? ''} | ${t('products.title')}`)
 const seoDescription = computed(() => `${collection.value?.label ?? ''} — ${t('products.subtitle')}`)
 const seoImage = computed(() => collectionProducts.value[0]?.image || undefined)
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() => toAbsoluteShareImage(seoImage.value))
 
 useSeoMeta({
   title: () => seoTitle.value,
   description: () => seoDescription.value,
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
-  ogImage: () => seoImage.value,
+  ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoTitle.value,
   twitterDescription: () => seoDescription.value,
-  twitterImage: () => seoImage.value,
+  twitterImage: () => shareImage.value,
 })
 </script>
 

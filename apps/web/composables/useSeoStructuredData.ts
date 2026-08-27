@@ -4,12 +4,14 @@ import type { EventItem } from '~/composables/useEvents'
 export function useProductStructuredData(product: Ref<Product | null>) {
   const route = useRoute()
   const baseUrl = useRequestURL().origin
+  const { toAbsoluteShareImage } = useSeoShareImage()
 
   useHead({
     script: computed(() => {
       if (!product.value) return []
 
       const pageUrl = `${baseUrl}${route.path}`
+      const image = toAbsoluteShareImage(product.value.image)
 
       return [{
         type: 'application/ld+json',
@@ -18,7 +20,7 @@ export function useProductStructuredData(product: Ref<Product | null>) {
           '@type': 'Product',
           name: product.value.title,
           description: product.value.shortDesc || product.value.description,
-          image: product.value.image,
+          ...(image ? { image } : {}),
           sku: product.value.id,
           offers: {
             '@type': 'Offer',
@@ -39,12 +41,14 @@ export function useArticleStructuredData(post: Ref<BlogPost | null | undefined>)
   const route = useRoute()
   const { site } = useSettings()
   const baseUrl = useRequestURL().origin
+  const { toAbsoluteShareImage } = useSeoShareImage()
 
   useHead({
     script: computed(() => {
       if (!post.value) return []
 
       const pageUrl = `${baseUrl}${route.path}`
+      const image = toAbsoluteShareImage(post.value.image)
 
       return [{
         type: 'application/ld+json',
@@ -53,7 +57,7 @@ export function useArticleStructuredData(post: Ref<BlogPost | null | undefined>)
           '@type': 'Article',
           headline: post.value.seoTitle || post.value.title,
           description: post.value.seoDescription || post.value.excerpt,
-          image: post.value.image || undefined,
+          ...(image ? { image } : {}),
           datePublished: post.value.date,
           author: {
             '@type': 'Organization',
@@ -70,12 +74,14 @@ export function useEventStructuredData(event: Ref<EventItem | null | undefined>)
   const route = useRoute()
   const { site } = useSettings()
   const baseUrl = useRequestURL().origin
+  const { toAbsoluteShareImage } = useSeoShareImage()
 
   useHead({
     script: computed(() => {
       if (!event.value || !event.value.startAt) return []
 
       const pageUrl = `${baseUrl}${route.path}`
+      const image = toAbsoluteShareImage(event.value.image)
 
       return [{
         type: 'application/ld+json',
@@ -84,7 +90,7 @@ export function useEventStructuredData(event: Ref<EventItem | null | undefined>)
           '@type': 'Event',
           name: event.value.seoTitle || event.value.title,
           description: event.value.seoDescription || event.value.excerpt,
-          image: event.value.image || undefined,
+          ...(image ? { image } : {}),
           startDate: event.value.startAt,
           endDate: event.value.endAt || undefined,
           eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',

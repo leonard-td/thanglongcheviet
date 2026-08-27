@@ -126,6 +126,8 @@ const relatedPosts = computed(() => {
 
 const seoTitle = computed(() => post.value?.seoTitle || title.value)
 const seoDescription = computed(() => post.value?.seoDescription || excerpt.value)
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() => toAbsoluteShareImage(post.value?.image))
 
 useSeoMeta({
   title: () => `${seoTitle.value} | ${t('nav.blog')}`,
@@ -133,12 +135,12 @@ useSeoMeta({
   keywords: () => post.value?.seoKeywords || undefined,
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
-  ogImage: () => post.value?.image,
+  ogImage: () => shareImage.value,
   ogType: 'article',
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoTitle.value,
   twitterDescription: () => seoDescription.value,
-  twitterImage: () => post.value?.image,
+  twitterImage: () => shareImage.value,
 })
 
 useArticleStructuredData(post)

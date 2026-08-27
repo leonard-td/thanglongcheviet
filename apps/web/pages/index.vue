@@ -10,27 +10,30 @@ useHead({
 })
 
 const { paused } = useMotionPause()
+const { t } = useI18n()
 
 const { site } = useSettings()
 const { heroImages } = useSiteSettings()
 
-// Crawlers need an absolute og:image, and hero_images is empty until an admin
-// uploads one — so fall back to the bundled brand card in public/.
-const origin = useRequestURL().origin
-const shareImage = computed(
-  () => heroImages.value[0] || `${origin}/images/og-image.jpg`,
+const brandName = computed(() => site.value.name || t('site.name'))
+const shareTitle = computed(() => site.value.tagline || brandName.value)
+const shareDescription = computed(() => site.value.description || '')
+
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() =>
+  toAbsoluteShareImage(heroImages.value[0] || DEFAULT_SHARE_IMAGE),
 )
 
 useSeoMeta({
-  title: () => site.value.tagline,
-  description: () => site.value.description,
-  ogTitle: () => site.value.tagline,
-  ogDescription: () => site.value.description,
+  title: () => site.value.tagline || undefined,
+  description: () => shareDescription.value || undefined,
+  ogTitle: () => shareTitle.value,
+  ogDescription: () => shareDescription.value || undefined,
   ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
-  twitterTitle: () => site.value.tagline,
-  twitterDescription: () => site.value.description,
+  twitterTitle: () => shareTitle.value,
+  twitterDescription: () => shareDescription.value || undefined,
   twitterImage: () => shareImage.value,
 })
 </script>

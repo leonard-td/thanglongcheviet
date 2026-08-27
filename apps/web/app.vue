@@ -1,12 +1,14 @@
 <script setup lang="ts">
-const { locale } = useI18n()
+const { t, locale } = useI18n()
 const { site } = useSettings()
+
+const brandName = computed(() => site.value.name || t('site.name'))
 
 useSeoHreflang()
 
 useSeoMeta({
-  titleTemplate: (title) => title ? `${title} | ${site.value.name}` : site.value.name,
-  ogSiteName: () => site.value.name,
+  titleTemplate: (title) => title ? `${title} | ${brandName.value}` : brandName.value,
+  ogSiteName: () => brandName.value,
 })
 
 useHead({

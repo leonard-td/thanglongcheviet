@@ -11,7 +11,13 @@ export function useMediaUrl() {
 
   const resolveMediaUrl = (url: string | null | undefined): string => {
     if (!url) return ''
-    if (url.startsWith('/')) return `${config.public.medusaBackendUrl}${url}`
+    // Only Medusa uploads live under /static/. Nuxt public assets (/images/…)
+    // must stay on the storefront origin — prefixing them with the backend URL
+    // breaks split dev (Nuxt :3000, Medusa :9000).
+    if (url.startsWith('/static/')) {
+      const backend = String(config.public.medusaBackendUrl || '').replace(/\/$/, '')
+      return backend ? `${backend}${url}` : url
+    }
     return url
   }
 

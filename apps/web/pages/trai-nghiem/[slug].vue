@@ -86,6 +86,8 @@ const handleSubmit = async () => {
 
 const seoTitle = computed(() => event.value?.seoTitle || event.value?.title || '')
 const seoDescription = computed(() => event.value?.seoDescription || event.value?.excerpt || '')
+const { toAbsoluteShareImage } = useSeoShareImage()
+const shareImage = computed(() => toAbsoluteShareImage(event.value?.image))
 
 useSeoMeta({
   title: () => `${seoTitle.value} | ${t('events.title')}`,
@@ -93,12 +95,12 @@ useSeoMeta({
   keywords: () => event.value?.seoKeywords || undefined,
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
-  ogImage: () => event.value?.image,
+  ogImage: () => shareImage.value,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoTitle.value,
   twitterDescription: () => seoDescription.value,
-  twitterImage: () => event.value?.image,
+  twitterImage: () => shareImage.value,
 })
 
 useEventStructuredData(event)

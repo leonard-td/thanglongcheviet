@@ -20,6 +20,7 @@ import {
   createTaxRegionsWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
   linkSalesChannelsToStockLocationWorkflow,
+  updateProductsWorkflow,
 } from "@medusajs/core-flows";
 import type {
   IFulfillmentModuleService,
@@ -635,6 +636,34 @@ async function seedStoreData({
   };
 }
 
+async function loadExistingStoreContext(container: MedusaContainer) {
+  const query = container.resolve(ContainerRegistrationKeys.QUERY);
+  const { data: channels } = await query.graph({
+    entity: "sales_channel",
+    fields: ["id", "name"],
+  });
+  const { data: regions } = await query.graph({
+    entity: "region",
+    fields: ["id", "name"],
+  });
+  const { data: profiles } = await query.graph({
+    entity: "shipping_profile",
+    fields: ["id"],
+  });
+
+  if (!channels[0] || !profiles[0]) {
+    throw new Error(
+      "Store/region seed failed and no existing sales channel or shipping profile was found."
+    );
+  }
+
+  return {
+    defaultSalesChannel: channels[0],
+    region: regions[0],
+    shippingProfile: profiles[0],
+  };
+}
+
 async function seedProductData({
   container,
   logger,
@@ -977,6 +1006,55 @@ async function seedSiteSettings({
   }
 }
 
+/**
+ * Applies `metadata.featured` from the seed JSON onto products that already
+ * exist (create is skipped on re-run). Does not clear a flag an admin has
+ * already set.
+ */
+async function seedFeaturedFlags({
+  container,
+  logger,
+  seedData,
+}: {
+  container: MedusaContainer;
+  logger: LoggerLike;
+  seedData: SeedData;
+}) {
+  const featuredHandles = seedData.products.items
+    .filter((item) => item.metadata?.featured === true)
+    .map((item) => item.handle);
+
+  if (!featuredHandles.length) {
+    return;
+  }
+
+  logger.info("Ensuring featured flags on seed products...");
+
+  const productModuleService = container.resolve<IProductModuleService>(
+    Modules.PRODUCT
+  );
+  const products = await productModuleService.listProducts(
+    { handle: featuredHandles },
+    { take: featuredHandles.length }
+  );
+
+  for (const product of products) {
+    if (product.metadata?.featured === true) {
+      continue;
+    }
+
+    await updateProductsWorkflow(container).run({
+      input: {
+        selector: { id: product.id },
+        update: {
+          metadata: { ...(product.metadata ?? {}), featured: true },
+        },
+      },
+    });
+    logger.info(`Marked product "${product.handle}" as featured.`);
+  }
+}
+
 export default async function initial_data_seed({
   container,
   data,
@@ -987,35 +1065,59 @@ export default async function initial_data_seed({
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const seedData = await loadSeedData(data ?? undefined);
 
-  const {
-    defaultSalesChannel,
-    shippingProfile,
-    pendingRegionShippingPrices,
-  } = await seedStoreData({
-    container,
-    logger,
-    seedData,
-  });
+  let defaultSalesChannel: { id: string };
+  let shippingProfile: { id: string };
+  let pendingRegionShippingPrices: Array<{
+    shippingOptionId: string;
+    amount: number;
+  }> = [];
 
-  await seedProductData({
-    container,
-    logger,
-    seedData,
-    defaultSalesChannel,
-    shippingProfile,
-  });
+  try {
+    ({ defaultSalesChannel, shippingProfile, pendingRegionShippingPrices } =
+      await seedStoreData({ container, logger, seedData }));
+  } catch (error) {
+    logger.warn(
+      `Store seed failed (using existing records): ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+    ({ defaultSalesChannel, shippingProfile } =
+      await loadExistingStoreContext(container));
+  }
 
-  await seedContentData({
-    container,
-    logger,
-    seedData,
-  });
+  const runStep = async (label: string, fn: () => Promise<unknown>) => {
+    try {
+      await fn();
+    } catch (error) {
+      logger.warn(
+        `Initial-data seed step "${label}" failed (continuing): ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  };
 
-  await seedSiteSettings({
-    container,
-    logger,
-    seedData,
-  });
+  await runStep("products", () =>
+    seedProductData({
+      container,
+      logger,
+      seedData,
+      defaultSalesChannel,
+      shippingProfile,
+    })
+  );
+
+  await runStep("content", () =>
+    seedContentData({ container, logger, seedData })
+  );
+
+  await runStep("site-settings", () =>
+    seedSiteSettings({ container, logger, seedData })
+  );
+
+  await runStep("featured-flags", () =>
+    seedFeaturedFlags({ container, logger, seedData })
+  );
 
   // Runs last on purpose — see seedRegion()'s docstring. Everything above
   // only needed the store/sales-channel/product/content pieces; the region
